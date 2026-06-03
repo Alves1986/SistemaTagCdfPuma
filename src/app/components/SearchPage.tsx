@@ -1,201 +1,263 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
-import { Search, Camera, QrCode, AlertTriangle, Wrench } from 'lucide-react';
-import { searchTags } from '../mockData';
-import { Tag } from '../types';
+import { Search, Camera, QrCode, AlertTriangle, Wrench, Tag } from 'lucide-react';
+import { Tag as TagType } from '../types';
+import * as api from '../services/api';
 
 export function SearchPage() {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<Tag[]>([]);
+  const [results, setResults] = useState<TagType[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const handleSearch = (searchQuery: string) => {
+  const handleSearch = async (searchQuery: string) => {
     setQuery(searchQuery);
-    
+
     if (searchQuery.trim().length >= 2) {
-      const searchResults = searchTags(searchQuery);
-      setResults(searchResults);
+      try {
+        setLoading(true);
+        const searchResults = await api.searchTags(searchQuery);
+        setResults(searchResults);
+      } catch (error) {
+        console.error('Erro ao buscar TAGs:', error);
+        setResults([]);
+      } finally {
+        setLoading(false);
+      }
     } else {
       setResults([]);
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusDot = (status: string) => {
     switch (status) {
-      case 'operacional':
-        return 'bg-green-100 text-green-800';
-      case 'manutenção':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'inativo':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+      case 'operacional': return { bg: '#D1FAE5', text: '#065F46', dot: '#00A551' };
+      case 'manutenção': return { bg: '#FEF3C7', text: '#92400E', dot: '#D97706' };
+      case 'inativo': return { bg: '#FEE2E2', text: '#991B1B', dot: '#DC2626' };
+      default: return { bg: '#F3F4F6', text: '#374151', dot: '#9CA3AF' };
     }
   };
 
-  const getPrioridadeColor = (prioridade?: string) => {
+  const getPrioridadeBadge = (prioridade?: string) => {
     switch (prioridade) {
-      case 'urgente':
-        return 'bg-red-600 text-white';
-      case 'alta':
-        return 'bg-orange-600 text-white';
-      case 'média':
-        return 'bg-yellow-600 text-white';
-      case 'baixa':
-        return 'bg-blue-600 text-white';
-      default:
-        return 'bg-gray-600 text-white';
+      case 'urgente': return { bg: '#DC2626', text: '#fff' };
+      case 'alta': return { bg: '#EA580C', text: '#fff' };
+      case 'média': return { bg: '#D97706', text: '#fff' };
+      case 'baixa': return { bg: '#003865', text: '#fff' };
+      default: return { bg: '#6B7280', text: '#fff' };
     }
   };
 
   return (
-    <div className="space-y-6">
-      {/* Search Section */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center mb-4">
-          <div className="flex-1 w-full">
-            <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
-              Buscar TAG
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-5 w-5 text-gray-400" />
-              </div>
-              <input
-                id="search"
-                type="text"
-                value={query}
-                onChange={(e) => handleSearch(e.target.value)}
-                placeholder="Digite últimos 4 dígitos ou nome do equipamento"
-                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <p className="mt-2 text-sm text-gray-500">
-              Exemplos: "0001" (últimos 4 dígitos) ou "válvula" (nome do equipamento)
-            </p>
-          </div>
+    <div className="space-y-5">
+      {/* Search box */}
+      <div
+        className="bg-white rounded border p-5 shadow-sm"
+        style={{ borderColor: '#D1D5DB' }}
+      >
+        <label
+          className="block mb-2 text-sm font-medium"
+          style={{ color: '#2D2D2D' }}
+        >
+          Buscar Equipamento
+        </label>
+        <div className="relative">
+          <Search
+            size={16}
+            className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+            style={{ color: '#5A5A5A' }}
+          />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => handleSearch(e.target.value)}
+            placeholder="Últimos 4 dígitos do TAG ou nome do equipamento…"
+            className="w-full pl-9 pr-4 py-2.5 rounded border text-sm outline-none transition-colors"
+            style={{ borderColor: '#D1D5DB', backgroundColor: '#F9FAFB', color: '#2D2D2D' }}
+            onFocus={(e) => { e.currentTarget.style.borderColor = '#003865'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0,56,101,0.1)'; }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = '#D1D5DB'; e.currentTarget.style.boxShadow = 'none'; }}
+          />
         </div>
+        <p className="mt-2 text-xs" style={{ color: '#5A5A5A' }}>
+          Ex: <span className="font-mono">0001</span> para buscar por código &nbsp;·&nbsp; "válvula" para buscar por nome
+        </p>
 
-        {/* Quick Actions */}
-        <div className="flex flex-wrap gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors">
-            <QrCode size={20} />
-            <span>Escanear QR</span>
+        <div className="mt-4 flex flex-wrap gap-2 pt-4 border-t" style={{ borderColor: '#E8E8E8' }}>
+          <button
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded border text-sm font-medium transition-colors"
+            style={{ borderColor: '#003865', color: '#003865', backgroundColor: 'transparent' }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#003865'; e.currentTarget.style.color = '#fff'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#003865'; }}
+          >
+            <QrCode size={15} />
+            Escanear QR Code
           </button>
         </div>
       </div>
 
-      {/* Results Section */}
+      {/* Results */}
       {query && (
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Resultados da Busca {results.length > 0 && `(${results.length})`}
-          </h2>
+        <div
+          className="bg-white rounded border p-5 shadow-sm"
+          style={{ borderColor: '#D1D5DB' }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-semibold" style={{ color: '#2D2D2D' }}>
+              Resultados da Busca
+            </h2>
+            {results.length > 0 && (
+              <span
+                className="text-xs font-medium px-2 py-0.5 rounded"
+                style={{ backgroundColor: '#E8E8E8', color: '#5A5A5A' }}
+              >
+                {results.length} encontrado{results.length > 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
 
-          {results.length === 0 ? (
+          {loading ? (
+            <div className="flex items-center justify-center gap-3 py-12">
+              <div
+                className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin"
+                style={{ borderColor: '#003865', borderTopColor: 'transparent' }}
+              />
+              <p className="text-sm" style={{ color: '#5A5A5A' }}>Buscando...</p>
+            </div>
+          ) : results.length === 0 ? (
             <div className="text-center py-12">
-              <Search className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">Nenhum resultado encontrado</h3>
-              <p className="mt-1 text-sm text-gray-500">
-                Tente buscar por outros termos ou pelos últimos 4 dígitos do TAG
+              <Search size={40} className="mx-auto mb-3" style={{ color: '#D1D5DB' }} />
+              <p className="text-sm font-medium" style={{ color: '#2D2D2D' }}>Nenhum resultado encontrado</p>
+              <p className="text-xs mt-1" style={{ color: '#5A5A5A' }}>
+                Tente buscar pelos últimos 4 dígitos do TAG ou pelo nome do equipamento
               </p>
             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {results.map((tag) => (
-                <Link
-                  key={tag.id}
-                  to={`/tag/${tag.id}`}
-                  className={`block bg-white border-2 rounded-lg overflow-hidden hover:shadow-lg transition-shadow ${
-                    tag.nota_manutencao 
-                      ? 'border-red-500 ring-2 ring-red-200' 
-                      : 'border-gray-200'
-                  }`}
-                >
-                  {/* Image */}
-                  <div className="relative h-48 bg-gray-100">
-                    {tag.foto_url ? (
-                      <img
-                        src={tag.foto_url}
-                        alt={tag.nome_equipamento}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Camera className="h-12 w-12 text-gray-300" />
-                      </div>
-                    )}
-                    {tag.nota_manutencao && (
-                      <div className="absolute top-2 right-2">
-                        <div className={`px-3 py-1.5 rounded-md text-xs font-bold flex items-center gap-1.5 shadow-lg ${getPrioridadeColor(tag.nota_manutencao.prioridade)}`}>
-                          <AlertTriangle size={16} />
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {results.map((tag) => {
+                const status = getStatusDot(tag.status);
+                const prioridade = tag.nota_manutencao ? getPrioridadeBadge(tag.nota_manutencao.prioridade) : null;
+                return (
+                  <Link
+                    key={tag.id}
+                    to={`/tag/${tag.id}`}
+                    className="block rounded border overflow-hidden transition-all duration-150 hover:shadow-md"
+                    style={{
+                      borderColor: tag.nota_manutencao ? '#DC2626' : '#D1D5DB',
+                      borderWidth: tag.nota_manutencao ? '2px' : '1px',
+                    }}
+                  >
+                    {/* Image */}
+                    <div className="relative h-40" style={{ backgroundColor: '#E8E8E8' }}>
+                      {tag.foto_url ? (
+                        <img
+                          src={tag.foto_url}
+                          alt={tag.nome_equipamento}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Camera size={36} style={{ color: '#9CA3AF' }} />
+                        </div>
+                      )}
+                      {prioridade && tag.nota_manutencao && (
+                        <div
+                          className="absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold shadow"
+                          style={{ backgroundColor: prioridade.bg, color: prioridade.text }}
+                        >
+                          <AlertTriangle size={11} />
                           {tag.nota_manutencao.prioridade.toUpperCase()}
                         </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Content */}
-                  <div className="p-4">
-                    {tag.nota_manutencao && (
-                      <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded flex items-start gap-2">
-                        <Wrench size={16} className="text-red-600 mt-0.5 flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-semibold text-red-800">
-                            Nota: {tag.nota_manutencao.numero_nota}
-                          </p>
-                          <p className="text-xs text-red-700 truncate">
-                            {tag.nota_manutencao.descricao}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <p className="text-xs text-gray-500 font-medium">TAG</p>
-                        <p className="text-sm font-bold text-blue-600">{tag.tag_completo}</p>
-                      </div>
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                          tag.status
-                        )}`}
-                      >
-                        {tag.status}
-                      </span>
+                      )}
                     </div>
 
-                    <h3 className="font-semibold text-gray-900 mb-2">
-                      {tag.nome_equipamento}
-                    </h3>
+                    {/* Content */}
+                    <div className="p-3">
+                      {tag.nota_manutencao && (
+                        <div
+                          className="mb-2.5 p-2 rounded flex items-start gap-1.5 text-xs"
+                          style={{ backgroundColor: '#FEF2F2', borderLeft: '3px solid #DC2626' }}
+                        >
+                          <Wrench size={12} className="flex-shrink-0 mt-0.5" style={{ color: '#DC2626' }} />
+                          <div className="min-w-0">
+                            <p className="font-semibold" style={{ color: '#991B1B' }}>
+                              Nota: {tag.nota_manutencao.numero_nota}
+                            </p>
+                            <p className="truncate" style={{ color: '#B91C1C' }}>
+                              {tag.nota_manutencao.descricao}
+                            </p>
+                          </div>
+                        </div>
+                      )}
 
-                    <p className="text-sm text-gray-600 line-clamp-2">
-                      {tag.localizacao_texto}
-                    </p>
-                  </div>
-                </Link>
-              ))}
+                      <div className="flex items-start justify-between gap-2 mb-1.5">
+                        <div>
+                          <p className="text-xs uppercase tracking-wider mb-0.5" style={{ color: '#5A5A5A' }}>TAG</p>
+                          <p className="text-sm font-bold font-mono" style={{ color: '#003865' }}>
+                            {tag.tag_completo}
+                          </p>
+                        </div>
+                        <div
+                          className="flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium flex-shrink-0 mt-0.5"
+                          style={{ backgroundColor: status.bg, color: status.text }}
+                        >
+                          <span
+                            className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                            style={{ backgroundColor: status.dot }}
+                          />
+                          {tag.status}
+                        </div>
+                      </div>
+
+                      <p className="text-sm font-medium mb-1" style={{ color: '#2D2D2D' }}>
+                        {tag.nome_equipamento}
+                      </p>
+                      <p className="text-xs line-clamp-1" style={{ color: '#5A5A5A' }}>
+                        {tag.localizacao_texto}
+                      </p>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           )}
         </div>
       )}
 
-      {/* Helper Section */}
+      {/* Empty state helper */}
       {!query && (
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Como usar</h2>
+        <div
+          className="bg-white rounded border p-6 shadow-sm"
+          style={{ borderColor: '#D1D5DB' }}
+        >
+          <h2 className="font-semibold mb-4" style={{ color: '#2D2D2D' }}>
+            Como usar
+          </h2>
           <div className="grid sm:grid-cols-2 gap-4">
-            <div className="flex flex-col items-center text-center p-4 bg-blue-50 rounded-lg">
-              <Search className="h-10 w-10 text-blue-600 mb-2" />
-              <h3 className="font-medium text-gray-900 mb-1">Buscar por Código</h3>
-              <p className="text-sm text-gray-600">
-                Digite os últimos 4 dígitos do TAG (ex: 0001, 2002)
+            <div
+              className="p-4 rounded border"
+              style={{ backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' }}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <Tag size={18} style={{ color: '#003865' }} />
+                <span className="text-sm font-semibold" style={{ color: '#003865' }}>
+                  Buscar por Código
+                </span>
+              </div>
+              <p className="text-xs" style={{ color: '#1E40AF' }}>
+                Digite os últimos 4 dígitos do TAG — ex: <span className="font-mono font-bold">0001</span>, <span className="font-mono font-bold">2002</span>
               </p>
             </div>
-            <div className="flex flex-col items-center text-center p-4 bg-green-50 rounded-lg">
-              <QrCode className="h-10 w-10 text-green-600 mb-2" />
-              <h3 className="font-medium text-gray-900 mb-1">Escanear QR Code</h3>
-              <p className="text-sm text-gray-600">
-                Use a câmera para escanear o código do equipamento
+            <div
+              className="p-4 rounded border"
+              style={{ backgroundColor: '#F0FDF4', borderColor: '#BBF7D0' }}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <QrCode size={18} style={{ color: '#00A551' }} />
+                <span className="text-sm font-semibold" style={{ color: '#065F46' }}>
+                  Escanear QR Code
+                </span>
+              </div>
+              <p className="text-xs" style={{ color: '#166534' }}>
+                Use a câmera do dispositivo para escanear o QR Code fixado no equipamento
               </p>
             </div>
           </div>

@@ -1,7 +1,8 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
+import * as api from '../services/api';
 
 interface User {
-  id: number;
+  id: string;
   nome: string;
   cargo: string;
   prn: string;
@@ -9,9 +10,9 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (nome: string, prn: string) => boolean;
+  login: (nome: string, prn: string) => Promise<boolean>;
   logout: () => void;
-  register: (nome: string, prn: string, cargo: string) => boolean;
+  register: (nome: string, prn: string, cargo: string) => Promise<boolean>;
   isAuthenticated: boolean;
 }
 
@@ -23,52 +24,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return savedUser ? JSON.parse(savedUser) : null;
   });
 
-  const [users, setUsers] = useState<User[]>(() => {
-    const savedUsers = localStorage.getItem('users');
-    return savedUsers ? JSON.parse(savedUsers) : [];
-  });
-
-  const login = (nome: string, prn: string): boolean => {
-    const foundUser = users.find(
-      (u) => u.nome.toLowerCase() === nome.toLowerCase() && u.prn === prn
-    );
-
-    if (foundUser) {
-      const userData = { id: foundUser.id, nome: foundUser.nome, cargo: foundUser.cargo, prn: foundUser.prn };
+  const login = async (nome: string, prn: string): Promise<boolean> => {
+    try {
+      const response = await api.login(nome, prn);
+      const userData = response.user;
       setUser(userData);
       localStorage.setItem('user', JSON.stringify(userData));
       return true;
-    }
-    return false;
-  };
-
-  const register = (nome: string, prn: string, cargo: string): boolean => {
-    // Verificar se já existe usuário com esse nome
-    const existingUser = users.find(
-      (u) => u.nome.toLowerCase() === nome.toLowerCase()
-    );
-
-    if (existingUser) {
+    } catch (error) {
+      console.error('Erro ao fazer login:', error);
       return false;
     }
+  };
 
-    // Criar novo usuário
-    const newUser: User = {
-      id: users.length + 1,
-      nome,
-      prn,
-      cargo
-    };
-
-    const updatedUsers = [...users, newUser];
-    setUsers(updatedUsers);
-    localStorage.setItem('users', JSON.stringify(updatedUsers));
-
-    // Fazer login automaticamente
-    setUser(newUser);
-    localStorage.setItem('user', JSON.stringify(newUser));
-
-    return true;
+  const register = async (nome: string, prn: string, cargo: string): Promise<boolean> => {
+    try {
+      const response = await api.register(nome, prn, cargo);
+      const userData = response.user;
+      setUser(userData);
+      localStorage.setItem('user', JSON.stringify(userData));
+      return true;
+    } catch (error) {
+      console.error('Erro ao registrar:', error);
+      return false;
+    }
   };
 
   const logout = () => {
