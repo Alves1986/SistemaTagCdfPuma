@@ -1,17 +1,32 @@
-import { Outlet, Link, useLocation } from 'react-router';
-import { Search, Settings, LogOut, User, AlertTriangle, Flame } from 'lucide-react';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router';
+import { Search, Settings, LogOut, User, AlertTriangle, Flame, ChevronDown, ArrowRight } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { useState, useEffect } from 'react';
+import { useArea } from '../contexts/AreaContext';
+import { useState, useEffect, useRef } from 'react';
 import * as api from '../services/api';
 
 export function Layout() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { selectedArea, setSelectedArea, areas } = useArea();
   const [notasAbertas, setNotasAbertas] = useState(0);
+  const [showAreaDropdown, setShowAreaDropdown] = useState(false);
+  const areaDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadNotasCount();
   }, [location.pathname]);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (areaDropdownRef.current && !areaDropdownRef.current.contains(e.target as Node)) {
+        setShowAreaDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   const loadNotasCount = async () => {
     try {
@@ -23,28 +38,57 @@ export function Layout() {
     }
   };
 
+  const handleAlertBarClick = () => {
+    navigate('/admin?filter=com_nota');
+  };
+
+  const badgeCount = notasAbertas > 99 ? '99+' : notasAbertas;
+
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#F4F5F7' }}>
+    <div className="min-h-screen flex flex-col bg-background">
       {/* Top bar */}
-      <header style={{ backgroundColor: '#003865' }} className="shadow-lg">
+      <header className="bg-primary shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-16 gap-3">
             {/* Brand */}
-            <div className="flex items-center gap-3">
-              <div
-                className="w-9 h-9 flex items-center justify-center rounded"
-                style={{ backgroundColor: '#00A551' }}
-              >
-                <Flame size={20} className="text-white" />
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <div className="w-9 h-9 flex items-center justify-center rounded bg-accent">
+                <Flame size={20} className="text-accent-foreground" />
               </div>
-              <div className="leading-tight">
-                <div className="text-white font-semibold tracking-wide" style={{ fontSize: '0.9rem', letterSpacing: '0.05em' }}>
+              <div className="leading-tight hidden sm:block">
+                <div className="text-[0.9rem] tracking-wide text-primary-foreground font-semibold">
                   KLABIN · SISTEMA TAG
                 </div>
-                <div style={{ color: '#7ab3d4', fontSize: '0.7rem', letterSpacing: '0.08em' }}>
-                  CALDEIRA DE FORÇA
+                <div className="text-[0.7rem] tracking-widest text-primary-foreground/70 uppercase">
+                  Caldeira de Força
                 </div>
               </div>
+            </div>
+
+            {/* Area selector */}
+            <div className="relative flex-shrink-0" ref={areaDropdownRef}>
+              <button
+                onClick={() => setShowAreaDropdown(v => !v)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-primary-foreground/30 text-primary-foreground/90 text-sm font-medium transition-colors hover:bg-white/10 hover:border-primary-foreground/50"
+              >
+                <span>{selectedArea}</span>
+                <ChevronDown size={13} className={`transition-transform duration-150 ${showAreaDropdown ? 'rotate-180' : ''}`} />
+              </button>
+              {showAreaDropdown && (
+                <div className="absolute left-0 top-full mt-1.5 bg-card rounded border border-border shadow-lg z-50 min-w-[140px]">
+                  {areas.map(area => (
+                    <button
+                      key={area}
+                      onClick={() => { setSelectedArea(area); setShowAreaDropdown(false); }}
+                      className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-muted ${
+                        selectedArea === area ? 'text-primary font-semibold bg-primary/5' : 'text-foreground'
+                      }`}
+                    >
+                      {area}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Center nav */}
@@ -53,10 +97,9 @@ export function Layout() {
                 to="/"
                 className={`flex items-center gap-2 px-4 py-2 rounded transition-all duration-150 text-sm font-medium ${
                   location.pathname === '/'
-                    ? 'text-white'
-                    : 'text-blue-200 hover:text-white hover:bg-white/10'
+                    ? 'bg-accent text-accent-foreground'
+                    : 'text-primary-foreground/70 hover:text-primary-foreground hover:bg-white/10'
                 }`}
-                style={location.pathname === '/' ? { backgroundColor: '#00A551' } : {}}
               >
                 <Search size={16} />
                 <span className="hidden sm:inline">Buscar</span>
@@ -65,19 +108,15 @@ export function Layout() {
                 to="/admin"
                 className={`relative flex items-center gap-2 px-4 py-2 rounded transition-all duration-150 text-sm font-medium ${
                   location.pathname === '/admin'
-                    ? 'text-white'
-                    : 'text-blue-200 hover:text-white hover:bg-white/10'
+                    ? 'bg-accent text-accent-foreground'
+                    : 'text-primary-foreground/70 hover:text-primary-foreground hover:bg-white/10'
                 }`}
-                style={location.pathname === '/admin' ? { backgroundColor: '#00A551' } : {}}
               >
                 <Settings size={16} />
                 <span className="hidden sm:inline">Gestão</span>
                 {notasAbertas > 0 && (
-                  <span
-                    className="absolute -top-1 -right-1 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center"
-                    style={{ backgroundColor: '#e74c3c', fontSize: '0.6rem' }}
-                  >
-                    {notasAbertas > 9 ? '9+' : notasAbertas}
+                  <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[0.6rem] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-0.5 shadow-sm">
+                    {badgeCount}
                   </span>
                 )}
               </Link>
@@ -85,21 +124,18 @@ export function Layout() {
 
             {/* Right: user + logout */}
             <div className="flex items-center gap-3">
-              <div className="hidden md:flex items-center gap-2 pr-3 border-r border-white/20">
-                <div
-                  className="w-8 h-8 rounded flex items-center justify-center text-white"
-                  style={{ backgroundColor: '#004f8b' }}
-                >
+              <div className="hidden md:flex items-center gap-2 pr-3 border-r border-primary-foreground/20">
+                <div className="w-8 h-8 rounded flex items-center justify-center bg-primary-foreground/10 text-primary-foreground">
                   <User size={15} />
                 </div>
                 <div className="leading-tight">
-                  <p className="text-white text-sm font-medium leading-none">{user?.nome}</p>
-                  <p className="text-xs mt-0.5" style={{ color: '#7ab3d4' }}>{user?.cargo}</p>
+                  <p className="text-primary-foreground text-sm font-medium leading-none">{user?.nome}</p>
+                  <p className="text-xs mt-0.5 text-primary-foreground/70">{user?.cargo}</p>
                 </div>
               </div>
               <button
                 onClick={logout}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded text-sm transition-colors text-blue-200 hover:text-white hover:bg-white/10"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded text-sm transition-colors text-primary-foreground/70 hover:text-primary-foreground hover:bg-white/10"
                 title="Sair"
               >
                 <LogOut size={15} />
@@ -109,20 +145,21 @@ export function Layout() {
           </div>
         </div>
 
-        {/* Maintenance alert bar */}
+        {/* Maintenance alert bar — clicável */}
         {notasAbertas > 0 && (
-          <div
-            className="border-t flex items-center gap-2 px-4 py-2"
-            style={{ backgroundColor: '#7a2000', borderColor: '#a83000' }}
+          <button
+            onClick={handleAlertBarClick}
+            className="w-full border-t flex items-center gap-2 px-4 py-2 bg-amber-500/10 border-amber-500/20 hover:bg-amber-500/20 transition-colors text-left group"
           >
             <div className="max-w-7xl mx-auto w-full flex items-center gap-2 sm:px-6 lg:px-8">
-              <AlertTriangle size={15} className="text-orange-300 flex-shrink-0" />
-              <span className="text-sm text-orange-200">
-                <span className="font-semibold">{notasAbertas}</span>{' '}
+              <AlertTriangle size={15} className="text-amber-500 flex-shrink-0" />
+              <span className="text-sm text-amber-500 font-medium flex-1">
+                <span className="font-bold">{notasAbertas}</span>{' '}
                 equipamento{notasAbertas > 1 ? 's' : ''} com nota de manutenção aberta
               </span>
+              <ArrowRight size={14} className="text-amber-500 flex-shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
             </div>
-          </div>
+          </button>
         )}
       </header>
 
@@ -132,15 +169,12 @@ export function Layout() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t bg-white" style={{ borderColor: '#D1D5DB' }}>
+      <footer className="border-t bg-card border-border">
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
-          <span className="text-xs" style={{ color: '#5A5A5A' }}>
+          <span className="text-xs text-muted-foreground">
             Sistema TAG — Caldeira de Força © {new Date().getFullYear()}
           </span>
-          <span
-            className="text-xs font-semibold tracking-widest uppercase"
-            style={{ color: '#003865' }}
-          >
+          <span className="text-xs font-semibold tracking-widest uppercase text-primary">
             KLABIN S/A
           </span>
         </div>

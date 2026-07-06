@@ -1,18 +1,20 @@
 import { RouterProvider } from 'react-router';
 import { router } from './routes';
 import { AuthProvider } from './contexts/AuthContext';
+import { AreaProvider } from './contexts/AreaContext';
 import { useEffect } from 'react';
 import { initializeLocalData } from './utils/initializeData';
 
 export default function App() {
   useEffect(() => {
-    // Inicializar dados locais na primeira carga
     initializeLocalData();
   }, []);
 
   return (
     <AuthProvider>
-      <RouterProvider router={router} />
+      <AreaProvider>
+        <RouterProvider router={router} />
+      </AreaProvider>
     </AuthProvider>
   );
 }
