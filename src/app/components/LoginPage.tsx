@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { LogIn, AlertCircle, Flame } from 'lucide-react';
+import { LogIn, AlertCircle, Flame, Eye, EyeOff } from 'lucide-react';
 import { RegisterPage } from './RegisterPage';
 
 export function LoginPage() {
-  const [nome, setNome] = useState('');
-  const [prn, setPrn] = useState('');
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
+  const [showSenha, setShowSenha] = useState(false);
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
   const { login } = useAuth();
 
@@ -14,14 +16,17 @@ export function LoginPage() {
     e.preventDefault();
     setError('');
 
-    if (!nome || !prn) {
+    if (!email || !senha) {
       setError('Por favor, preencha todos os campos');
       return;
     }
 
-    const success = await login(nome, prn);
-    if (!success) {
-      setError('Nome ou PRN inválidos');
+    setSubmitting(true);
+    const result = await login(email.trim(), senha);
+    setSubmitting(false);
+
+    if (!result.success) {
+      setError(result.error ?? 'Erro ao fazer login. Tente novamente.');
     }
   };
 
@@ -57,7 +62,7 @@ export function LoginPage() {
               'Busca por TAG ou equipamento',
               'Notas de manutenção com prioridade',
               'Histórico de fotos e comentários',
-              'Controle de acesso por cargo',
+              'Autenticação segura via Supabase',
             ].map((item) => (
               <div key={item} className="flex items-center gap-3">
                 <div className="w-1.5 h-1.5 rounded-full flex-shrink-0 bg-accent" />
@@ -91,7 +96,7 @@ export function LoginPage() {
               Acesso ao sistema
             </h2>
             <p className="mb-6 text-sm text-muted-foreground">
-              Informe suas credenciais para continuar
+              Informe seu e-mail e senha para continuar
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -103,45 +108,56 @@ export function LoginPage() {
               )}
 
               <div>
-                <label
-                  htmlFor="nome"
-                  className="block mb-1.5 text-sm font-medium text-foreground"
-                >
-                  Nome do Operador
+                <label htmlFor="email" className="block mb-1.5 text-sm font-medium text-foreground">
+                  E-mail
                 </label>
                 <input
-                  id="nome"
-                  type="text"
-                  value={nome}
-                  onChange={(e) => setNome(e.target.value)}
-                  placeholder="Digite seu nome completo"
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="operador@klabin.com.br"
+                  autoComplete="email"
                   className={inputClass}
                 />
               </div>
 
               <div>
-                <label
-                  htmlFor="prn"
-                  className="block mb-1.5 text-sm font-medium text-foreground"
-                >
-                  PRN
+                <label htmlFor="senha" className="block mb-1.5 text-sm font-medium text-foreground">
+                  Senha
                 </label>
-                <input
-                  id="prn"
-                  type="password"
-                  value={prn}
-                  onChange={(e) => setPrn(e.target.value)}
-                  placeholder="Número de registro pessoal"
-                  className={inputClass}
-                />
+                <div className="relative">
+                  <input
+                    id="senha"
+                    type={showSenha ? 'text' : 'password'}
+                    value={senha}
+                    onChange={(e) => setSenha(e.target.value)}
+                    placeholder="Sua senha"
+                    autoComplete="current-password"
+                    className={`${inputClass} pr-10`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowSenha(v => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showSenha ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </div>
 
               <button
                 type="submit"
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded bg-primary text-primary-foreground text-sm font-medium transition-colors hover:bg-primary/90"
+                disabled={submitting}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded bg-primary text-primary-foreground text-sm font-medium transition-colors hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <LogIn size={16} />
-                Entrar
+                {submitting ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <LogIn size={16} />
+                )}
+                {submitting ? 'Entrando…' : 'Entrar'}
               </button>
             </form>
 
@@ -155,12 +171,6 @@ export function LoginPage() {
               >
                 Criar Nova Conta
               </button>
-            </div>
-
-            <div className="mt-4 p-3 rounded text-xs space-y-1 bg-primary/5 text-primary/80">
-              <p className="font-medium">ℹ️ Informações</p>
-              <p>• Use seu nome completo para login</p>
-              <p>• O PRN é seu número de registro pessoal</p>
             </div>
           </div>
         </div>
