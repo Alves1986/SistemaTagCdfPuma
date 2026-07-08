@@ -25,6 +25,7 @@ app.get("/make-server-e7ada368/health", (c) => {
   return c.json({ status: "ok" });
 });
 
+
 // ============ AUTENTICAÇÃO ============
 
 // Registrar novo usuário
