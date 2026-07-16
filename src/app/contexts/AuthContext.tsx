@@ -97,13 +97,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha });
     if (error) {
       let msg = 'Erro ao fazer login. Tente novamente.';
-      const e = error.message.toLowerCase();
+      const e = (error.message || '').toLowerCase();
       if (e.includes('invalid') || e.includes('credentials')) {
         msg = 'E-mail ou senha inválidos';
       } else if (e.includes('not confirmed')) {
         msg = 'Confirme seu e-mail antes de entrar.';
       } else if (e.includes('too many')) {
         msg = 'Muitas tentativas. Aguarde e tente novamente.';
+      } else if (e.includes('fetch') || e.includes('network') || !import.meta.env.VITE_SUPABASE_URL) {
+        msg = 'Erro de conexão. Verifique as variáveis de ambiente na Vercel.';
       }
       return { success: false, error: msg };
     }
