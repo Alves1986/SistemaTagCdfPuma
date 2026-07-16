@@ -5,6 +5,21 @@ Este documento serve como o registro principal (Changelog) de todas as alteraç�
 
 ---
 
+## [1.3.0] - Módulo de Gestão de Manutenção
+
+### 🚀 Novas Funcionalidades e Fluxos
+* **Novo Cargo Estratégico:** Adição da função "Gestor de Manutenção" no cadastro de usuários.
+* **Abertura de Notas Detalhada:** A Operação agora é obrigada a selecionar a **Especialidade** (Mecânica, Elétrica, Instrumentação, Automação) ao abrir uma nova Nota de Manutenção no equipamento.
+* **Painel Exclusivo de Manutenção:** 
+  * Nova tela de Gestão acessível apenas pelo Gestor de Manutenção.
+  * As notas em aberto são agrupadas em abas (tabs) pelas especialidades, facilitando o acompanhamento e filtro da equipe técnica.
+  * Status de Atendimento: O Gestor pode atualizar o status do serviço ("Visualizado", "Em Tratamento", "Finalizado") interagindo diretamente pelo painel.
+* **Fluxo de Dupla Validação (Check da Operação):**
+  * Quando a Manutenção sinaliza a nota como "Finalizada", a nota não é fechada automaticamente. Ela entra em status de "Aguardando Validação da Operação".
+  * Um novo botão verde ("Validar e Encerrar Nota") passa a aparecer apenas para os usuários da Operação e Liderança, permitindo que a baixa definitiva no sistema seja dada apenas após conferência física de que o equipamento está pronto.
+
+---
+
 ## [1.2.0] - Atualizações Recentes de UI e Estrutura SaaS
 
 ### 🚀 Funcionalidades e Melhorias
