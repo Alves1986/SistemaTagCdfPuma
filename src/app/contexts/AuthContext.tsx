@@ -144,7 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (error) {
       let msg = 'Erro ao criar conta. Tente novamente.';
-      const e = error.message.toLowerCase();
+      const e = (error.message || '').toLowerCase();
       if (e.includes('already registered') || e.includes('already been registered')) {
         msg = 'Este e-mail já está cadastrado';
       } else if (e.includes('password')) {
