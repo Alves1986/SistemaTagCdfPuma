@@ -5,6 +5,16 @@ Este documento serve como o registro principal (Changelog) de todas as alteraç�
 
 ---
 
+## [1.3.2] - Correções no Painel de Manutenção
+
+### 🛠️ Correções e Ajustes UI
+* **Ocultação de Botões:** Botões administrativos como "Criar TAG", "QR Codes" e "Equipe" foram removidos da visão dos usuários da gerência de Manutenção, garantindo uma interface mais limpa e focada em suas atividades.
+* **Ajuste no Registro de Notas (Especialidade):** Corrigido o problema onde a Especialidade da nota (Mecânica, Elétrica, etc.) não era enviada para o banco de dados. A lógica foi reestruturada para garantir a gravação correta, permitindo que as notas voltem a aparecer organizadas por abas no Painel de Manutenção.
+* **Fix de Cadastro (Supabase):** Removida uma restrição legada (`CHECK constraint`) no Supabase que impedia a criação de contas com os novos cargos como Gestor de Manutenção.
+* **Resiliência de Erros:** Corrigido bug na tela de cadastro (`AuthContext`) que causava uma quebra branca na tela ao receber um erro sem mensagem explícita do banco de dados.
+
+---
+
 ## [1.3.1] - Estrutura Hierárquica no Cadastro e Equipe
 
 ### 🚀 Melhorias de Fluxo e Usabilidade
