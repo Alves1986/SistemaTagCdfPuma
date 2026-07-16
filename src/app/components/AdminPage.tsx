@@ -227,6 +227,7 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
 
   const isAdmin = ['Operador Lider', 'Coordenador', 'Especialista', 'Engenheiro', 'Assistente Tecnico', 'Gestor de Manutenção'].includes(user?.cargo || '');
   const isGestorManutencao = user?.cargo === 'Gestor de Manutenção';
+  const isManutencao = user?.gerencia === 'Manutenção';
 
   return (
     <>
@@ -244,20 +245,24 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
             </p>
           </div>
           <div className="flex gap-2 flex-wrap">
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded bg-primary text-primary-foreground text-sm font-medium transition-colors hover:bg-primary/90"
-            >
-              <Plus size={15} />
-              Criar TAG
-            </button>
-            <button
-              onClick={() => { setQrPage(1); setQrSelected(new Set()); setShowQrModal(true); }}
-              className="flex items-center gap-1.5 px-3 py-2 rounded border border-primary text-primary text-sm font-medium transition-colors bg-transparent hover:bg-primary hover:text-primary-foreground"
-            >
-              <QrCode size={15} />
-              QR Codes
-            </button>
+            {!isManutencao && (
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="flex items-center gap-1.5 px-3 py-2 rounded bg-primary text-primary-foreground text-sm font-medium transition-colors hover:bg-primary/90"
+              >
+                <Plus size={15} />
+                Criar TAG
+              </button>
+            )}
+            {!isManutencao && (
+              <button
+                onClick={() => { setQrPage(1); setQrSelected(new Set()); setShowQrModal(true); }}
+                className="flex items-center gap-1.5 px-3 py-2 rounded border border-primary text-primary text-sm font-medium transition-colors bg-transparent hover:bg-primary hover:text-primary-foreground"
+              >
+                <QrCode size={15} />
+                QR Codes
+              </button>
+            )}
             <button
               onClick={() => setShowExportModal(true)}
               className="flex items-center gap-1.5 px-3 py-2 rounded border border-accent text-accent text-sm font-medium transition-colors bg-transparent hover:bg-accent hover:text-accent-foreground"
@@ -271,10 +276,12 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
                   <Activity size={15} />
                   Dashboard
                 </Link>
-                <Link to="/admin/team" className="flex items-center gap-1.5 px-3 py-2 rounded border border-border text-muted-foreground text-sm font-medium transition-colors bg-transparent hover:bg-muted">
-                  <Users size={15} />
-                  Equipe
-                </Link>
+                {!isManutencao && (
+                  <Link to="/admin/team" className="flex items-center gap-1.5 px-3 py-2 rounded border border-border text-muted-foreground text-sm font-medium transition-colors bg-transparent hover:bg-muted">
+                    <Users size={15} />
+                    Equipe
+                  </Link>
+                )}
               </>
             )}
             {isGestorManutencao && (

@@ -355,94 +355,17 @@ export async function addNotaManutencao(
     especialidade?: 'Mecânica' | 'Elétrica' | 'Instrumentação' | 'Automação';
   }
 ): Promise<Tag> {
-  const isApiAvailable = await checkApiAvailability();
-
-  if (!isApiAvailable) {
-    return addNotaLocal(tagId, nota);
-  }
-
-  try {
-    const response = await fetch(`${BASE_URL}/tags/${tagId}/nota`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(nota)
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Erro ao adicionar nota de manutenção');
-    }
-
-    return data.tag;
-  } catch (error) {
-    console.warn('API não disponível, usando fallback local');
-    return addNotaLocal(tagId, nota);
-  }
-}
-
-function addNotaLocal(tagId: number, nota: any): Tag {
-  const tags = JSON.parse(localStorage.getItem('tags') || '[]');
-  const tagIndex = tags.findIndex((t: Tag) => t.id === tagId);
-
-  if (tagIndex === -1) {
-    throw new Error('TAG não encontrado');
-  }
-
-  tags[tagIndex].nota_manutencao = {
-    numero_nota: nota.numero_nota,
+  const notaManutencaoCompleta = {
+    ...nota,
     data_abertura: new Date().toISOString(),
-    descricao: nota.descricao,
-    prioridade: nota.prioridade,
-    aberta_por: nota.aberta_por,
-    especialidade: nota.especialidade,
     status_manutencao: 'aberta'
   };
 
-  tags[tagIndex].atualizado_em = new Date().toISOString();
-  localStorage.setItem('tags', JSON.stringify(tags));
-  return tags[tagIndex];
+  return updateTag(tagId, { nota_manutencao: notaManutencaoCompleta } as Partial<Tag>);
 }
 
 export async function removeNotaManutencao(tagId: number): Promise<Tag> {
-  const isApiAvailable = await checkApiAvailability();
-
-  if (!isApiAvailable) {
-    return removeNotaLocal(tagId);
-  }
-
-  try {
-    const response = await fetch(`${BASE_URL}/tags/${tagId}/nota`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({ remover: true })
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Erro ao remover nota de manutenção');
-    }
-
-    return data.tag;
-  } catch (error) {
-    console.warn('API não disponível, usando fallback local');
-    return removeNotaLocal(tagId);
-  }
-}
-
-function removeNotaLocal(tagId: number): Tag {
-  const tags = JSON.parse(localStorage.getItem('tags') || '[]');
-  const tagIndex = tags.findIndex((t: Tag) => t.id === tagId);
-
-  if (tagIndex === -1) {
-    throw new Error('TAG não encontrado');
-  }
-
-  tags[tagIndex].nota_manutencao = undefined;
-  tags[tagIndex].atualizado_em = new Date().toISOString();
-  localStorage.setItem('tags', JSON.stringify(tags));
-  return tags[tagIndex];
+  return updateTag(tagId, { nota_manutencao: null as any } as Partial<Tag>);
 }
 
 // ============ COMENTÁRIOS ============
