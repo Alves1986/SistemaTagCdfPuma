@@ -5,6 +5,17 @@ Este documento serve como o registro principal (Changelog) de todas as alteraç�
 
 ---
 
+## [1.3.1] - Estrutura Hierárquica no Cadastro e Equipe
+
+### 🚀 Melhorias de Fluxo e Usabilidade
+* **Menu em Cascata Dinâmico:** Implementado um novo sistema de seleção hierárquica inteligente durante a criação de conta e na edição de equipe:
+  * **Ordem lógica:** O usuário seleciona primeiro a `Gerência`, que define a `Área`, que por sua vez define o `Cargo/Função`.
+  * **Novas Gerências:** Incluídas as gerências de `Fibras`, `Produção de Papéis`, `Produção de Celulose`, `Recuperação e Utilidades` e `Manutenção`.
+  * **Funções restritas:** O cargo de "Gestor de Manutenção" agora só é exibido se a Gerência "Manutenção" estiver selecionada, evitando erros de cadastro de função incorreta em gerências erradas.
+* **Flexibilidade:** Arquivo utilitário central `hierarchy.ts` criado para facilitar a adição rápida de novas áreas e cargos por gerência no futuro sem a necessidade de reescrever lógica visual.
+
+---
+
 ## [1.3.0] - Módulo de Gestão de Manutenção
 
 ### 🚀 Novas Funcionalidades e Fluxos

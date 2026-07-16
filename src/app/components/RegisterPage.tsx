@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { UserPlus, AlertCircle, ArrowLeft, Flame, Eye, EyeOff, CheckCircle } from 'lucide-react';
+import { GERENCIAS, getAreasByGerencia, getCargosByGerencia } from '../utils/hierarchy';
 
 interface RegisterPageProps {
   onBackToLogin: () => void;
@@ -9,9 +10,9 @@ interface RegisterPageProps {
 export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
   const [nome, setNome] = useState('');
   const [prn, setPrn] = useState('');
-  const [cargo, setCargo] = useState('Operador II');
-  const [gerencia, setGerencia] = useState('Utilidades');
-  const [area, setArea] = useState('CDF2 / ETAC2');
+  const [gerencia, setGerencia] = useState(GERENCIAS[0]);
+  const [area, setArea] = useState(getAreasByGerencia(GERENCIAS[0])[0]);
+  const [cargo, setCargo] = useState(getCargosByGerencia(GERENCIAS[0])[0]);
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
@@ -148,54 +149,52 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
 
             <div>
               <label className="block mb-1.5 text-sm font-medium text-foreground">
-                Função / Cargo *
+                Gerência *
               </label>
               <select
-                value={cargo}
-                onChange={(e) => setCargo(e.target.value)}
+                value={gerencia}
+                onChange={(e) => {
+                  const newGerencia = e.target.value;
+                  setGerencia(newGerencia);
+                  setArea(getAreasByGerencia(newGerencia)[0]);
+                  setCargo(getCargosByGerencia(newGerencia)[0]);
+                }}
                 className={inputClass}
               >
-                <option value="Aprendiz">Aprendiz</option>
-                <option value="Operador II">Operador II</option>
-                <option value="Operador III">Operador III</option>
-                <option value="Operador Lider">Operador Líder</option>
-                <option value="Coordenador">Coordenador</option>
-                <option value="Especialista">Especialista</option>
-                <option value="Engenheiro">Engenheiro(a)</option>
-                <option value="Assistente Tecnico">Assistente Técnico</option>
-                <option value="Gestor de Manutenção">Gestor de Manutenção</option>
+                {GERENCIAS.map(g => (
+                  <option key={g} value={g}>{g}</option>
+                ))}
               </select>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block mb-1.5 text-sm font-medium text-foreground">
-                  Gerência *
-                </label>
-                <select
-                  value={gerencia}
-                  onChange={(e) => setGerencia(e.target.value)}
-                  className={inputClass}
-                >
-                  <option value="Utilidades">Utilidades</option>
-                  <option value="Manutenção">Manutenção</option>
-                  <option value="Operação">Operação</option>
-                  <option value="Projetos">Projetos</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block mb-1.5 text-sm font-medium text-foreground">
-                  Área *
+                  Área / Setor *
                 </label>
                 <select
                   value={area}
                   onChange={(e) => setArea(e.target.value)}
                   className={inputClass}
                 >
-                  <option value="CDF2 / ETAC2">CDF2 / ETAC2</option>
-                  <option value="CDF1 / ETAC1">CDF1 / ETAC1</option>
-                  <option value="Tratamento de Efluentes">Tratamento de Efluentes</option>
+                  {getAreasByGerencia(gerencia).map(a => (
+                    <option key={a} value={a}>{a}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block mb-1.5 text-sm font-medium text-foreground">
+                  Função / Cargo *
+                </label>
+                <select
+                  value={cargo}
+                  onChange={(e) => setCargo(e.target.value)}
+                  className={inputClass}
+                >
+                  {getCargosByGerencia(gerencia).map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
                 </select>
               </div>
             </div>

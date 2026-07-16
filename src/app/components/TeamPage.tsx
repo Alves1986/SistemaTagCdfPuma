@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase, UserProfile } from '../lib/supabase';
 import * as api from '../services/api';
 import { Users, Phone, Camera, Save, X, Edit2, ShieldAlert } from 'lucide-react';
+import { GERENCIAS, getAreasByGerencia, getCargosByGerencia } from '../utils/hierarchy';
 
 export function TeamPage() {
   const { user } = useAuth();
@@ -196,47 +197,49 @@ export function TeamPage() {
 
               {/* Selects Adicionais para Gestão */}
               <div>
-                <label className="block text-sm font-medium mb-1">Função / Cargo</label>
+                <label className="block text-sm font-medium mb-1">Gerência</label>
                 <select
-                  value={formData.cargo}
-                  onChange={e => setFormData(prev => ({ ...prev, cargo: e.target.value }))}
-                  className="w-full px-3 py-2 rounded border border-border bg-muted/50 text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                  value={formData.gerencia}
+                  onChange={e => {
+                    const newGerencia = e.target.value;
+                    setFormData(prev => ({
+                      ...prev,
+                      gerencia: newGerencia,
+                      area: getAreasByGerencia(newGerencia)[0],
+                      cargo: getCargosByGerencia(newGerencia)[0]
+                    }));
+                  }}
+                  className="w-full px-3 py-2 rounded border border-border bg-muted/50 text-foreground outline-none focus:border-primary"
                 >
-                  <option value="Aprendiz">Aprendiz</option>
-                  <option value="Operador II">Operador II</option>
-                  <option value="Operador III">Operador III</option>
-                  <option value="Operador Lider">Operador Líder</option>
-                  <option value="Coordenador">Coordenador</option>
-                  <option value="Especialista">Especialista</option>
-                  <option value="Engenheiro">Engenheiro(a)</option>
-                  <option value="Assistente Tecnico">Assistente Técnico</option>
+                  {GERENCIAS.map(g => (
+                    <option key={g} value={g}>{g}</option>
+                  ))}
                 </select>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Gerência</label>
-                  <select
-                    value={formData.gerencia}
-                    onChange={e => setFormData(prev => ({ ...prev, gerencia: e.target.value }))}
-                    className="w-full px-3 py-2 rounded border border-border bg-muted/50 text-foreground outline-none focus:border-primary"
-                  >
-                    <option value="Utilidades">Utilidades</option>
-                    <option value="Manutenção">Manutenção</option>
-                    <option value="Operação">Operação</option>
-                    <option value="Projetos">Projetos</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Área</label>
+                  <label className="block text-sm font-medium mb-1">Área / Setor</label>
                   <select
                     value={formData.area}
                     onChange={e => setFormData(prev => ({ ...prev, area: e.target.value }))}
                     className="w-full px-3 py-2 rounded border border-border bg-muted/50 text-foreground outline-none focus:border-primary"
                   >
-                    <option value="CDF2 / ETAC2">CDF2 / ETAC2</option>
-                    <option value="CDF1 / ETAC1">CDF1 / ETAC1</option>
-                    <option value="Tratamento de Efluentes">Tratamento de Efluentes</option>
+                    {getAreasByGerencia(formData.gerencia).map(a => (
+                      <option key={a} value={a}>{a}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Função / Cargo</label>
+                  <select
+                    value={formData.cargo}
+                    onChange={e => setFormData(prev => ({ ...prev, cargo: e.target.value }))}
+                    className="w-full px-3 py-2 rounded border border-border bg-muted/50 text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                  >
+                    {getCargosByGerencia(formData.gerencia).map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
                   </select>
                 </div>
               </div>
