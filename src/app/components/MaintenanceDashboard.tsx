@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { ArrowLeft, Tool, Eye, Settings, Play, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Wrench, Eye, Settings, Play, CheckCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useArea } from '../contexts/AreaContext';
 import { Tag } from '../types';
@@ -83,7 +83,7 @@ export function MaintenanceDashboard() {
   };
 
   const tabs: { id: Especialidade; label: string; icon: any }[] = [
-    { id: 'Mecânica', label: 'Mecânica', icon: Tool },
+    { id: 'Mecânica', label: 'Mecânica', icon: Wrench },
     { id: 'Elétrica', label: 'Elétrica', icon: Settings },
     { id: 'Instrumentação', label: 'Instrumentação', icon: Eye },
     { id: 'Automação', label: 'Automação', icon: Play },
