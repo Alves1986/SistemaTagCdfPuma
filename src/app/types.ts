@@ -19,6 +19,8 @@ export interface NotaManutencao {
   descricao: string;
   prioridade: 'baixa' | 'média' | 'alta' | 'urgente';
   aberta_por: string;
+  especialidade?: 'Mecânica' | 'Elétrica' | 'Instrumentação' | 'Automação';
+  status_manutencao?: 'aberta' | 'visualizada' | 'em_tratamento' | 'finalizada_manutencao';
 }
 
 export interface Photo {

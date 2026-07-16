@@ -105,6 +105,7 @@ export function TagDetailPage() {
   const [numeroNota, setNumeroNota] = useState('');
   const [descricaoNota, setDescricaoNota] = useState('');
   const [prioridadeNota, setPrioridadeNota] = useState<'baixa' | 'média' | 'alta' | 'urgente'>('média');
+  const [especialidadeNota, setEspecialidadeNota] = useState<'Mecânica' | 'Elétrica' | 'Instrumentação' | 'Automação'>('Mecânica');
 
   useEffect(() => { loadTagData(); }, [id]);
 
@@ -224,11 +225,12 @@ export function TagDetailPage() {
     try {
       const updatedTag = await api.addNotaManutencao(tag.id, {
         numero_nota: numeroNota, descricao: descricaoNota,
-        prioridade: prioridadeNota, aberta_por: user.nome
+        prioridade: prioridadeNota, aberta_por: user.nome,
+        especialidade: especialidadeNota
       });
       setTag(updatedTag);
       setShowNotaModal(false);
-      setNumeroNota(''); setDescricaoNota(''); setPrioridadeNota('média');
+      setNumeroNota(''); setDescricaoNota(''); setPrioridadeNota('média'); setEspecialidadeNota('Mecânica');
     } catch { alert('Erro ao abrir nota de manutenção'); }
   };
 
@@ -293,16 +295,33 @@ export function TagDetailPage() {
                   <p><span className="font-medium">Descrição:</span> {tag.nota_manutencao.descricao}</p>
                   <p><span className="font-medium">Aberta por:</span> {tag.nota_manutencao.aberta_por}</p>
                   <p><span className="font-medium">Data:</span> {formatDate(tag.nota_manutencao.data_abertura)}</p>
+                  {tag.nota_manutencao.especialidade && (
+                    <p><span className="font-medium">Especialidade:</span> {tag.nota_manutencao.especialidade}</p>
+                  )}
+                  {tag.nota_manutencao.status_manutencao && (
+                    <p><span className="font-medium">Status da Manutenção:</span> <span className="uppercase tracking-wider font-semibold text-xs ml-1 bg-destructive/10 px-1.5 py-0.5 rounded">{tag.nota_manutencao.status_manutencao.replace('_', ' ')}</span></p>
+                  )}
                 </div>
               </div>
             </div>
-            <button
-              onClick={handleFecharNota}
-              className="flex items-center gap-1.5 px-3 py-2 rounded text-accent-foreground text-sm font-medium flex-shrink-0 bg-accent hover:bg-accent/90 transition-colors"
-            >
-              <CheckCircle size={15} />
-              Fechar Nota
-            </button>
+            
+            {tag.nota_manutencao.status_manutencao === 'finalizada_manutencao' && user?.cargo !== 'Gestor de Manutenção' ? (
+              <button
+                onClick={handleFecharNota}
+                className="p-2 bg-green-600 text-white hover:bg-green-700 rounded-md transition-colors text-sm font-medium flex items-center gap-2"
+                title="Validar e Encerrar Nota Definitivamente"
+              >
+                <CheckCircle size={16} /> Validar e Encerrar Nota
+              </button>
+            ) : (
+              <button
+                onClick={handleFecharNota}
+                className="p-1.5 bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground rounded-md transition-colors"
+                title="Fechar Nota (Cancelar ou Encerrar sem validação)"
+              >
+                <X size={18} />
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -622,6 +641,15 @@ export function TagDetailPage() {
                 <option value="média">Média</option>
                 <option value="alta">Alta</option>
                 <option value="urgente">Urgente</option>
+              </select>
+            </div>
+            <div>
+              <label className="block mb-1.5 text-sm font-medium text-foreground">Especialidade *</label>
+              <select value={especialidadeNota} onChange={(e) => setEspecialidadeNota(e.target.value as any)} className={inputClass}>
+                <option value="Mecânica">Mecânica</option>
+                <option value="Elétrica">Elétrica</option>
+                <option value="Instrumentação">Instrumentação</option>
+                <option value="Automação">Automação</option>
               </select>
             </div>
             <div>

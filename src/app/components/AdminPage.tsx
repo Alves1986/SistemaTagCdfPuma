@@ -225,7 +225,8 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
     { key: 'inativo', label: 'Inativo', activeClass: 'bg-muted-foreground text-white' },
   ];
 
-  const isAdmin = ['Operador Lider', 'Coordenador', 'Especialista', 'Engenheiro', 'Assistente Tecnico'].includes(user?.cargo || '');
+  const isAdmin = ['Operador Lider', 'Coordenador', 'Especialista', 'Engenheiro', 'Assistente Tecnico', 'Gestor de Manutenção'].includes(user?.cargo || '');
+  const isGestorManutencao = user?.cargo === 'Gestor de Manutenção';
 
   return (
     <>
@@ -275,6 +276,12 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
                   Equipe
                 </Link>
               </>
+            )}
+            {isGestorManutencao && (
+              <Link to="/admin/manutencao" className="flex items-center gap-1.5 px-3 py-2 rounded bg-amber-600 text-white text-sm font-medium transition-colors hover:bg-amber-700">
+                <Wrench size={15} />
+                Painel Manutenção
+              </Link>
             )}
           </div>
         </div>

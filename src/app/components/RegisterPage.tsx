@@ -163,6 +163,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                 <option value="Especialista">Especialista</option>
                 <option value="Engenheiro">Engenheiro(a)</option>
                 <option value="Assistente Tecnico">Assistente Técnico</option>
+                <option value="Gestor de Manutenção">Gestor de Manutenção</option>
               </select>
             </div>
 

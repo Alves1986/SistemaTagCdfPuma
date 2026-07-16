@@ -352,6 +352,7 @@ export async function addNotaManutencao(
     descricao: string;
     prioridade: 'baixa' | 'média' | 'alta' | 'urgente';
     aberta_por: string;
+    especialidade?: 'Mecânica' | 'Elétrica' | 'Instrumentação' | 'Automação';
   }
 ): Promise<Tag> {
   const isApiAvailable = await checkApiAvailability();
@@ -393,7 +394,9 @@ function addNotaLocal(tagId: number, nota: any): Tag {
     data_abertura: new Date().toISOString(),
     descricao: nota.descricao,
     prioridade: nota.prioridade,
-    aberta_por: nota.aberta_por
+    aberta_por: nota.aberta_por,
+    especialidade: nota.especialidade,
+    status_manutencao: 'aberta'
   };
 
   tags[tagIndex].atualizado_em = new Date().toISOString();
