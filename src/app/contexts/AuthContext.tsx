@@ -10,6 +10,8 @@ interface AuthContextType {
     nome: string;
     prn: string;
     cargo: string;
+    gerencia: string;
+    area: string;
     email: string;
     senha: string;
   }) => Promise<{ success: boolean; error?: string }>;
@@ -27,6 +29,8 @@ function buildProfileFromAuthUser(supabaseUser: SupabaseUser): UserProfile {
     nome: meta.nome ?? meta.full_name ?? supabaseUser.email?.split('@')[0] ?? 'Operador',
     prn: meta.prn ?? '0000',
     cargo: meta.cargo ?? 'Operador II',
+    gerencia: meta.gerencia ?? '',
+    area: meta.area ?? '',
     email: supabaseUser.email ?? '',
   };
 }
@@ -36,7 +40,7 @@ async function resolveProfile(supabaseUser: SupabaseUser): Promise<UserProfile> 
   try {
     const { data } = await supabase
       .from('profiles')
-      .select('id, nome, prn, cargo')
+      .select('id, nome, prn, cargo, foto_url, whatsapp, gerencia, area')
       .eq('id', supabaseUser.id)
       .maybeSingle();
 
@@ -117,6 +121,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     nome: string;
     prn: string;
     cargo: string;
+    gerencia: string;
+    area: string;
     email: string;
     senha: string;
   }): Promise<{ success: boolean; error?: string }> => {
@@ -128,6 +134,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           nome: dados.nome,
           prn: dados.prn,
           cargo: dados.cargo,
+          gerencia: dados.gerencia,
+          area: dados.area,
         },
       },
     });

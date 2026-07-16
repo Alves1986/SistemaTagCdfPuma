@@ -47,20 +47,20 @@ export function Layout() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Top bar */}
-      <header className="bg-primary shadow-lg">
+      <header className="bg-gradient-to-r from-primary via-primary to-[#002040] shadow-md border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 gap-3">
             {/* Brand */}
             <div className="flex items-center gap-3 flex-shrink-0">
-              <div className="w-9 h-9 flex items-center justify-center rounded bg-accent">
-                <Flame size={20} className="text-accent-foreground" />
+              <div className="bg-white/10 p-1.5 rounded-lg backdrop-blur-sm shadow-sm border border-white/20">
+                <img src="/logo.svg" alt="Klabin Logo" className="h-8 w-auto object-contain drop-shadow-sm" />
               </div>
               <div className="leading-tight hidden sm:block">
-                <div className="text-[0.9rem] tracking-wide text-primary-foreground font-semibold">
+                <div className="text-[0.95rem] tracking-wide text-primary-foreground font-bold drop-shadow-sm">
                   KLABIN · SISTEMA TAG
                 </div>
-                <div className="text-[0.7rem] tracking-widest text-primary-foreground/70 uppercase">
-                  Caldeira de Força
+                <div className="text-[0.7rem] tracking-[0.2em] text-primary-foreground/80 uppercase font-medium">
+                  {user?.area || 'OPERAÇÕES INDUSTRIAIS'}
                 </div>
               </div>
             </div>
@@ -124,15 +124,19 @@ export function Layout() {
 
             {/* Right: user + logout */}
             <div className="flex items-center gap-3">
-              <div className="hidden md:flex items-center gap-2 pr-3 border-r border-primary-foreground/20">
-                <div className="w-8 h-8 rounded flex items-center justify-center bg-primary-foreground/10 text-primary-foreground">
-                  <User size={15} />
+              <Link to="/profile" className="hidden md:flex items-center gap-2 pr-3 border-r border-primary-foreground/20 hover:opacity-80 transition-opacity" title="Meu Perfil">
+                <div className="w-8 h-8 rounded flex items-center justify-center bg-primary-foreground/10 text-primary-foreground overflow-hidden">
+                  {user?.foto_url ? (
+                    <img src={user.foto_url} alt="Foto" className="w-full h-full object-cover" />
+                  ) : (
+                    <User size={15} />
+                  )}
                 </div>
                 <div className="leading-tight">
                   <p className="text-primary-foreground text-sm font-medium leading-none">{user?.nome}</p>
                   <p className="text-xs mt-0.5 text-primary-foreground/70">{user?.cargo}</p>
                 </div>
-              </div>
+              </Link>
               <button
                 onClick={logout}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded text-sm transition-colors text-primary-foreground/70 hover:text-primary-foreground hover:bg-white/10"
@@ -170,10 +174,10 @@ export function Layout() {
 
       {/* Footer */}
       <footer className="border-t bg-card border-border">
-        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
-          <span className="text-xs text-muted-foreground">
-            Sistema TAG — Caldeira de Força © {new Date().getFullYear()}
-          </span>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row items-center justify-between text-xs text-muted-foreground">
+          <p>
+            Sistema TAG — {user?.area || 'Operações Industriais'} © {new Date().getFullYear()} <span className="hidden sm:inline">|</span> Criado por Anderson Alves
+          </p>
           <span className="text-xs font-semibold tracking-widest uppercase text-primary">
             KLABIN S/A
           </span>

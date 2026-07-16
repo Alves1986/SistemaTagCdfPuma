@@ -10,6 +10,8 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
   const [nome, setNome] = useState('');
   const [prn, setPrn] = useState('');
   const [cargo, setCargo] = useState('Operador II');
+  const [gerencia, setGerencia] = useState('Utilidades');
+  const [area, setArea] = useState('CDF2 / ETAC2');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
@@ -45,7 +47,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
     }
 
     setSubmitting(true);
-    const result = await register({ nome, prn, cargo, email: email.trim(), senha });
+    const result = await register({ nome, prn, cargo, gerencia, area, email: email.trim(), senha });
     setSubmitting(false);
 
     if (!result.success) {
@@ -91,12 +93,10 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="flex items-center gap-3 mb-8">
-          <div className="w-9 h-9 flex items-center justify-center rounded bg-primary">
-            <Flame size={18} className="text-primary-foreground" />
-          </div>
-          <div>
+          <img src="/logo.svg" alt="Klabin Logo" className="h-9 w-auto object-contain" />
+          <div className="flex-1">
             <p className="font-semibold text-sm text-primary">KLABIN S/A</p>
-            <p className="text-xs text-muted-foreground">Sistema TAG – Caldeira de Força</p>
+            <p className="text-xs text-muted-foreground">Sistema TAG</p>
           </div>
         </div>
 
@@ -155,10 +155,48 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                 onChange={(e) => setCargo(e.target.value)}
                 className={inputClass}
               >
+                <option value="Aprendiz">Aprendiz</option>
                 <option value="Operador II">Operador II</option>
                 <option value="Operador III">Operador III</option>
                 <option value="Operador Lider">Operador Líder</option>
+                <option value="Coordenador">Coordenador</option>
+                <option value="Especialista">Especialista</option>
+                <option value="Engenheiro">Engenheiro(a)</option>
+                <option value="Assistente Tecnico">Assistente Técnico</option>
               </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block mb-1.5 text-sm font-medium text-foreground">
+                  Gerência *
+                </label>
+                <select
+                  value={gerencia}
+                  onChange={(e) => setGerencia(e.target.value)}
+                  className={inputClass}
+                >
+                  <option value="Utilidades">Utilidades</option>
+                  <option value="Manutenção">Manutenção</option>
+                  <option value="Operação">Operação</option>
+                  <option value="Projetos">Projetos</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block mb-1.5 text-sm font-medium text-foreground">
+                  Área *
+                </label>
+                <select
+                  value={area}
+                  onChange={(e) => setArea(e.target.value)}
+                  className={inputClass}
+                >
+                  <option value="CDF2 / ETAC2">CDF2 / ETAC2</option>
+                  <option value="CDF1 / ETAC1">CDF1 / ETAC1</option>
+                  <option value="Tratamento de Efluentes">Tratamento de Efluentes</option>
+                </select>
+              </div>
             </div>
 
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground pt-2">

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { Search, Camera, QrCode, AlertTriangle, Wrench, Tag, X, Clock, Scan } from 'lucide-react';
+import { Scanner } from '@yudiel/react-qr-scanner';
 import { Tag as TagType } from '../types';
 import * as api from '../services/api';
 
@@ -38,7 +39,6 @@ export function SearchPage() {
   const [recentTags, setRecentTags] = useState<RecentTag[]>([]);
   const [showQrModal, setShowQrModal] = useState(false);
   const [qrStatus, setQrStatus] = useState<'scanning' | 'not_found' | 'found'>('scanning');
-  const [qrScanTimeout, setQrScanTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     try {
@@ -68,54 +68,40 @@ export function SearchPage() {
   const openQrModal = () => {
     setQrStatus('scanning');
     setShowQrModal(true);
-    // Simulate QR scan after 3 seconds (in production: use camera API)
-    const t = setTimeout(async () => {
-      try {
-        const tags = await api.getAllTags();
-        if (tags.length > 0) {
-          const randomTag = tags[Math.floor(Math.random() * tags.length)];
-          setQrStatus('found');
-          setTimeout(() => {
-            setShowQrModal(false);
-            navigate(`/tag/${randomTag.id}`);
-          }, 800);
-        } else {
-          setQrStatus('not_found');
-        }
-      } catch {
-        setQrStatus('not_found');
-      }
-    }, 3000);
-    setQrScanTimeout(t);
   };
 
   const closeQrModal = useCallback(() => {
-    if (qrScanTimeout) clearTimeout(qrScanTimeout);
     setShowQrModal(false);
     setQrStatus('scanning');
-  }, [qrScanTimeout]);
+  }, []);
 
   const retryQrScan = () => {
-    if (qrScanTimeout) clearTimeout(qrScanTimeout);
     setQrStatus('scanning');
-    const t = setTimeout(async () => {
-      try {
-        const tags = await api.getAllTags();
-        if (tags.length > 0) {
-          const randomTag = tags[Math.floor(Math.random() * tags.length)];
+  };
+
+  const handleScan = (result: any) => {
+    if (result && result.length > 0) {
+      const scannedValue = result[0].rawValue;
+      const match = scannedValue.match(/\/tag\/(\d+)/);
+      if (match) {
+        setQrStatus('found');
+        setTimeout(() => {
+          setShowQrModal(false);
+          navigate(`/tag/${match[1]}`);
+        }, 800);
+      } else {
+        const id = parseInt(scannedValue);
+        if (!isNaN(id)) {
           setQrStatus('found');
           setTimeout(() => {
             setShowQrModal(false);
-            navigate(`/tag/${randomTag.id}`);
+            navigate(`/tag/${id}`);
           }, 800);
         } else {
           setQrStatus('not_found');
         }
-      } catch {
-        setQrStatus('not_found');
       }
-    }, 3000);
-    setQrScanTimeout(t);
+    }
   };
 
   const getStatusDot = (status: string) => {
@@ -144,17 +130,17 @@ export function SearchPage() {
         <label className="block mb-2 text-sm font-medium text-foreground">
           Buscar Equipamento
         </label>
-        <div className="relative">
+        <div className="relative group">
           <Search
-            size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground"
+            size={18}
+            className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground group-focus-within:text-primary transition-colors"
           />
           <input
             type="text"
             value={query}
             onChange={(e) => handleSearch(e.target.value)}
             placeholder="Últimos 4 dígitos do TAG ou nome do equipamento…"
-            className="w-full pl-9 pr-4 py-2.5 rounded border border-border bg-muted/30 text-sm text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+            className="w-full pl-10 pr-4 py-3 rounded-lg border-2 border-border/60 bg-muted/20 text-sm text-foreground outline-none transition-all focus:border-primary focus:bg-background focus:shadow-[0_0_15px_rgba(0,165,81,0.15)]"
           />
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
@@ -206,8 +192,8 @@ export function SearchPage() {
                   <Link
                     key={tag.id}
                     to={`/tag/${tag.id}`}
-                    className={`block rounded overflow-hidden transition-all duration-150 hover:shadow-md ${
-                      tag.nota_manutencao ? 'border-2 border-destructive' : 'border border-border'
+                    className={`block rounded-lg overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl bg-card ${
+                      tag.nota_manutencao ? 'border-2 border-destructive shadow-sm shadow-destructive/20' : 'border border-border/50 shadow-sm'
                     }`}
                   >
                     <div className="relative h-40 bg-muted">
@@ -339,39 +325,18 @@ export function SearchPage() {
 
             <div className="p-5">
               {/* Camera view */}
-              <div className="relative w-full aspect-square bg-gray-900 rounded overflow-hidden mb-4">
-                {/* Fake camera feed */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  {qrStatus === 'found' ? (
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="w-14 h-14 rounded-full bg-accent/20 flex items-center justify-center">
-                        <Scan size={28} className="text-accent" />
-                      </div>
-                      <p className="text-accent text-sm font-medium">QR Code detectado!</p>
+              <div className="relative w-full aspect-square bg-gray-900 rounded overflow-hidden mb-4 flex items-center justify-center">
+                {qrStatus === 'found' ? (
+                  <div className="flex flex-col items-center gap-2 z-10 bg-gray-900/80 p-4 rounded-lg">
+                    <div className="w-14 h-14 rounded-full bg-accent/20 flex items-center justify-center">
+                      <Scan size={28} className="text-accent" />
                     </div>
-                  ) : (
-                    <div className="text-gray-600 text-xs">Câmera não disponível em modo demo</div>
-                  )}
-                </div>
-
-                {/* Scanner overlay */}
-                {qrStatus === 'scanning' && (
-                  <>
-                    {/* Corner guides */}
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="relative w-48 h-48">
-                        <div className="absolute top-0 left-0 w-8 h-8 border-t-[3px] border-l-[3px] border-primary rounded-tl" />
-                        <div className="absolute top-0 right-0 w-8 h-8 border-t-[3px] border-r-[3px] border-primary rounded-tr" />
-                        <div className="absolute bottom-0 left-0 w-8 h-8 border-b-[3px] border-l-[3px] border-primary rounded-bl" />
-                        <div className="absolute bottom-0 right-0 w-8 h-8 border-b-[3px] border-r-[3px] border-primary rounded-br" />
-                        {/* Animated scan line */}
-                        <div
-                          className="absolute left-2 right-2 h-[2px] bg-primary/70"
-                          style={{ animation: 'scanline 2s ease-in-out infinite', top: '50%' }}
-                        />
-                      </div>
-                    </div>
-                  </>
+                    <p className="text-accent text-sm font-medium">QR Code detectado!</p>
+                  </div>
+                ) : qrStatus === 'scanning' ? (
+                  <Scanner onScan={handleScan} />
+                ) : (
+                  <div className="text-gray-600 text-xs">A câmera foi pausada</div>
                 )}
               </div>
 

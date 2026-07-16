@@ -3,17 +3,23 @@ import { useParams, Link } from 'react-router';
 import {
   ArrowLeft, Camera, Calendar, User, Upload, MessageSquare,
   Edit, Wrench, AlertTriangle, CheckCircle, X, Activity,
-  Clock
+  Clock, QrCode, Printer
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { useAuth } from '../contexts/AuthContext';
 import { Comentario, NotaManutencao, Tag, Photo } from '../types';
 import * as api from '../services/api';
 import { saveRecentTag } from './SearchPage';
+import { supabase } from '../lib/supabase';
 
 const CARGO_BADGE: Record<string, { label: string; style: string }> = {
   'Operador Lider': { label: 'Líder', style: 'bg-primary text-primary-foreground' },
   'Operador III': { label: 'Op. III', style: 'bg-teal-600 text-white' },
   'Operador II': { label: 'Op. II', style: 'bg-muted-foreground text-white' },
+  'Coordenador': { label: 'Coord.', style: 'bg-purple-600 text-white' },
+  'Especialista': { label: 'Espec.', style: 'bg-indigo-600 text-white' },
+  'Engenheiro': { label: 'Eng.', style: 'bg-blue-600 text-white' },
+  'Assistente Tecnico': { label: 'Ass. Téc.', style: 'bg-cyan-600 text-white' },
 };
 
 const getCargoBadge = (index: number) => {
@@ -89,9 +95,11 @@ export function TagDetailPage() {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showNotaModal, setShowNotaModal] = useState(false);
+  const [showQrCodeModal, setShowQrCodeModal] = useState(false);
 
   const [uploadNotes, setUploadNotes] = useState('');
-  const [uploadUrl, setUploadUrl] = useState('');
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [editNomeEquipamento, setEditNomeEquipamento] = useState('');
   const [editLocalizacao, setEditLocalizacao] = useState('');
   const [numeroNota, setNumeroNota] = useState('');
@@ -157,13 +165,43 @@ export function TagDetailPage() {
   };
 
   const handleUploadPhoto = async () => {
-    if (!uploadUrl.trim() || !user || !tag) return;
+    if (!uploadFile || !user || !tag) return;
     try {
-      const newPhoto = await api.addFoto(tag.id, user.nome, uploadUrl, uploadNotes);
+      setIsUploading(true);
+      
+      const fileExt = uploadFile.name.split('.').pop();
+      const fileName = `${tag.id}-${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('equipamentos')
+        .upload(filePath, uploadFile);
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage
+        .from('equipamentos')
+        .getPublicUrl(filePath);
+
+      const publicUrl = publicUrlData.publicUrl;
+
+      const newPhoto = await api.addFoto(tag.id, user.nome, publicUrl, uploadNotes);
       setPhotos([newPhoto, ...photos]);
+      
+      if (!tag.foto_url) {
+        const updatedTag = await api.updateTag(tag.id, { foto_url: publicUrl });
+        setTag(updatedTag);
+      }
+      
       setShowUploadModal(false);
-      setUploadNotes(''); setUploadUrl('');
-    } catch { alert('Erro ao enviar foto'); }
+      setUploadFile(null);
+      setUploadNotes('');
+    } catch (error) { 
+      console.error(error);
+      alert('Erro ao enviar foto. Verifique se o bucket "equipamentos" foi criado no Supabase.');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleSaveEdit = async () => {
@@ -327,6 +365,13 @@ export function TagDetailPage() {
               >
                 <Edit size={14} />
                 Editar
+              </button>
+              <button
+                onClick={() => setShowQrCodeModal(true)}
+                className="flex items-center gap-1.5 px-3 py-2 rounded border border-border text-muted-foreground text-sm font-medium hover:bg-muted transition-colors bg-transparent"
+              >
+                <QrCode size={14} />
+                Gerar QR
               </button>
               {!tag.nota_manutencao && (
                 <button
@@ -494,15 +539,13 @@ export function TagDetailPage() {
         <Modal title="Adicionar Foto" onClose={() => setShowUploadModal(false)}>
           <div className="space-y-4">
             <div>
-              <label className="block mb-1.5 text-sm font-medium text-foreground">URL da Foto *</label>
+              <label className="block mb-1.5 text-sm font-medium text-foreground">Arquivo de Imagem *</label>
               <input
-                type="url"
-                value={uploadUrl}
-                onChange={(e) => setUploadUrl(e.target.value)}
-                placeholder="https://exemplo.com/foto.jpg"
-                className={inputClass}
+                type="file"
+                accept="image/*"
+                onChange={(e) => setUploadFile(e.target.files ? e.target.files[0] : null)}
+                className="w-full text-sm text-foreground file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 transition-colors cursor-pointer"
               />
-              <p className="mt-1 text-xs text-muted-foreground">Insira a URL completa da imagem</p>
             </div>
             <div>
               <label className="block mb-1.5 text-sm font-medium text-foreground">Observações (opcional)</label>
@@ -519,8 +562,12 @@ export function TagDetailPage() {
             </div>
           </div>
           <div className="mt-5 flex gap-3">
-            <button onClick={handleUploadPhoto} className="flex-1 py-2.5 rounded bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90">
-              Enviar Foto
+            <button 
+              onClick={handleUploadPhoto} 
+              disabled={isUploading || !uploadFile}
+              className="flex-1 py-2.5 rounded bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isUploading ? 'Enviando...' : 'Enviar Foto'}
             </button>
             <button onClick={() => setShowUploadModal(false)} className="px-4 py-2.5 rounded border border-border text-muted-foreground hover:bg-muted text-sm">
               Cancelar
@@ -603,17 +650,54 @@ export function TagDetailPage() {
           </div>
         </Modal>
       )}
+
+      {/* QR Code Modal */}
+      {showQrCodeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
+          <div className="bg-card w-full max-w-sm rounded shadow-lg border border-border overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-border bg-muted/30">
+              <h3 className="font-semibold text-foreground flex items-center gap-2">
+                <QrCode size={18} className="text-primary" />
+                QR Code do Equipamento
+              </h3>
+              <button onClick={() => setShowQrCodeModal(false)} className="text-muted-foreground hover:text-foreground">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-8 flex flex-col items-center justify-center text-center bg-white" id="print-qr-area">
+              <QRCodeSVG 
+                value={`${window.location.origin}/tag/${tag.id}`} 
+                size={220} 
+                level="Q"
+                includeMargin={true}
+              />
+              <p className="mt-4 font-mono font-bold text-lg text-black">{tag.tag_completo}</p>
+              <p className="text-sm text-gray-600 font-medium">{tag.nome_equipamento}</p>
+            </div>
+            <div className="p-4 border-t border-border flex justify-end gap-2 bg-muted/30">
+              <button onClick={() => setShowQrCodeModal(false)} className="px-4 py-2 rounded border border-border text-sm font-medium text-foreground hover:bg-muted">
+                Fechar
+              </button>
+              <button onClick={() => window.print()} className="px-4 py-2 rounded bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 flex items-center gap-2">
+                <Printer size={16} />
+                Imprimir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
 
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
-    <div className="fixed inset-0 flex items-center justify-center p-4 z-50 bg-black/50">
-      <div className="bg-card rounded shadow-2xl w-full max-w-md border border-border">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+    <div className="fixed inset-0 flex items-center justify-center p-4 z-50 bg-black/40 backdrop-blur-md transition-all">
+      <div className="bg-card rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] w-full max-w-md border border-border/40 transform transition-all">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border/40">
           <h3 className="font-semibold text-sm text-foreground">{title}</h3>
-          <button onClick={onClose} className="p-1 rounded transition-colors text-muted-foreground hover:bg-muted hover:text-foreground">
+          <button onClick={onClose} className="p-1.5 rounded-md transition-colors text-muted-foreground hover:bg-muted hover:text-foreground">
             <X size={16} />
           </button>
         </div>

@@ -1,5 +1,6 @@
 import { projectId, publicAnonKey } from '../../../utils/supabase/info';
 import { Tag, Comentario, Photo, NotaManutencao } from '../types';
+import { supabase, UserProfile } from '../lib/supabase';
 
 const BASE_URL = `https://${projectId}.supabase.co/functions/v1/make-server-e7ada368`;
 
@@ -600,3 +601,24 @@ function addFotoLocal(tagId: number, uploader: string, file_path: string, notes?
   localStorage.setItem('fotos', JSON.stringify(fotos));
   return newPhoto;
 }
+
+// ============ PROFILES (SUPABASE DIRECT) ============
+
+export async function getAllProfiles(): Promise<UserProfile[]> {
+  const { data, error } = await supabase.from('profiles').select('*');
+  if (error) {
+    console.error('Erro ao buscar perfis:', error);
+    return [];
+  }
+  return data as UserProfile[];
+}
+
+export async function updateProfile(id: string, updates: Partial<UserProfile>): Promise<boolean> {
+  const { error } = await supabase.from('profiles').update(updates).eq('id', id);
+  if (error) {
+    console.error('Erro ao atualizar perfil:', error);
+    return false;
+  }
+  return true;
+}
+

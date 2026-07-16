@@ -8,9 +8,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-3">
-        <div className="w-10 h-10 flex items-center justify-center rounded bg-accent">
-          <Flame size={22} className="text-accent-foreground" />
-        </div>
+        <img src="/logo.svg" alt="Klabin Logo" className="h-10 w-auto object-contain" />
         <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
         <p className="text-sm text-muted-foreground">Verificando sessão…</p>
       </div>

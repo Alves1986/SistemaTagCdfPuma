@@ -9,6 +9,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useArea } from '../contexts/AreaContext';
 import * as api from '../services/api';
+import { QRCodeSVG } from 'qrcode.react';
 
 type FilterKey = 'all' | 'com_nota' | 'operacional' | 'manutenção' | 'inativo';
 
@@ -33,12 +34,17 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
   // QR modal state
   const [qrPage, setQrPage] = useState(1);
   const [qrSelected, setQrSelected] = useState<Set<number>>(new Set());
+  const [tagsToPrint, setTagsToPrint] = useState<Tag[]>([]);
   const QR_PER_PAGE = 8;
 
   // Export modal state
   const [exportFormat, setExportFormat] = useState<'xlsx' | 'csv' | 'pdf'>('xlsx');
   const [exportFilter, setExportFilter] = useState<'all' | 'com_nota'>('all');
   const [exporting, setExporting] = useState(false);
+
+  // Table pagination state
+  const [tablePage, setTablePage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
 
   const [formData, setFormData] = useState({
     tag_completo: '',
@@ -57,6 +63,10 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
     setFormData(prev => ({ ...prev, area: selectedArea }));
   }, [selectedArea]);
 
+  useEffect(() => {
+    setTablePage(1);
+  }, [searchQuery, filter, selectedArea]);
+
   const loadTags = async () => {
     try {
       setLoading(true);
@@ -69,7 +79,19 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
     }
   };
 
-  const filteredTags = tags.filter(tag => {
+  const getLocalizacaoFromArea = (area: string) => {
+    switch (area) {
+      case 'ETAC II': return 'ETAC 2';
+      case 'CDF II': return 'Caldeira 2';
+      case 'ETAC I': return 'ETAC 1';
+      case 'CDF I': return 'Caldeira 1';
+      default: return area;
+    }
+  };
+
+  const areaTags = tags.filter(t => t.localizacao_texto === getLocalizacaoFromArea(selectedArea));
+
+  const filteredTags = areaTags.filter(tag => {
     const matchesSearch = searchQuery.trim() === '' ||
       tag.tag_completo.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tag.nome_equipamento.toLowerCase().includes(searchQuery.toLowerCase());
@@ -78,10 +100,22 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
     return matchesSearch && tag.status === filter;
   });
 
-  const tagsComNota = tags.filter(t => t.nota_manutencao).length;
-  const tagsOperacionais = tags.filter(t => t.status === 'operacional').length;
-  const tagsManutencao = tags.filter(t => t.status === 'manutenção').length;
-  const tagsInativos = tags.filter(t => t.status === 'inativo').length;
+  const sortedTags = [...filteredTags].sort((a, b) => {
+    const matchA = a.tag_completo.match(/\d{4}$/);
+    const matchB = b.tag_completo.match(/\d{4}$/);
+    const numA = matchA ? parseInt(matchA[0], 10) : 0;
+    const numB = matchB ? parseInt(matchB[0], 10) : 0;
+    if (numA !== numB) return numA - numB;
+    return a.tag_completo.localeCompare(b.tag_completo);
+  });
+
+  const totalPages = Math.max(1, Math.ceil(sortedTags.length / itemsPerPage));
+  const paginatedTags = sortedTags.slice((tablePage - 1) * itemsPerPage, tablePage * itemsPerPage);
+
+  const tagsComNota = areaTags.filter(t => t.nota_manutencao).length;
+  const tagsOperacionais = areaTags.filter(t => t.status === 'operacional').length;
+  const tagsManutencao = areaTags.filter(t => t.status === 'manutenção').length;
+  const tagsInativos = areaTags.filter(t => t.status === 'inativo').length;
 
   const getStatusStyle = (status: string) => {
     switch (status) {
@@ -191,11 +225,12 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
     { key: 'inativo', label: 'Inativo', activeClass: 'bg-muted-foreground text-white' },
   ];
 
-  const isLider = user?.cargo === 'Operador Lider';
+  const isAdmin = ['Operador Lider', 'Coordenador', 'Especialista', 'Engenheiro', 'Assistente Tecnico'].includes(user?.cargo || '');
 
   return (
-    <div className="space-y-5">
-      {/* Header card */}
+    <>
+      <div className="space-y-5 print:hidden">
+        {/* Header card */}
       <div className="bg-card rounded border border-border p-5 shadow-sm">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5">
           <div>
@@ -229,11 +264,17 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
               <Download size={15} />
               Exportar
             </button>
-            {isLider && (
-              <button className="flex items-center gap-1.5 px-3 py-2 rounded border border-border text-muted-foreground text-sm font-medium transition-colors bg-transparent hover:bg-muted">
-                <Users size={15} />
-                Usuários
-              </button>
+            {isAdmin && (
+              <>
+                <Link to="/admin/dashboard" className="flex items-center gap-1.5 px-3 py-2 rounded border border-border text-muted-foreground text-sm font-medium transition-colors bg-transparent hover:bg-muted">
+                  <Activity size={15} />
+                  Dashboard
+                </Link>
+                <Link to="/admin/team" className="flex items-center gap-1.5 px-3 py-2 rounded border border-border text-muted-foreground text-sm font-medium transition-colors bg-transparent hover:bg-muted">
+                  <Users size={15} />
+                  Equipe
+                </Link>
+              </>
             )}
           </div>
         </div>
@@ -241,7 +282,7 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           {[
-            { label: 'Total', value: tags.length, style: 'bg-primary/5 border-primary/20 text-primary', icon: <Activity size={16} /> },
+            { label: 'Total', value: areaTags.length, style: 'bg-primary/5 border-primary/20 text-primary', icon: <Activity size={16} /> },
             { label: 'Com Nota', value: tagsComNota, style: 'bg-destructive/5 border-destructive/20 text-destructive', icon: <AlertTriangle size={16} /> },
             { label: 'Operacionais', value: tagsOperacionais, style: 'bg-accent/5 border-accent/20 text-accent', icon: null },
             { label: 'Manutenção', value: tagsManutencao, style: 'bg-amber-100 border-amber-200 text-amber-800', icon: <Wrench size={16} /> },
@@ -308,14 +349,14 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
                     </div>
                   </td>
                 </tr>
-              ) : filteredTags.length === 0 ? (
+              ) : paginatedTags.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-5 py-12 text-center">
                     <p className="text-sm text-muted-foreground">Nenhum equipamento encontrado</p>
                   </td>
                 </tr>
               ) : (
-                filteredTags.map((tag) => {
+                paginatedTags.map((tag) => {
                   const statusStyle = getStatusStyle(tag.status);
                   const priorStyle = tag.nota_manutencao ? getPrioridadeStyle(tag.nota_manutencao.prioridade) : null;
                   return (
@@ -336,7 +377,7 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
                         </div>
                       </td>
                       <td className="px-5 py-3.5">
-                        <span className="text-xs font-medium px-2 py-0.5 rounded bg-primary/5 text-primary border border-primary/20">
+                        <span className="whitespace-nowrap text-xs font-medium px-2 py-0.5 rounded bg-primary/5 text-primary border border-primary/20">
                           {selectedArea}
                         </span>
                       </td>
@@ -386,6 +427,49 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
               )}
             </tbody>
           </table>
+        </div>
+        
+        {/* Pagination Controls */}
+        <div className="bg-muted/30 border-t border-border px-5 py-3 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Exibir</span>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => {
+                setItemsPerPage(Number(e.target.value));
+                setTablePage(1);
+              }}
+              className="text-sm border border-border rounded bg-background px-2 py-1 outline-none focus:border-primary"
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+            </select>
+            <span className="text-sm text-muted-foreground">por página</span>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-muted-foreground">
+              Página {tablePage} de {totalPages}
+            </span>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setTablePage(p => Math.max(1, p - 1))}
+                disabled={tablePage === 1}
+                className="px-2 py-1 rounded border border-border text-sm font-medium hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors bg-background"
+              >
+                Anterior
+              </button>
+              <button
+                onClick={() => setTablePage(p => Math.min(totalPages, p + 1))}
+                disabled={tablePage === totalPages}
+                className="px-2 py-1 rounded border border-border text-sm font-medium hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors bg-background"
+              >
+                Próxima
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -538,12 +622,15 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
                   onClick={toggleSelectAll}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-border text-sm text-muted-foreground hover:bg-muted transition-colors"
                 >
-                  {qrSelected.size === tags.length ? <CheckSquare size={14} className="text-primary" /> : <Square size={14} />}
-                  {qrSelected.size === tags.length ? 'Desmarcar todos' : 'Selecionar todos'}
+                  {qrSelected.size === areaTags.length ? <CheckSquare size={14} className="text-primary" /> : <Square size={14} />}
+                  {qrSelected.size === areaTags.length ? 'Desmarcar todos' : 'Selecionar todos'}
                 </button>
                 {qrSelected.size > 0 && (
                   <button
-                    onClick={() => window.print()}
+                    onClick={() => {
+                      setTagsToPrint(areaTags.filter(t => qrSelected.has(t.id)));
+                      setTimeout(() => window.print(), 150);
+                    }}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
                   >
                     <Printer size={14} />
@@ -551,7 +638,10 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
                   </button>
                 )}
                 <button
-                  onClick={() => window.print()}
+                  onClick={() => {
+                    setTagsToPrint(areaTags);
+                    setTimeout(() => window.print(), 150);
+                  }}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-accent text-accent text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors bg-transparent"
                 >
                   <Printer size={14} />
@@ -707,6 +797,25 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
           </div>
         </div>
       )}
-    </div>
+      </div>
+
+      {/* ── Hidden Print View ── */}
+      <div className="hidden print:block fixed inset-0 bg-white z-[9999] overflow-visible">
+        {Array.from({ length: Math.ceil(tagsToPrint.length / 9) }, (_, i) => tagsToPrint.slice(i * 9, i * 9 + 9)).map((pageTags, pageIndex, arr) => (
+          <div key={pageIndex} className="grid grid-cols-3 gap-6 p-6 print:p-6" style={{ pageBreakAfter: pageIndex < arr.length - 1 ? 'always' : 'auto' }}>
+            {pageTags.map(tag => (
+              <div key={tag.id} className="flex flex-col items-center justify-center p-4 border-2 border-black rounded-lg break-inside-avoid shadow-none h-[290px]">
+                <QRCodeSVG value={`${window.location.origin}/tag/${tag.id}`} size={140} level="H" />
+                <div className="mt-4 text-center">
+                  <p className="font-bold text-[1.1rem] font-mono text-black">{tag.tag_completo}</p>
+                  <p className="text-[0.8rem] font-bold text-black uppercase leading-tight line-clamp-2 mt-1">{tag.nome_equipamento}</p>
+                  <p className="text-[0.7rem] text-gray-600 mt-1 font-semibold">{tag.localizacao_texto} • KLABIN</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </>
   );
 }

@@ -41,17 +41,15 @@ export function LoginPage() {
       {/* Left panel – branding */}
       <div className="hidden lg:flex flex-col justify-between w-2/5 p-12 bg-primary">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 flex items-center justify-center rounded bg-accent">
-            <Flame size={22} className="text-accent-foreground" />
-          </div>
+          <img src="/logo.svg" alt="Klabin Logo" className="h-10 w-auto object-contain" />
           <span className="text-primary-foreground font-semibold tracking-widest uppercase text-sm">
             KLABIN S/A
           </span>
         </div>
 
         <div>
-          <h1 className="text-primary-foreground mb-4 text-[2.25rem] font-bold leading-tight tracking-tight">
-            Sistema TAG<br />Caldeira de Força
+          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-6 text-primary-foreground">
+            Sistema TAG
           </h1>
           <p className="text-primary-foreground/80 leading-relaxed text-[0.9rem]">
             Gestão de equipamentos, notas de manutenção e histórico de operações em tempo real.
@@ -82,12 +80,10 @@ export function LoginPage() {
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <div className="flex items-center gap-3 mb-8 lg:hidden">
-            <div className="w-9 h-9 flex items-center justify-center rounded bg-primary">
-              <Flame size={18} className="text-primary-foreground" />
-            </div>
-            <div>
-              <p className="font-semibold text-sm text-primary">KLABIN S/A</p>
-              <p className="text-xs text-muted-foreground">Sistema TAG – Caldeira de Força</p>
+            <img src="/logo.svg" alt="Klabin Logo" className="h-9 w-auto object-contain" />
+            <div className="flex-1">
+              <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-1">Klabin S/A</p>
+              <p className="text-xs text-muted-foreground">Sistema TAG</p>
             </div>
           </div>
 
