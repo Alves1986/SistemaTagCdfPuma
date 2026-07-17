@@ -179,6 +179,7 @@ export function LoginPage() {
                 Criar Nova Conta
               </button>
             </div>
+            </div>
           </div>
         </div>
       </div>
