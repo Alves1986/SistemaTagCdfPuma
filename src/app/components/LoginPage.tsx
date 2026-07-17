@@ -34,7 +34,7 @@ export function LoginPage() {
     return <RegisterPage onBackToLogin={() => setShowRegister(false)} />;
   }
 
-  const inputClass = "w-full px-3 py-2.5 rounded border border-border bg-muted/30 text-sm text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20";
+  const inputClass = "w-full px-4 py-3 rounded-xl border border-white/30 bg-white/10 text-sm text-white placeholder:text-white/60 outline-none transition-all focus:border-white focus:ring-4 focus:ring-white/20 focus:bg-white/20";
 
   return (
     <div 
@@ -98,11 +98,11 @@ export function LoginPage() {
             </div>
           </div>
 
-          <div className="bg-card/95 backdrop-blur-md rounded-lg p-8 shadow-2xl border border-white/20">
-            <h2 className="mb-1 text-foreground font-semibold text-[1.3rem]">
+          <div className="bg-white/10 backdrop-blur-2xl rounded-3xl p-8 sm:p-10 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] border border-white/30">
+            <h2 className="mb-1 text-white font-bold text-[1.5rem] tracking-tight">
               Acesso ao sistema
             </h2>
-            <p className="mb-6 text-sm text-muted-foreground">
+            <p className="mb-8 text-sm text-white/90 font-medium">
               Informe seu e-mail e senha para continuar
             </p>
 
@@ -115,7 +115,7 @@ export function LoginPage() {
               )}
 
               <div>
-                <label htmlFor="email" className="block mb-1.5 text-sm font-medium text-foreground">
+                <label htmlFor="email" className="block mb-2 text-sm font-semibold text-white drop-shadow-md">
                   E-mail
                 </label>
                 <input
@@ -130,7 +130,7 @@ export function LoginPage() {
               </div>
 
               <div>
-                <label htmlFor="senha" className="block mb-1.5 text-sm font-medium text-foreground">
+                <label htmlFor="senha" className="block mb-2 text-sm font-semibold text-white drop-shadow-md">
                   Senha
                 </label>
                 <div className="relative">
@@ -146,7 +146,7 @@ export function LoginPage() {
                   <button
                     type="button"
                     onClick={() => setShowSenha(v => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors"
                     tabIndex={-1}
                   >
                     {showSenha ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -157,7 +157,7 @@ export function LoginPage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded bg-primary text-primary-foreground text-sm font-medium transition-colors hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-2 py-3.5 mt-2 rounded-xl bg-primary text-primary-foreground text-[0.95rem] font-bold shadow-lg transition-all hover:bg-primary/90 hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
                 {submitting ? (
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -168,13 +168,13 @@ export function LoginPage() {
               </button>
             </form>
 
-            <div className="mt-5 pt-5 border-t border-border">
-              <p className="text-sm mb-3 text-muted-foreground">
+            <div className="mt-8 pt-6 border-t border-white/20">
+              <p className="text-sm mb-4 text-white/90 font-medium text-center">
                 Ainda não tem cadastro?
               </p>
               <button
                 onClick={() => setShowRegister(true)}
-                className="w-full py-2.5 rounded border border-accent text-accent text-sm font-medium transition-colors bg-transparent hover:bg-accent hover:text-accent-foreground"
+                className="w-full py-3.5 rounded-xl border-2 border-white/40 text-white text-[0.95rem] font-bold transition-all bg-white/10 hover:bg-white/20 hover:scale-[1.02] shadow-lg"
               >
                 Criar Nova Conta
               </button>

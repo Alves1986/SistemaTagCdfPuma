@@ -59,7 +59,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
     }
   };
 
-  const inputClass = "w-full px-3 py-2.5 rounded border border-border bg-muted/30 text-sm text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20";
+  const inputClass = "w-full px-4 py-3 rounded-xl border border-white/30 bg-white/10 text-sm text-white placeholder:text-white/60 outline-none transition-all focus:border-white focus:ring-4 focus:ring-white/20 focus:bg-white/20 shadow-inner";
 
   if (success) {
     return (
@@ -98,21 +98,21 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
 
           <div className="flex-1 flex items-center justify-center p-6 lg:justify-end lg:pr-12">
             <div className="w-full max-w-md">
-              <div className="bg-card/95 backdrop-blur-md rounded-lg p-8 shadow-2xl border border-white/20 text-center">
-            <div className="w-14 h-14 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
-              <CheckCircle size={28} className="text-accent" />
+              <div className="bg-white/10 backdrop-blur-2xl rounded-3xl p-8 sm:p-10 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] border border-white/30 text-center">
+            <div className="w-16 h-16 rounded-full bg-accent/20 flex items-center justify-center mx-auto mb-6 shadow-lg">
+              <CheckCircle size={32} className="text-accent" />
             </div>
-            <h2 className="font-semibold text-foreground text-[1.3rem] mb-2">Conta criada!</h2>
-            <p className="text-sm text-muted-foreground mb-2">
+            <h2 className="font-bold text-white text-[1.5rem] tracking-tight mb-3">Conta criada!</h2>
+            <p className="text-[0.95rem] text-white/90 mb-2 font-medium">
               Um e-mail de confirmação foi enviado para:
             </p>
-            <p className="text-sm font-medium text-foreground mb-5">{email}</p>
-            <p className="text-xs text-muted-foreground mb-6">
+            <p className="text-sm font-bold text-white mb-6 p-3 bg-white/10 rounded-lg">{email}</p>
+            <p className="text-xs text-white/80 mb-8 font-medium">
               Confirme seu e-mail antes de fazer o primeiro acesso. Verifique também a pasta de spam.
             </p>
             <button
               onClick={onBackToLogin}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded bg-primary text-primary-foreground text-sm font-medium transition-colors hover:bg-primary/90"
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-primary text-primary-foreground text-[0.95rem] font-bold shadow-lg transition-all hover:bg-primary/90 hover:scale-[1.02]"
             >
               <ArrowLeft size={16} />
               Ir para o Login
@@ -171,9 +171,9 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
               </div>
             </div>
 
-            <div className="bg-white/10 backdrop-blur-md rounded-lg p-8 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] border border-white/20">
-          <h2 className="mb-1 text-white font-semibold text-[1.3rem]">Criar conta</h2>
-          <p className="mb-6 text-sm text-white/70">
+            <div className="bg-white/10 backdrop-blur-2xl rounded-3xl p-8 sm:p-10 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] border border-white/30">
+          <h2 className="mb-1 text-white font-bold text-[1.5rem] tracking-tight">Criar conta</h2>
+          <p className="mb-8 text-sm text-white/90 font-medium">
             Preencha os dados para registrar seu acesso
           </p>
 
@@ -185,12 +185,12 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
               </div>
             )}
 
-            <p className="text-xs font-semibold uppercase tracking-wider text-white/50 pt-1">
+            <p className="text-xs font-bold uppercase tracking-wider text-white/70 pt-2 mb-2">
               Identificação
             </p>
 
             <div>
-              <label className="block mb-1.5 text-sm font-medium text-white/90">
+              <label className="block mb-2 text-sm font-semibold text-white drop-shadow-md">
                 Nome Completo *
               </label>
               <input
@@ -204,7 +204,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
             </div>
 
             <div>
-              <label className="block mb-1.5 text-sm font-medium text-white/90">
+              <label className="block mb-2 text-sm font-semibold text-white drop-shadow-md">
                 PRN (Número de Registro Pessoal) *
               </label>
               <input
@@ -214,11 +214,11 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                 placeholder="Mínimo 4 caracteres"
                 className={inputClass}
               />
-              <p className="mt-1 text-xs text-white/50">Mínimo 4 caracteres</p>
+              <p className="mt-1.5 text-xs text-white/70 font-medium">Mínimo 4 caracteres</p>
             </div>
 
             <div>
-              <label className="block mb-1.5 text-sm font-medium text-white/90">
+              <label className="block mb-2 text-sm font-semibold text-white drop-shadow-md">
                 Gerência *
               </label>
               <select
@@ -241,7 +241,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
 
             {getCoordenacoesByGerencia(gerencia) && (
               <div>
-                <label className="block mb-1.5 text-sm font-medium text-white/90">
+                <label className="block mb-2 text-sm font-semibold text-white drop-shadow-md">
                   Coordenação *
                 </label>
                 <select
@@ -263,8 +263,8 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
             )}
 
             <div>
-              <label className="block mb-2 text-sm font-medium text-white/90">
-                Áreas de Trabalho * <span className="text-xs text-white/50">(selecione todas as suas áreas)</span>
+              <label className="block mb-2 text-sm font-semibold text-white drop-shadow-md">
+                Áreas de Trabalho * <span className="text-xs text-white/70 font-medium ml-1">(selecione todas)</span>
               </label>
               <div className="grid grid-cols-2 gap-2 p-3 rounded border border-white/20 bg-white/5">
                 {(coordenacao ? getAreasByCoordenacao(gerencia, coordenacao) : getAreasByGerencia(gerencia)).map(a => (
@@ -294,7 +294,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
 
 
             <div>
-              <label className="block mb-1.5 text-sm font-medium text-white/90">
+              <label className="block mb-2 text-sm font-semibold text-white drop-shadow-md">
                 Função / Cargo *
               </label>
               <select
@@ -309,12 +309,12 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
             </div>
 
 
-            <p className="text-xs font-semibold uppercase tracking-wider text-white/50 pt-2">
+            <p className="text-xs font-bold uppercase tracking-wider text-white/70 pt-4 mb-2">
               Credenciais de acesso
             </p>
 
             <div>
-              <label className="block mb-1.5 text-sm font-medium text-white/90">
+              <label className="block mb-2 text-sm font-semibold text-white drop-shadow-md">
                 E-mail *
               </label>
               <input
@@ -328,7 +328,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
             </div>
 
             <div>
-              <label className="block mb-1.5 text-sm font-medium text-white/90">
+              <label className="block mb-2 text-sm font-semibold text-white drop-shadow-md">
                 Senha *
               </label>
               <div className="relative">
@@ -360,7 +360,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
             </div>
 
             <div>
-              <label className="block mb-1.5 text-sm font-medium text-white/90">
+              <label className="block mb-2 text-sm font-semibold text-white drop-shadow-md">
                 Confirmar senha *
               </label>
               <div className="relative">
@@ -388,26 +388,26 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
               )}
             </div>
 
-            <div className="pt-2">
+            <div className="pt-4">
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded bg-primary text-primary-foreground text-sm font-medium transition-colors hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-primary text-primary-foreground text-[0.95rem] font-bold shadow-lg transition-all hover:bg-primary/90 hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
                 {submitting ? (
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  <UserPlus size={16} />
+                  <UserPlus size={18} />
                 )}
                 {submitting ? 'Criando conta…' : 'Criar Conta'}
               </button>
             </div>
           </form>
 
-          <div className="mt-5 pt-5 border-t border-white/10">
+          <div className="mt-8 pt-6 border-t border-white/20">
             <button
               onClick={onBackToLogin}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded border border-white/30 text-white/70 text-sm font-medium transition-colors bg-transparent hover:bg-white/10 hover:text-white"
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl border-2 border-white/40 text-white text-[0.95rem] font-bold transition-all bg-white/10 hover:bg-white/20 hover:scale-[1.02] shadow-lg"
             >
               <ArrowLeft size={16} />
               Voltar para Login
