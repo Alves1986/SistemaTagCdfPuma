@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useArea } from '../contexts/AreaContext';
 import { supabase, UserProfile } from '../lib/supabase';
 import * as api from '../services/api';
 import { Users, Phone, Camera, Save, X, Edit2, ShieldAlert } from 'lucide-react';
@@ -7,6 +8,7 @@ import { GERENCIAS, getAreasByGerencia, getCargosByGerencia } from '../utils/hie
 
 export function TeamPage() {
   const { user } = useAuth();
+  const { selectedArea } = useArea();
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -127,7 +129,10 @@ export function TeamPage() {
         <div className="text-center py-12 text-muted-foreground">Carregando equipe...</div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {profiles.map(profile => (
+          {profiles.filter(p => {
+            const pAreas = p.areas_coordenadas?.length ? p.areas_coordenadas : (p.area ? [p.area] : []);
+            return pAreas.includes(selectedArea);
+          }).map(profile => (
             <div key={profile.id} className="bg-card rounded-xl border border-border overflow-hidden shadow-md hover:shadow-lg transition-all hover:scale-[1.02] flex flex-col">
               <div className="h-20 bg-gradient-to-r from-primary to-[#002040]"></div>
               <div className="px-5 pb-5 flex-1 flex flex-col items-center text-center -mt-10">
