@@ -5,13 +5,16 @@ import { useAuth } from '../contexts/AuthContext';
 import { useArea } from '../contexts/AreaContext';
 import { Tag, NotaManutencao } from '../types';
 import * as api from '../services/api';
-import { getLocalizacaoFromArea } from '../utils/hierarchy';
+import { getLocalizacaoFromArea, getAllOperationalAreas } from '../utils/hierarchy';
 
 type Especialidade = 'Mecânica' | 'Elétrica' | 'Instrumentação' | 'Automação';
 type ViewMode = 'notas' | 'graficos' | 'historico';
 
-const AREAS_OPERACIONAIS = ['Caldeira 2', 'ETAC 2', 'Caldeira 1', 'ETAC 1'];
+// Todas as áreas operacionais (derivadas do HIERARQUIA, excluindo Manutenção)
+const AREAS_OPERACIONAIS = getAllOperationalAreas();
 
+// Label de exibição — como as novas áreas já têm nome legível, usa o próprio nome
+// Mantemos retrocompatibilidade com áreas antigas
 const AREA_LABEL: Record<string, string> = {
   'Caldeira 2': 'CDF II',
   'ETAC 2': 'ETAC II',

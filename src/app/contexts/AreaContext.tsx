@@ -1,9 +1,10 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 
-import { getAreasByGerencia, normalizeGerencia } from '../utils/hierarchy';
+import { getAreasByGerencia, normalizeGerencia, getAllOperationalAreas } from '../utils/hierarchy';
 
-export const ALL_AREAS = ['CDF II', 'ETAC II', 'CDF I', 'ETAC I'] as const;
+// Derivado dinamicamente do HIERARQUIA (excluindo Manutenção)
+export const ALL_AREAS = getAllOperationalAreas();
 export type Area = string;
 
 interface AreaContextType {
@@ -19,8 +20,8 @@ const AreaContext = createContext<AreaContextType | undefined>(undefined);
 export function AreaProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [selectedGerencia, setSelectedGerencia] = useState<string>('Recuperação e Utilidades');
-  const [selectedArea, setSelectedArea] = useState<Area>('CDF II');
-  const [availableAreas, setAvailableAreas] = useState<Area[]>([...ALL_AREAS]);
+  const [selectedArea, setSelectedArea] = useState<Area>('CDR1/EVAP1');
+  const [availableAreas, setAvailableAreas] = useState<Area[]>(getAreasByGerencia('Recuperação e Utilidades'));
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
