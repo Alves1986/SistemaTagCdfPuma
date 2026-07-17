@@ -85,6 +85,8 @@ const AUDIT_CONFIG: Record<AuditEntry['tipo'], { icon: React.ReactNode; color: s
 export function TagDetailPage() {
   const { id } = useParams();
   const { user } = useAuth();
+  
+  const isCoordenador = user?.cargo === 'Coordenador';
 
   const [tag, setTag] = useState<Tag | null>(null);
   const [photos, setPhotos] = useState<Photo[]>([]);
@@ -317,22 +319,24 @@ export function TagDetailPage() {
               </div>
             </div>
             
-            {tag.nota_manutencao.status_manutencao === 'finalizada_manutencao' && user?.cargo !== 'Gestor de Manutenção' ? (
-              <button
-                onClick={handleValidarNota}
-                className="p-2 bg-green-600 text-white hover:bg-green-700 rounded-md transition-colors text-sm font-medium flex items-center gap-2"
-                title="Validar e Encerrar Nota — registra no histórico"
-              >
-                <CheckCircle size={16} /> Validar e Encerrar Nota
-              </button>
-            ) : (
-              <button
-                onClick={handleCancelarNota}
-                className="p-1.5 bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground rounded-md transition-colors"
-                title="Fechar/Cancelar nota (sem histórico)"
-              >
-                <X size={18} />
-              </button>
+            {!isCoordenador && (
+              tag.nota_manutencao.status_manutencao === 'finalizada_manutencao' && user?.cargo !== 'Gestor de Manutenção' ? (
+                <button
+                  onClick={handleValidarNota}
+                  className="p-2 bg-green-600 text-white hover:bg-green-700 rounded-md transition-colors text-sm font-medium flex items-center gap-2"
+                  title="Validar e Encerrar Nota — registra no histórico"
+                >
+                  <CheckCircle size={16} /> Validar e Encerrar Nota
+                </button>
+              ) : (
+                <button
+                  onClick={handleCancelarNota}
+                  className="p-1.5 bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground rounded-md transition-colors"
+                  title="Fechar/Cancelar nota (sem histórico)"
+                >
+                  <X size={18} />
+                </button>
+              )
             )}
           </div>
         </div>
@@ -382,38 +386,40 @@ export function TagDetailPage() {
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => setShowUploadModal(true)}
-                className="flex items-center gap-1.5 px-3 py-2 rounded bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
-              >
-                <Upload size={14} />
-                Adicionar Foto
-              </button>
-              <button
-                onClick={() => setShowEditModal(true)}
-                className="flex items-center gap-1.5 px-3 py-2 rounded border border-border text-muted-foreground text-sm font-medium hover:bg-muted transition-colors bg-transparent"
-              >
-                <Edit size={14} />
-                Editar
-              </button>
-              <button
-                onClick={() => setShowQrCodeModal(true)}
-                className="flex items-center gap-1.5 px-3 py-2 rounded border border-border text-muted-foreground text-sm font-medium hover:bg-muted transition-colors bg-transparent"
-              >
-                <QrCode size={14} />
-                Gerar QR
-              </button>
-              {!tag.nota_manutencao && (
+            {!isCoordenador && (
+              <div className="flex flex-wrap gap-2">
                 <button
-                  onClick={() => setShowNotaModal(true)}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded bg-orange-600 text-white text-sm font-medium hover:bg-orange-700 transition-colors"
+                  onClick={() => setShowUploadModal(true)}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
                 >
-                  <Wrench size={14} />
-                  Abrir Nota Manutenção
+                  <Upload size={14} />
+                  Adicionar Foto
                 </button>
-              )}
-            </div>
+                <button
+                  onClick={() => setShowEditModal(true)}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded border border-border text-muted-foreground text-sm font-medium hover:bg-muted transition-colors bg-transparent"
+                >
+                  <Edit size={14} />
+                  Editar
+                </button>
+                <button
+                  onClick={() => setShowQrCodeModal(true)}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded border border-border text-muted-foreground text-sm font-medium hover:bg-muted transition-colors bg-transparent"
+                >
+                  <QrCode size={14} />
+                  Gerar QR
+                </button>
+                {!tag.nota_manutencao && (
+                  <button
+                    onClick={() => setShowNotaModal(true)}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded bg-orange-600 text-white text-sm font-medium hover:bg-orange-700 transition-colors"
+                  >
+                    <Wrench size={14} />
+                    Abrir Nota Manutenção
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
