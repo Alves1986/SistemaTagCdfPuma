@@ -4,6 +4,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { AreaProvider } from './contexts/AreaContext';
 import { useEffect } from 'react';
 import { initializeLocalData } from './utils/initializeData';
+import { InstallPrompt } from './components/InstallPrompt';
 
 export default function App() {
   useEffect(() => {
@@ -13,6 +14,7 @@ export default function App() {
   return (
     <AuthProvider>
       <AreaProvider>
+        <InstallPrompt />
         <RouterProvider router={router} />
       </AreaProvider>
     </AuthProvider>

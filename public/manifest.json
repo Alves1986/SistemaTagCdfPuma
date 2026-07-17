@@ -8,14 +8,8 @@
   "icons": [
     {
       "src": "/icon.svg",
-      "sizes": "any",
+      "sizes": "any 192x192 512x512",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/logo-app.png",
-      "sizes": "192x192 512x512",
-      "type": "image/png",
       "purpose": "any maskable"
     }
   ]
