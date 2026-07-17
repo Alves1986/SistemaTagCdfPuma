@@ -5,6 +5,21 @@ Este documento serve como o registro principal (Changelog) de todas as alteraç�
 
 ---
 
+## [1.3.3] - Navegação e Filtros da Manutenção
+
+### 🚀 Novas Funcionalidades
+* **Filtro por Gerência no Menu Superior:** O cabeçalho do sistema agora conta com dois filtros encadeados — **Gerência** e **Área**. Ao selecionar uma gerência, as áreas disponíveis atualizam automaticamente para mostrar apenas as opções relevantes.
+* **Áreas da Manutenção:** A gerência "Manutenção" passa a listar as áreas físicas reais (CDF II, ETAC II, CDF I, ETAC I) para que o filtro do painel funcione corretamente com os equipamentos da planta.
+
+### 🛠️ Correções e Ajustes
+* **Painel de Manutenção aberto para toda a gerência:** Antes, o Painel de Manutenção era acessível apenas ao cargo "Gestor de Manutenção". Agora qualquer usuário com gerência "Manutenção" acessa diretamente.
+* **Redirecionamento Automático:** Ao entrar no sistema, usuários da Manutenção são redirecionados automaticamente para o Painel de Manutenção (em vez da tela de busca). Os links "Buscar" e "Gestão" não aparecem para eles.
+* **Alerta de Notificação Clicável:** A barra laranja que avisa sobre notas abertas agora direciona a Manutenção para o Painel de Manutenção e a Operação para a lista de TAGs filtrada.
+* **Bug do import dentro do componente:** Corrigido um `import` que havia sido acidentalmente inserido dentro do corpo do componente `Layout`, causando erro de compilação no Vite.
+* **Reload por área:** O painel de manutenção agora recarrega os dados automaticamente sempre que a área selecionada muda.
+
+---
+
 ## [1.3.2] - Correções no Painel de Manutenção
 
 ### 🛠️ Correções e Ajustes UI
