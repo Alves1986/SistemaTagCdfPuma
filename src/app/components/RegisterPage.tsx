@@ -74,50 +74,27 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
         <div className="absolute inset-0 bg-primary/85 mix-blend-multiply" />
         <div className="absolute inset-0 bg-gradient-to-tr from-primary/95 via-primary/70 to-transparent" />
         
-        <div className="relative z-10 w-full flex flex-col lg:flex-row max-w-7xl mx-auto">
-          {/* Left panel – branding */}
-          <div className="hidden lg:flex flex-col justify-between w-1/2 lg:w-3/5 p-12 py-16">
-            <div className="flex items-center gap-3">
-              <img src="/logo.svg" alt="Klabin Logo" className="h-10 w-auto object-contain" />
-              <span className="text-primary-foreground font-semibold tracking-widest uppercase text-sm">
-                KLABIN S/A
-              </span>
-            </div>
-            <div>
-              <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-6 text-primary-foreground">
-                Sistema TAG
-              </h1>
-              <p className="text-primary-foreground/80 leading-relaxed text-[0.9rem]">
-                Gestão de equipamentos, notas de manutenção e histórico de operações em tempo real.
+        <div className="relative z-10 w-full min-h-screen flex items-center justify-center p-4 sm:p-8">
+          <div className="w-full max-w-md">
+            <div className="bg-white/10 backdrop-blur-2xl rounded-3xl p-8 sm:p-10 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] border border-white/30 text-center">
+              <div className="w-16 h-16 rounded-full bg-accent/20 flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <CheckCircle size={32} className="text-accent" />
+              </div>
+              <h2 className="font-bold text-white text-[1.5rem] tracking-tight mb-3">Conta criada!</h2>
+              <p className="text-[0.95rem] text-white/90 mb-2 font-medium">
+                Um e-mail de confirmação foi enviado para:
               </p>
-            </div>
-            <p className="text-primary-foreground/50 text-[0.75rem]">
-              © {new Date().getFullYear()} Klabin S/A — Uso interno
-            </p>
-          </div>
-
-          <div className="flex-1 flex items-center justify-center p-6 lg:justify-end lg:pr-12">
-            <div className="w-full max-w-md">
-              <div className="bg-white/10 backdrop-blur-2xl rounded-3xl p-8 sm:p-10 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] border border-white/30 text-center">
-            <div className="w-16 h-16 rounded-full bg-accent/20 flex items-center justify-center mx-auto mb-6 shadow-lg">
-              <CheckCircle size={32} className="text-accent" />
-            </div>
-            <h2 className="font-bold text-white text-[1.5rem] tracking-tight mb-3">Conta criada!</h2>
-            <p className="text-[0.95rem] text-white/90 mb-2 font-medium">
-              Um e-mail de confirmação foi enviado para:
-            </p>
-            <p className="text-sm font-bold text-white mb-6 p-3 bg-white/10 rounded-lg">{email}</p>
-            <p className="text-xs text-white/80 mb-8 font-medium">
-              Confirme seu e-mail antes de fazer o primeiro acesso. Verifique também a pasta de spam.
-            </p>
-            <button
-              onClick={onBackToLogin}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-primary text-primary-foreground text-[0.95rem] font-bold shadow-lg transition-all hover:bg-primary/90 hover:scale-[1.02]"
-            >
-              <ArrowLeft size={16} />
-              Ir para o Login
-            </button>
-          </div>
+              <p className="text-sm font-bold text-white mb-6 p-3 bg-white/10 rounded-xl shadow-inner">{email}</p>
+              <p className="text-xs text-white/80 mb-8 font-medium">
+                Confirme seu e-mail antes de fazer o primeiro acesso. Verifique também a pasta de spam.
+              </p>
+              <button
+                onClick={onBackToLogin}
+                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-primary text-primary-foreground text-[0.95rem] font-bold shadow-lg transition-all hover:bg-primary/90 hover:scale-[1.02]"
+              >
+                <ArrowLeft size={16} />
+                Ir para o Login
+              </button>
             </div>
           </div>
         </div>
@@ -137,290 +114,285 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
       <div className="absolute inset-0 bg-primary/85 mix-blend-multiply" />
       <div className="absolute inset-0 bg-gradient-to-tr from-primary/95 via-primary/70 to-transparent" />
       
-      <div className="relative z-10 w-full flex flex-col lg:flex-row max-w-7xl mx-auto">
-        {/* Left panel – branding */}
-        <div className="hidden lg:flex flex-col justify-between w-1/2 lg:w-3/5 p-12 py-16">
-          <div className="flex items-center gap-3">
-            <img src="/logo.svg" alt="Klabin Logo" className="h-10 w-auto object-contain" />
-            <span className="text-primary-foreground font-semibold tracking-widest uppercase text-sm">
-              KLABIN S/A
-            </span>
-          </div>
-          <div>
-            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-6 text-primary-foreground">
-              Sistema TAG
-            </h1>
-            <p className="text-primary-foreground/80 leading-relaxed text-[0.9rem]">
-              Crie sua conta para acessar a gestão de equipamentos e notas de manutenção.
-            </p>
-          </div>
-          <p className="text-primary-foreground/50 text-[0.75rem]">
-            © {new Date().getFullYear()} Klabin S/A — Uso interno
-          </p>
-        </div>
-
-        {/* Right panel – form */}
-        <div className="flex-1 flex items-center justify-center p-6 lg:justify-end lg:pr-12">
-          <div className="w-full max-w-md max-h-screen overflow-y-auto py-6">
-            {/* Mobile logo */}
-            <div className="flex items-center gap-3 mb-8 lg:hidden">
-              <img src="/logo.svg" alt="Klabin Logo" className="h-10 w-auto object-contain brightness-0 invert" />
-              <div className="flex-1">
-                <p className="font-semibold text-xs uppercase tracking-widest text-primary-foreground mb-1">Klabin S/A</p>
-                <p className="text-xs text-primary-foreground/80">Sistema TAG</p>
-              </div>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-2xl rounded-3xl p-8 sm:p-10 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] border border-white/30">
-          <h2 className="mb-1 text-white font-bold text-[1.5rem] tracking-tight">Criar conta</h2>
-          <p className="mb-8 text-sm text-white/90 font-medium">
-            Preencha os dados para registrar seu acesso
-          </p>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="flex items-start gap-2 p-3 rounded border border-destructive/20 bg-destructive/10 text-destructive text-sm">
-                <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
-                <p>{error}</p>
-              </div>
-            )}
-
-            <p className="text-xs font-bold uppercase tracking-wider text-white/70 pt-2 mb-2">
-              Identificação
-            </p>
-
-            <div>
-              <label className="block mb-2 text-sm font-semibold text-white drop-shadow-md">
-                Nome Completo *
-              </label>
-              <input
-                type="text"
-                value={nome}
-                onChange={(e) => setNome(e.target.value)}
-                placeholder="Digite seu nome completo"
-                autoComplete="name"
-                className={inputClass}
-              />
-            </div>
-
-            <div>
-              <label className="block mb-2 text-sm font-semibold text-white drop-shadow-md">
-                PRN (Número de Registro Pessoal) *
-              </label>
-              <input
-                type="text"
-                value={prn}
-                onChange={(e) => setPrn(e.target.value)}
-                placeholder="Mínimo 4 caracteres"
-                className={inputClass}
-              />
-              <p className="mt-1.5 text-xs text-white/70 font-medium">Mínimo 4 caracteres</p>
-            </div>
-
-            <div>
-              <label className="block mb-2 text-sm font-semibold text-white drop-shadow-md">
-                Gerência *
-              </label>
-              <select
-                value={gerencia}
-                onChange={(e) => {
-                  const newGerencia = e.target.value;
-                  setGerencia(newGerencia);
-                  setCoordenacao('');
-                  const firstArea = getAreasByGerencia(newGerencia)[0];
-                  setAreas(firstArea ? [firstArea] : []);
-                  setCargo(getCargosByGerencia(newGerencia)[0]);
-                }}
-                className={inputClass}
-              >
-                {GERENCIAS.filter(g => g !== 'Manutenção').map(g => (
-                  <option key={g} value={g}>{g}</option>
-                ))}
-              </select>
-            </div>
-
-            {getCoordenacoesByGerencia(gerencia) && (
+      <div className="relative z-10 w-full min-h-screen flex items-center justify-center p-4 sm:p-8 overflow-y-auto">
+        <div className="w-full max-w-4xl py-6">
+          <div className="bg-white/10 backdrop-blur-2xl rounded-3xl p-8 sm:p-10 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] border border-white/30">
+            
+            {/* Header com Logo */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 pb-5 border-b border-white/20 gap-4">
               <div>
-                <label className="block mb-2 text-sm font-semibold text-white drop-shadow-md">
-                  Coordenação *
-                </label>
-                <select
-                  value={coordenacao}
-                  onChange={(e) => {
-                    const newCoordenacao = e.target.value;
-                    setCoordenacao(newCoordenacao);
-                    const firstArea = getAreasByCoordenacao(gerencia, newCoordenacao)[0];
-                    setAreas(firstArea ? [firstArea] : []);
-                  }}
-                  className={inputClass}
-                >
-                  <option value="" disabled>Selecione uma coordenação</option>
-                  {Object.keys(getCoordenacoesByGerencia(gerencia)!).map(c => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
+                <h2 className="text-white font-bold text-[1.8rem] tracking-tight mb-1">Criar conta</h2>
+                <p className="text-[0.95rem] text-white/90 font-medium">
+                  Preencha os dados para registrar seu acesso
+                </p>
               </div>
-            )}
-
-            <div>
-              <label className="block mb-2 text-sm font-semibold text-white drop-shadow-md">
-                Áreas de Trabalho * <span className="text-xs text-white/70 font-medium ml-1">(selecione todas)</span>
-              </label>
-              <div className="grid grid-cols-2 gap-2 p-3 rounded border border-white/20 bg-white/5">
-                {(coordenacao ? getAreasByCoordenacao(gerencia, coordenacao) : getAreasByGerencia(gerencia)).map(a => (
-                  <label key={a} className={`flex items-center gap-2 p-2 rounded cursor-pointer text-sm transition-colors ${
-                    areas.includes(a)
-                      ? 'bg-primary/20 text-white border border-primary/50 font-medium'
-                      : 'hover:bg-white/10 text-white/90 border border-transparent'
-                  }`}>
-                    <input
-                      type="checkbox"
-                      checked={areas.includes(a)}
-                      onChange={() => {
-                        setAreas(prev =>
-                          prev.includes(a) ? prev.filter(x => x !== a) : [...prev, a]
-                        );
-                      }}
-                      className="accent-primary w-3.5 h-3.5"
-                    />
-                    {a}
-                  </label>
-                ))}
+              <div className="flex items-center gap-3 bg-white/5 p-3 rounded-2xl border border-white/10 shadow-inner">
+                <img src="/logo.svg" alt="Klabin Logo" className="h-8 w-auto object-contain brightness-0 invert" />
+                <div className="hidden sm:block">
+                  <p className="font-semibold text-[10px] uppercase tracking-widest text-white mb-0.5 leading-none">Klabin S/A</p>
+                  <p className="text-[10px] text-white/80 leading-none">Sistema TAG</p>
+                </div>
               </div>
-              {areas.length === 0 && (
-                <p className="mt-1.5 text-xs text-destructive">Selecione pelo menos uma área</p>
-              )}
             </div>
 
-
-            <div>
-              <label className="block mb-2 text-sm font-semibold text-white drop-shadow-md">
-                Função / Cargo *
-              </label>
-              <select
-                value={cargo}
-                onChange={(e) => setCargo(e.target.value)}
-                className={inputClass}
-              >
-                {getCargosByGerencia(gerencia).map(c => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-            </div>
-
-
-            <p className="text-xs font-bold uppercase tracking-wider text-white/70 pt-4 mb-2">
-              Credenciais de acesso
-            </p>
-
-            <div>
-              <label className="block mb-2 text-sm font-semibold text-white drop-shadow-md">
-                E-mail *
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="operador@klabin.com.br"
-                autoComplete="email"
-                className={inputClass}
-              />
-            </div>
-
-            <div>
-              <label className="block mb-2 text-sm font-semibold text-white drop-shadow-md">
-                Senha *
-              </label>
-              <div className="relative">
-                <input
-                  type={showSenha ? 'text' : 'password'}
-                  value={senha}
-                  onChange={(e) => setSenha(e.target.value)}
-                  placeholder="Mínimo 8 caracteres"
-                  autoComplete="new-password"
-                  className={`${inputClass} pr-10`}
-                />
-                  <button
-                  type="button"
-                  onClick={() => setShowSenha(v => !v)}
-                  tabIndex={-1}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors"
-                >
-                  {showSenha ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-              {senha.length > 0 && (
-                <div className="mt-1.5 flex items-center gap-1.5">
-                  <div className={`h-1 flex-1 rounded-full transition-colors ${senhaForte ? 'bg-accent' : 'bg-amber-400'}`} />
-                  <span className={`text-xs ${senhaForte ? 'text-accent' : 'text-amber-600'}`}>
-                    {senhaForte ? 'Senha forte' : 'Mín. 8 caracteres'}
-                  </span>
+            <form onSubmit={handleSubmit}>
+              {error && (
+                <div className="flex items-start gap-2 p-3 mb-6 rounded-xl border border-destructive/30 bg-destructive/20 text-white text-sm shadow-sm backdrop-blur-md">
+                  <AlertCircle size={16} className="flex-shrink-0 mt-0.5 text-red-400" />
+                  <p className="font-medium text-red-100">{error}</p>
                 </div>
               )}
-            </div>
 
-            <div>
-              <label className="block mb-2 text-sm font-semibold text-white drop-shadow-md">
-                Confirmar senha *
-              </label>
-              <div className="relative">
-                <input
-                  type={showConfirmar ? 'text' : 'password'}
-                  value={confirmarSenha}
-                  onChange={(e) => setConfirmarSenha(e.target.value)}
-                  placeholder="Repita a senha"
-                  autoComplete="new-password"
-                  className={`${inputClass} pr-10 ${
-                    confirmarSenha.length > 0 && !senhasIguais ? 'border-destructive' : ''
-                  }`}
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
+                
+                {/* COLUNA ESQUERDA: Identificação */}
+                <div className="space-y-4">
+                  <p className="text-xs font-bold uppercase tracking-wider text-white/70 mb-3 border-b border-white/10 pb-2">
+                    Identificação
+                  </p>
+
+                  <div>
+                    <label className="block mb-1.5 text-sm font-semibold text-white drop-shadow-md">
+                      Nome Completo *
+                    </label>
+                    <input
+                      type="text"
+                      value={nome}
+                      onChange={(e) => setNome(e.target.value)}
+                      placeholder="Digite seu nome completo"
+                      autoComplete="name"
+                      className={inputClass}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block mb-1.5 text-sm font-semibold text-white drop-shadow-md">
+                      PRN (Número de Registro Pessoal) *
+                    </label>
+                    <input
+                      type="text"
+                      value={prn}
+                      onChange={(e) => setPrn(e.target.value)}
+                      placeholder="Mínimo 4 caracteres"
+                      className={inputClass}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block mb-1.5 text-sm font-semibold text-white drop-shadow-md">
+                      Gerência *
+                    </label>
+                    <select
+                      value={gerencia}
+                      onChange={(e) => {
+                        const newGerencia = e.target.value;
+                        setGerencia(newGerencia);
+                        setCoordenacao('');
+                        const firstArea = getAreasByGerencia(newGerencia)[0];
+                        setAreas(firstArea ? [firstArea] : []);
+                        setCargo(getCargosByGerencia(newGerencia)[0]);
+                      }}
+                      className={inputClass}
+                    >
+                      {GERENCIAS.filter(g => g !== 'Manutenção').map(g => (
+                        <option key={g} value={g}>{g}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {getCoordenacoesByGerencia(gerencia) && (
+                    <div>
+                      <label className="block mb-1.5 text-sm font-semibold text-white drop-shadow-md">
+                        Coordenação *
+                      </label>
+                      <select
+                        value={coordenacao}
+                        onChange={(e) => {
+                          const newCoordenacao = e.target.value;
+                          setCoordenacao(newCoordenacao);
+                          const firstArea = getAreasByCoordenacao(gerencia, newCoordenacao)[0];
+                          setAreas(firstArea ? [firstArea] : []);
+                        }}
+                        className={inputClass}
+                      >
+                        <option value="" disabled>Selecione uma coordenação</option>
+                        {Object.keys(getCoordenacoesByGerencia(gerencia)!).map(c => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block mb-1.5 text-sm font-semibold text-white drop-shadow-md">
+                      Função / Cargo *
+                    </label>
+                    <select
+                      value={cargo}
+                      onChange={(e) => setCargo(e.target.value)}
+                      className={inputClass}
+                    >
+                      {getCargosByGerencia(gerencia).map(c => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* COLUNA DIREITA: Credenciais e Áreas */}
+                <div className="space-y-4">
+                  <p className="text-xs font-bold uppercase tracking-wider text-white/70 mb-3 border-b border-white/10 pb-2">
+                    Credenciais e Áreas
+                  </p>
+
+                  <div>
+                    <label className="block mb-1.5 text-sm font-semibold text-white drop-shadow-md">
+                      E-mail *
+                    </label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="operador@klabin.com.br"
+                      autoComplete="email"
+                      className={inputClass}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block mb-1.5 text-sm font-semibold text-white drop-shadow-md">
+                        Senha *
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showSenha ? 'text' : 'password'}
+                          value={senha}
+                          onChange={(e) => setSenha(e.target.value)}
+                          placeholder="Mín. 8 char"
+                          autoComplete="new-password"
+                          className={`${inputClass} pr-10`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowSenha(v => !v)}
+                          tabIndex={-1}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors"
+                        >
+                          {showSenha ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block mb-1.5 text-sm font-semibold text-white drop-shadow-md">
+                        Confirmar senha *
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showConfirmar ? 'text' : 'password'}
+                          value={confirmarSenha}
+                          onChange={(e) => setConfirmarSenha(e.target.value)}
+                          placeholder="Repita a senha"
+                          autoComplete="new-password"
+                          className={`${inputClass} pr-10 ${
+                            confirmarSenha.length > 0 && !senhasIguais ? 'border-red-400 focus:border-red-400 focus:ring-red-400/20' : ''
+                          }`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmar(v => !v)}
+                          tabIndex={-1}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors"
+                        >
+                          {showConfirmar ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {senha.length > 0 && (
+                    <div className="flex items-center gap-1.5 mt-1 mb-2">
+                      <div className={`h-1 flex-1 rounded-full transition-colors ${senhaForte ? 'bg-accent' : 'bg-amber-400'}`} />
+                      <span className={`text-xs font-medium ${senhaForte ? 'text-accent' : 'text-amber-400'}`}>
+                        {senhaForte ? 'Senha forte' : 'Mínimo 8 caracteres'}
+                      </span>
+                    </div>
+                  )}
+                  {confirmarSenha.length > 0 && !senhasIguais && (
+                    <p className="mt-1 text-xs font-medium text-red-300">As senhas não conferem</p>
+                  )}
+
+                  <div className="pt-2">
+                    <label className="block mb-1.5 text-sm font-semibold text-white drop-shadow-md">
+                      Áreas de Trabalho * <span className="text-xs text-white/70 font-medium ml-1">(selecione todas)</span>
+                    </label>
+                    <div className="grid grid-cols-2 gap-2 p-3 rounded-xl border border-white/20 bg-white/5 max-h-[140px] overflow-y-auto">
+                      {(coordenacao ? getAreasByCoordenacao(gerencia, coordenacao) : getAreasByGerencia(gerencia)).map(a => (
+                        <label key={a} className={`flex items-center gap-2 p-2 rounded cursor-pointer text-sm transition-colors ${
+                          areas.includes(a)
+                            ? 'bg-primary/20 text-white border border-primary/50 font-medium'
+                            : 'hover:bg-white/10 text-white/90 border border-transparent'
+                        }`}>
+                          <input
+                            type="checkbox"
+                            checked={areas.includes(a)}
+                            onChange={() => {
+                              setAreas(prev =>
+                                prev.includes(a) ? prev.filter(x => x !== a) : [...prev, a]
+                              );
+                            }}
+                            className="accent-primary w-3.5 h-3.5"
+                          />
+                          {a}
+                        </label>
+                      ))}
+                    </div>
+                    {areas.length === 0 && (
+                      <p className="mt-1.5 text-xs font-medium text-red-300">Selecione pelo menos uma área</p>
+                    )}
+                  </div>
+
+                </div>
+              </div>
+
+              {/* Botões e Footer */}
+              <div className="mt-8 pt-6 border-t border-white/20 flex flex-col md:flex-row gap-4 items-center">
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full md:w-2/3 flex items-center justify-center gap-2 py-3.5 rounded-xl bg-primary text-primary-foreground text-[0.95rem] font-bold shadow-lg transition-all hover:bg-primary/90 hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
+                >
+                  {submitting ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <UserPlus size={18} />
+                  )}
+                  {submitting ? 'Criando conta…' : 'Criar Conta'}
+                </button>
+                
                 <button
                   type="button"
-                  onClick={() => setShowConfirmar(v => !v)}
-                  tabIndex={-1}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors"
+                  onClick={onBackToLogin}
+                  className="w-full md:w-1/3 flex items-center justify-center gap-2 py-3.5 rounded-xl border-2 border-white/40 text-white text-[0.95rem] font-bold transition-all bg-white/10 hover:bg-white/20 hover:scale-[1.02] shadow-lg"
                 >
-                  {showConfirmar ? <EyeOff size={16} /> : <Eye size={16} />}
+                  <ArrowLeft size={16} />
+                  Voltar
                 </button>
               </div>
-              {confirmarSenha.length > 0 && !senhasIguais && (
-                <p className="mt-1 text-xs text-destructive">As senhas não conferem</p>
-              )}
-            </div>
 
-            <div className="pt-4">
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-primary text-primary-foreground text-[0.95rem] font-bold shadow-lg transition-all hover:bg-primary/90 hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
-              >
-                {submitting ? (
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <UserPlus size={18} />
-                )}
-                {submitting ? 'Criando conta…' : 'Criar Conta'}
-              </button>
-            </div>
-          </form>
-
-          <div className="mt-8 pt-6 border-t border-white/20">
-            <button
-              onClick={onBackToLogin}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl border-2 border-white/40 text-white text-[0.95rem] font-bold transition-all bg-white/10 hover:bg-white/20 hover:scale-[1.02] shadow-lg"
-            >
-              <ArrowLeft size={16} />
-              Voltar para Login
-            </button>
-          </div>
-
-          <div className="mt-4 p-3 rounded text-xs space-y-1 bg-white/5 border border-white/10 text-white/80">
-            <p className="font-medium text-white">📋 Informações importantes</p>
-            <p>• Seu e-mail será usado para acessar o sistema</p>
-            <p>• O PRN identifica você nas notas e comentários</p>
-            <p>• Um e-mail de confirmação será enviado após o cadastro</p>
-          </div>
-            </div>
+              <div className="mt-6 flex flex-col md:flex-row gap-4 justify-between items-center text-xs bg-white/5 border border-white/10 text-white/80 p-4 rounded-xl shadow-inner">
+                <div className="flex items-center gap-2 font-medium text-white">
+                  <span>📋</span>
+                  Informações importantes:
+                </div>
+                <div className="flex flex-wrap gap-x-6 gap-y-2 font-medium">
+                  <p>• O PRN identifica você nas notas</p>
+                  <p>• E-mail é seu acesso</p>
+                  <p>• Confirmação via e-mail</p>
+                </div>
+              </div>
+            </form>
           </div>
         </div>
       </div>
