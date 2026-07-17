@@ -127,7 +127,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                 </p>
               </div>
               <div className="flex items-center gap-3 bg-white/5 p-3 rounded-2xl border border-white/10 shadow-inner">
-                <img src="/logo.svg" alt="Klabin Logo" className="h-8 w-auto object-contain brightness-0 invert" />
+                <img src="/logo.svg" alt="Klabin Logo" className="h-8 w-auto object-contain" />
                 <div className="hidden sm:block">
                   <p className="font-semibold text-[10px] uppercase tracking-widest text-white mb-0.5 leading-none">Klabin S/A</p>
                   <p className="text-[10px] text-white/80 leading-none">Sistema TAG</p>

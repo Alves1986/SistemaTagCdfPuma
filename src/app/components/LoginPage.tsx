@@ -91,7 +91,7 @@ export function LoginPage() {
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <div className="flex items-center gap-3 mb-8 lg:hidden">
-            <img src="/logo.svg" alt="Klabin Logo" className="h-10 w-auto object-contain brightness-0 invert" />
+            <img src="/logo.svg" alt="Klabin Logo" className="h-10 w-auto object-contain" />
             <div className="flex-1">
               <p className="text-xs font-semibold uppercase tracking-widest text-primary-foreground mb-1">Klabin S/A</p>
               <p className="text-xs text-primary-foreground/80">Sistema TAG</p>
