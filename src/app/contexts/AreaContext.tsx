@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 
-import { getAreasByGerencia } from '../utils/hierarchy';
+import { getAreasByGerencia, normalizeGerencia } from '../utils/hierarchy';
 
 export const ALL_AREAS = ['CDF II', 'ETAC II', 'CDF I', 'ETAC I'] as const;
 export type Area = string;
@@ -25,11 +25,12 @@ export function AreaProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (user?.gerencia && !initialized) {
-      // Usuários de Manutenção inicializam na gerência operacional padrão
-      const gerenciaInicial = user.gerencia === 'Manutenção'
+      const raw = user.gerencia;
+      // Normaliza: Manutenção inicializa em gerência operacional; demais normalizam aliases
+      const normalized = raw === 'Manutenção'
         ? 'Recuperação e Utilidades'
-        : user.gerencia;
-      setSelectedGerencia(gerenciaInicial);
+        : normalizeGerencia(raw);
+      setSelectedGerencia(normalized);
       setInitialized(true);
     }
   }, [user, initialized]);
