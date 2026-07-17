@@ -63,6 +63,19 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
     area: selectedArea,
   });
 
+  const getSubAreas = (area: string) => {
+    if (area.includes('/')) return area.split('/');
+    return [area];
+  };
+
+  const subAreas = getSubAreas(selectedArea);
+  const [selectedSubArea, setSelectedSubArea] = useState<string>('Todos');
+
+  useEffect(() => {
+    setSelectedSubArea('Todos');
+  }, [selectedArea]);
+
+
   useEffect(() => {
     loadTags();
   }, []);
@@ -87,7 +100,45 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
     }
   };
 
-  const areaTags = tags.filter(t => t.localizacao_texto === getLocalizacaoFromArea(selectedArea));
+  const checkAreaMatch = (tagLoc: string, targetArea: string) => {
+    if (!tagLoc) return false;
+    const loc = tagLoc.toUpperCase().trim();
+    const target = targetArea.toUpperCase().trim();
+
+    // Mapas de sinônimos/legado para robustez
+    const map: Record<string, string[]> = {
+      'CDF2': ['CDF2', 'CDF 2', 'CDF II', 'CALDEIRA 2', 'CDF2/ETAC2'],
+      'ETAC2': ['ETAC2', 'ETAC 2', 'ETAC II', 'CDF2/ETAC2'],
+      'CDF1': ['CDF1', 'CDF 1', 'CDF I', 'CALDEIRA 1', 'CDF1/ETAC1'],
+      'ETAC1': ['ETAC1', 'ETAC 1', 'ETAC I', 'CDF1/ETAC1'],
+      'CDR1': ['CDR1', 'CDR 1', 'CDR I', 'CDR1/EVAP1'],
+      'EVAP1': ['EVAP1', 'EVAP 1', 'EVAP I', 'CDR1/EVAP1'],
+      'CDR2': ['CDR2', 'CDR 2', 'CDR II', 'CDR2/EVAP2'],
+      'EVAP2': ['EVAP2', 'EVAP 2', 'EVAP II', 'CDR2/EVAP2'],
+      'ETA': ['ETA', 'ETA/ETE'],
+      'ETE': ['ETE', 'ETA/ETE'],
+      'ENERGIA (TG)': ['ENERGIA', 'ENERGIA (TG)', 'TG'],
+      'PLANTA QUIMICA (PQ)': ['PLANTA QUIMICA', 'PQ', 'PLANTA QUIMICA (PQ)']
+    };
+
+    if (target.includes('/')) {
+      const parts = target.split('/');
+      return parts.some(p => checkAreaMatch(tagLoc, p)) || loc.includes(target);
+    }
+
+    if (map[target] && map[target].some(alias => loc.includes(alias))) {
+      return true;
+    }
+
+    return loc.includes(target) || loc.includes(getLocalizacaoFromArea(targetArea).toUpperCase());
+  };
+
+  const areaTags = tags.filter(t => {
+    if (selectedSubArea !== 'Todos') {
+      return checkAreaMatch(t.localizacao_texto, selectedSubArea);
+    }
+    return checkAreaMatch(t.localizacao_texto, selectedArea);
+  });
 
   const filteredTags = areaTags.filter(tag => {
     const matchesSearch = searchQuery.trim() === '' ||
@@ -145,10 +196,15 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
       return;
     }
     try {
+      // Se tiver área selecionada diferente da selectedArea geral, prepend no texto
+      const locText = formData.area && formData.area !== formData.localizacao_texto && !formData.localizacao_texto.includes(formData.area)
+        ? `${formData.area} - ${formData.localizacao_texto}` 
+        : formData.localizacao_texto;
+
       const newTag = await api.createTag({
         tag_completo: formData.tag_completo,
         nome_equipamento: formData.nome_equipamento,
-        localizacao_texto: formData.localizacao_texto,
+        localizacao_texto: locText,
         status: formData.status,
         foto_url: formData.foto_url || undefined,
         user_nome: user?.nome
@@ -238,11 +294,23 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
               Gestão de TAGs
               <span className="ml-2 text-xs font-normal text-muted-foreground">— {selectedArea}</span>
             </h1>
-            <p className="text-sm mt-0.5 text-muted-foreground">
+              <p className="text-sm mt-0.5 text-muted-foreground">
               Monitoramento e gerenciamento de equipamentos
             </p>
           </div>
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap items-center">
+            {subAreas.length > 1 && (
+              <select
+                value={selectedSubArea}
+                onChange={e => setSelectedSubArea(e.target.value)}
+                className="px-3 py-2 text-sm rounded border border-border bg-background text-foreground min-w-[120px]"
+              >
+                <option value="Todos">Todas as Áreas ({selectedArea})</option>
+                {subAreas.map(sa => (
+                  <option key={sa} value={sa}>Somente {sa}</option>
+                ))}
+              </select>
+            )}
             {!isManutencao && (
               <button
                 onClick={() => setShowCreateModal(true)}
@@ -574,17 +642,20 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
                 />
               </div>
 
-              <div>
-                <label className="block mb-1.5 text-sm font-medium text-foreground">Área *</label>
-                <select name="area" value={formData.area} onChange={handleInputChange} className={inputClass}>
-                  {['CDF II', 'ETAC II', 'CDF I', 'ETAC I'].map(a => (
-                    <option key={a} value={a}>{a}</option>
-                  ))}
-                </select>
-              </div>
+              {subAreas.length > 1 && (
+                <div>
+                  <label className="block mb-1.5 text-sm font-medium text-foreground">Área Específica *</label>
+                  <select name="area" value={formData.area} onChange={handleInputChange} className={inputClass}>
+                    {subAreas.map(a => (
+                      <option key={a} value={a}>{a}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div>
                 <label className="block mb-1.5 text-sm font-medium text-foreground">Status *</label>
+
                 <select name="status" value={formData.status} onChange={handleInputChange} className={inputClass}>
                   <option value="operacional">Operacional</option>
                   <option value="manutenção">Manutenção</option>
