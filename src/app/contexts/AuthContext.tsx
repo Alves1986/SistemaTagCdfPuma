@@ -42,7 +42,7 @@ async function resolveProfile(supabaseUser: SupabaseUser): Promise<UserProfile> 
   try {
     const { data } = await supabase
       .from('profiles')
-      .select('id, nome, prn, cargo, foto_url, whatsapp, gerencia, coordenacao, area, areas_coordenadas')
+      .select('id, nome, prn, cargo, foto_url, whatsapp, gerencia, coordenacao, areas_coordenadas')
       .eq('id', supabaseUser.id)
       .maybeSingle();
 
@@ -50,8 +50,8 @@ async function resolveProfile(supabaseUser: SupabaseUser): Promise<UserProfile> 
       // Se não tem areas_coordenadas salvo, deriva do campo area (retrocompat.)
       const areas = data.areas_coordenadas?.length
         ? data.areas_coordenadas
-        : data.area ? [data.area] : [];
-      return { ...data, areas_coordenadas: areas, email: supabaseUser.email ?? '' };
+        : [];
+      return { ...data, areas_coordenadas: areas, email: supabaseUser.email ?? '', area: areas[0] || '' };
     }
   } catch {
     // Tabela não existe ou erro de rede — usa fallback

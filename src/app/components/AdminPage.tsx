@@ -282,6 +282,7 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
   const isAdmin = ['Operador Lider', 'Coordenador', 'Especialista', 'Engenheiro', 'Assistente Tecnico', 'Gestor de Manutenção'].includes(user?.cargo || '');
   const isGestorManutencao = user?.cargo === 'Gestor de Manutenção';
   const isManutencao = user?.gerencia === 'Manutenção';
+  const isCoordenador = user?.cargo === 'Coordenador';
 
   return (
     <>
@@ -311,7 +312,7 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
                 ))}
               </select>
             )}
-            {!isManutencao && (
+            {!isManutencao && !isCoordenador && (
               <button
                 onClick={() => setShowCreateModal(true)}
                 className="flex items-center gap-1.5 px-3 py-2 rounded bg-primary text-primary-foreground text-sm font-medium transition-colors hover:bg-primary/90"
@@ -320,7 +321,7 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
                 Criar TAG
               </button>
             )}
-            {!isManutencao && (
+            {!isManutencao && !isCoordenador && (
               <button
                 onClick={() => { setQrPage(1); setQrSelected(new Set()); setShowQrModal(true); }}
                 className="flex items-center gap-1.5 px-3 py-2 rounded border border-primary text-primary text-sm font-medium transition-colors bg-transparent hover:bg-primary hover:text-primary-foreground"

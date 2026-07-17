@@ -96,7 +96,7 @@ export function ProfilePage() {
             </div>
           </div>
 
-          <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-8 bg-muted/30 p-4 rounded-lg border border-border">
+          <div className={`w-full grid grid-cols-1 md:grid-cols-${user.coordenacao ? '3' : '2'} gap-4 text-sm mb-8 bg-muted/30 p-4 rounded-lg border border-border`}>
             <div className="flex items-center gap-3 text-muted-foreground">
               <div className="p-2 bg-background rounded border border-border"><Briefcase size={16} /></div>
               <div>
@@ -104,11 +104,20 @@ export function ProfilePage() {
                 <p className="text-foreground font-medium">{user.gerencia || 'Não informada'}</p>
               </div>
             </div>
+            {user.coordenacao && (
+              <div className="flex items-center gap-3 text-muted-foreground">
+                <div className="p-2 bg-background rounded border border-border"><Briefcase size={16} /></div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider">Coordenação</p>
+                  <p className="text-foreground font-medium">{user.coordenacao}</p>
+                </div>
+              </div>
+            )}
             <div className="flex items-center gap-3 text-muted-foreground">
               <div className="p-2 bg-background rounded border border-border"><MapPin size={16} /></div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider">Área</p>
-                <p className="text-foreground font-medium">{user.area || 'Não informada'}</p>
+                <p className="text-foreground font-medium">{user.areas_coordenadas?.join(', ') || user.area || 'Não informada'}</p>
               </div>
             </div>
           </div>
