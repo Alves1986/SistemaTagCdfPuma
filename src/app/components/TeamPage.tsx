@@ -4,11 +4,11 @@ import { useArea } from '../contexts/AreaContext';
 import { supabase, UserProfile } from '../lib/supabase';
 import * as api from '../services/api';
 import { Users, Phone, Camera, Save, X, Edit2, ShieldAlert } from 'lucide-react';
-import { GERENCIAS, getAreasByGerencia, getCargosByGerencia } from '../utils/hierarchy';
+import { GERENCIAS, getAreasByGerencia, getCargosByGerencia, normalizeGerencia } from '../utils/hierarchy';
 
 export function TeamPage() {
   const { user } = useAuth();
-  const { selectedArea } = useArea();
+  const { selectedArea, selectedGerencia } = useArea();
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -130,8 +130,17 @@ export function TeamPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {profiles.filter(p => {
-            const pAreas = p.areas_coordenadas?.length ? p.areas_coordenadas : (p.area ? [p.area] : []);
-            return pAreas.includes(selectedArea);
+            const userGerenciaNorm = normalizeGerencia(user?.gerencia || '');
+            const pGerenciaNorm = normalizeGerencia(p.gerencia || '');
+            const isManutencao = userGerenciaNorm === 'Manutenção';
+
+            if (isManutencao) {
+              // Gestores de Manutenção veem a gerência selecionada no header e sua própria equipe de manutenção
+              return pGerenciaNorm === selectedGerencia || pGerenciaNorm === 'Manutenção';
+            } else {
+              // Coordenadores/Operadores veem toda a sua gerência de uma vez só (não veem manutenção)
+              return pGerenciaNorm === userGerenciaNorm;
+            }
           }).map(profile => (
             <div key={profile.id} className="bg-card rounded-xl border border-border overflow-hidden shadow-md hover:shadow-lg transition-all hover:scale-[1.02] flex flex-col">
               <div className="h-20 bg-gradient-to-r from-primary to-[#002040]"></div>
