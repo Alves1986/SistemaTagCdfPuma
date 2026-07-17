@@ -60,24 +60,46 @@ export function Layout() {
       {/* Top bar */}
       <header className="bg-gradient-to-r from-primary via-primary to-[#002040] shadow-md border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 py-3 md:py-0 md:h-16">
             {/* Brand */}
-            <div className="flex items-center gap-3 flex-shrink-0">
-              <div className="bg-white/10 p-1.5 rounded-lg backdrop-blur-sm shadow-sm border border-white/20">
-                <img src="/logo.svg" alt="Klabin Logo" className="h-8 w-auto object-contain drop-shadow-sm" />
+            <div className="flex items-center gap-3 flex-shrink-0 w-full sm:w-auto justify-between sm:justify-start">
+              <div className="flex items-center gap-3">
+                <div className="bg-white/10 p-1.5 rounded-lg backdrop-blur-sm shadow-sm border border-white/20">
+                  <img src="/logo.svg" alt="Klabin Logo" className="h-8 w-auto object-contain drop-shadow-sm" />
+                </div>
+                <div className="leading-tight">
+                  <div className="text-[0.95rem] tracking-wide text-primary-foreground font-bold drop-shadow-sm">
+                    KLABIN · SISTEMA TAG
+                  </div>
+                  <div className="text-[0.7rem] tracking-[0.2em] text-primary-foreground/80 uppercase font-medium mt-0.5">
+                    {user?.coordenacao || user?.areas_coordenadas?.[0] || user?.area || 'OPERAÇÕES INDUSTRIAIS'}
+                  </div>
+                </div>
               </div>
-              <div className="leading-tight hidden sm:block">
-                <div className="text-[0.95rem] tracking-wide text-primary-foreground font-bold drop-shadow-sm">
-                  KLABIN · SISTEMA TAG
-                </div>
-                <div className="text-[0.7rem] tracking-[0.2em] text-primary-foreground/80 uppercase font-medium mt-0.5">
-                  {user?.coordenacao || user?.areas_coordenadas?.[0] || user?.area || 'OPERAÇÕES INDUSTRIAIS'}
-                </div>
+              
+              {/* Right: user + logout on mobile (moved up) */}
+              <div className="flex sm:hidden items-center gap-3">
+                <Link to="/profile" className="flex items-center gap-2 hover:opacity-80 transition-opacity" title="Meu Perfil">
+                  <div className="w-8 h-8 rounded flex items-center justify-center bg-primary-foreground/10 text-primary-foreground overflow-hidden flex-shrink-0">
+                    {user?.foto_url ? (
+                      <img src={user.foto_url} alt="Foto" className="w-full h-full object-cover" />
+                    ) : (
+                      <User size={15} />
+                    )}
+                  </div>
+                </Link>
+                <button
+                  onClick={logout}
+                  className="flex items-center gap-1.5 text-primary-foreground/70 hover:text-primary-foreground transition-colors"
+                  title="Sair"
+                >
+                  <LogOut size={18} />
+                </button>
               </div>
             </div>
 
             {/* Filters container */}
-            <div className="flex flex-col sm:flex-row items-center gap-2 flex-shrink-0">
+            <div className="flex flex-row items-center justify-center gap-2 flex-shrink-0 w-full sm:w-auto order-3 sm:order-none">
               
               {/* Gerencia selector */}
               <div className="relative flex-shrink-0" ref={gerenciaDropdownRef}>
@@ -133,7 +155,7 @@ export function Layout() {
             </div>
 
             {/* Center nav */}
-            <nav className="flex items-center gap-1">
+            <nav className="flex items-center justify-center gap-1 w-full sm:w-auto order-2 sm:order-none">
               {!isManutencao && (
                 <Link
                   to="/"
@@ -184,10 +206,10 @@ export function Layout() {
               )}
             </nav>
 
-            {/* Right: user + logout */}
-            <div className="flex items-center gap-3">
-              <Link to="/profile" className="hidden md:flex items-center gap-2 pr-3 border-r border-primary-foreground/20 hover:opacity-80 transition-opacity" title="Meu Perfil">
-                <div className="w-8 h-8 rounded flex items-center justify-center bg-primary-foreground/10 text-primary-foreground overflow-hidden">
+            {/* Right: user + logout (desktop) */}
+            <div className="hidden sm:flex items-center gap-3">
+              <Link to="/profile" className="flex items-center gap-2 pr-3 border-r border-primary-foreground/20 hover:opacity-80 transition-opacity" title="Meu Perfil">
+                <div className="w-8 h-8 rounded flex items-center justify-center bg-primary-foreground/10 text-primary-foreground overflow-hidden flex-shrink-0">
                   {user?.foto_url ? (
                     <img src={user.foto_url} alt="Foto" className="w-full h-full object-cover" />
                   ) : (
@@ -201,11 +223,11 @@ export function Layout() {
               </Link>
               <button
                 onClick={logout}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded text-sm transition-colors text-primary-foreground/70 hover:text-primary-foreground hover:bg-white/10"
+                className="flex items-center gap-1.5 text-primary-foreground/70 hover:text-primary-foreground transition-colors"
                 title="Sair"
               >
-                <LogOut size={15} />
-                <span className="hidden sm:inline">Sair</span>
+                <LogOut size={16} />
+                <span className="text-sm font-medium hidden md:inline">Sair</span>
               </button>
             </div>
           </div>
