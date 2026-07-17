@@ -234,9 +234,21 @@ export function TagDetailPage() {
     } catch { alert('Erro ao abrir nota de manutenção'); }
   };
 
-  const handleFecharNota = async () => {
+  // Operador valida: nota vai para o histórico antes de ser removida
+  const handleValidarNota = async () => {
+    if (!tag || !user) return;
+    if (confirm('Confirmar validação e encerramento desta nota de manutenção?')) {
+      try {
+        const updatedTag = await api.finalizarNota(tag.id, user.nome);
+        setTag(updatedTag);
+      } catch { alert('Erro ao validar nota de manutenção'); }
+    }
+  };
+
+  // Cancelar/fechar sem registrar histórico (remoção simples)
+  const handleCancelarNota = async () => {
     if (!tag) return;
-    if (confirm('Deseja realmente fechar esta nota de manutenção?')) {
+    if (confirm('Deseja cancelar/fechar esta nota sem registrar no histórico?')) {
       try {
         const updatedTag = await api.removeNotaManutencao(tag.id);
         setTag(updatedTag);
@@ -307,17 +319,17 @@ export function TagDetailPage() {
             
             {tag.nota_manutencao.status_manutencao === 'finalizada_manutencao' && user?.cargo !== 'Gestor de Manutenção' ? (
               <button
-                onClick={handleFecharNota}
+                onClick={handleValidarNota}
                 className="p-2 bg-green-600 text-white hover:bg-green-700 rounded-md transition-colors text-sm font-medium flex items-center gap-2"
-                title="Validar e Encerrar Nota Definitivamente"
+                title="Validar e Encerrar Nota — registra no histórico"
               >
                 <CheckCircle size={16} /> Validar e Encerrar Nota
               </button>
             ) : (
               <button
-                onClick={handleFecharNota}
+                onClick={handleCancelarNota}
                 className="p-1.5 bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground rounded-md transition-colors"
-                title="Fechar Nota (Cancelar ou Encerrar sem validação)"
+                title="Fechar/Cancelar nota (sem histórico)"
               >
                 <X size={18} />
               </button>
