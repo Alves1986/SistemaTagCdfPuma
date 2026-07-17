@@ -39,8 +39,19 @@ export function LoginPage() {
   return (
     <div className="min-h-screen flex bg-background">
       {/* Left panel – branding */}
-      <div className="hidden lg:flex flex-col justify-between w-2/5 p-12 bg-primary">
-        <div className="flex items-center gap-3">
+      <div 
+        className="hidden lg:flex flex-col justify-between w-2/5 relative overflow-hidden"
+        style={{ 
+          backgroundImage: 'url(/capa.jpg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        }}
+      >
+        <div className="absolute inset-0 bg-primary/85 mix-blend-multiply" />
+        <div className="absolute inset-0 bg-gradient-to-t from-primary/90 to-transparent" />
+        
+        <div className="relative z-10 flex flex-col h-full justify-between p-12">
+          <div className="flex items-center gap-3">
           <img src="/logo.svg" alt="Klabin Logo" className="h-10 w-auto object-contain" />
           <span className="text-primary-foreground font-semibold tracking-widest uppercase text-sm">
             KLABIN S/A
@@ -70,9 +81,10 @@ export function LoginPage() {
           </div>
         </div>
 
-        <p className="text-primary-foreground/50 text-[0.75rem]">
-          © {new Date().getFullYear()} Klabin S/A — Uso interno
-        </p>
+          <p className="text-primary-foreground/50 text-[0.75rem]">
+            © {new Date().getFullYear()} Klabin S/A — Uso interno
+          </p>
+        </div>
       </div>
 
       {/* Right panel – form */}
