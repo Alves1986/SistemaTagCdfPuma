@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router';
-import { Wrench, Eye, Settings, Play, CheckCircle, MapPin, BarChart2, List } from 'lucide-react';
+import { Wrench, Eye, Settings, Play, CheckCircle, BarChart2, List, MapPin } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useArea } from '../contexts/AreaContext';
 import { Tag } from '../types';
 import * as api from '../services/api';
+import { getLocalizacaoFromArea } from '../utils/hierarchy';
 
 type Especialidade = 'Mecânica' | 'Elétrica' | 'Instrumentação' | 'Automação';
 type ViewMode = 'notas' | 'graficos';
@@ -33,13 +35,13 @@ const PRIORIDADE_BG: Record<string, string> = {
 
 export function MaintenanceDashboard() {
   const { user } = useAuth();
+  const { selectedArea } = useArea();
   const navigate = useNavigate();
 
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Especialidade>('Mecânica');
   const [viewMode, setViewMode] = useState<ViewMode>('notas');
-  const [filterArea, setFilterArea] = useState<string>('todas');
 
   useEffect(() => {
     if (user && user.gerencia !== 'Manutenção') {
@@ -47,16 +49,18 @@ export function MaintenanceDashboard() {
       return;
     }
     if (user) loadData();
-  }, [user, navigate]);
+  }, [user, navigate, selectedArea]);
 
   const loadData = async () => {
     try {
       setLoading(true);
       const data = await api.getAllTags();
-      // Só equipamentos operacionais (não de manutenção) com nota aberta
-      const comNota = data.filter(
-        tag => tag.nota_manutencao && AREAS_OPERACIONAIS.includes(tag.localizacao_texto)
-      );
+      // Filtra pela área selecionada no header (ou todas as operacionais)
+      const comNota = data.filter(tag => {
+        const localizacao = getLocalizacaoFromArea(selectedArea);
+        const matchesArea = !selectedArea || tag.localizacao_texto === localizacao;
+        return matchesArea && tag.nota_manutencao && AREAS_OPERACIONAIS.includes(tag.localizacao_texto);
+      });
       setAllTags(comNota);
     } catch (error) {
       console.error('Erro ao buscar dados:', error);
@@ -81,28 +85,23 @@ export function MaintenanceDashboard() {
     }
   };
 
-  // ── Filtros ──────────────────────────────────────────────────────
-  const tagsFiltradas =
-    filterArea === 'todas'
-      ? allTags
-      : allTags.filter(t => t.localizacao_texto === filterArea);
-
-  const tagsByTab = tagsFiltradas.filter(
+  // allTags já está filtrado pela área do header
+  const tagsByTab = allTags.filter(
     t => t.nota_manutencao?.especialidade === activeTab
   );
 
   const counts: Record<Especialidade, number> = {
-    Mecânica: tagsFiltradas.filter(t => t.nota_manutencao?.especialidade === 'Mecânica').length,
-    Elétrica: tagsFiltradas.filter(t => t.nota_manutencao?.especialidade === 'Elétrica').length,
-    Instrumentação: tagsFiltradas.filter(t => t.nota_manutencao?.especialidade === 'Instrumentação').length,
-    Automação: tagsFiltradas.filter(t => t.nota_manutencao?.especialidade === 'Automação').length,
+    Mecânica: allTags.filter(t => t.nota_manutencao?.especialidade === 'Mecânica').length,
+    Elétrica: allTags.filter(t => t.nota_manutencao?.especialidade === 'Elétrica').length,
+    Instrumentação: allTags.filter(t => t.nota_manutencao?.especialidade === 'Instrumentação').length,
+    Automação: allTags.filter(t => t.nota_manutencao?.especialidade === 'Automação').length,
   };
 
   // ── Dados para gráficos ──────────────────────────────────────────
   const prioridadeData = ['urgente', 'alta', 'média', 'baixa'].map(p => ({
     label: p.charAt(0).toUpperCase() + p.slice(1),
     prioridade: p,
-    count: tagsFiltradas.filter(t => t.nota_manutencao?.prioridade === p).length,
+    count: allTags.filter(t => t.nota_manutencao?.prioridade === p).length,
   }));
 
   const areaData = AREAS_OPERACIONAIS.map(loc => ({
@@ -137,7 +136,7 @@ export function MaintenanceDashboard() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Gestão de Manutenção</h1>
           <p className="text-sm text-muted-foreground">
-            {allTags.length} nota{allTags.length !== 1 ? 's' : ''} abertas no total
+            {allTags.length} nota{allTags.length !== 1 ? 's' : ''} abertas — área: <strong>{selectedArea}</strong>
           </p>
         </div>
 
@@ -158,29 +157,6 @@ export function MaintenanceDashboard() {
         </div>
       </div>
 
-      {/* Filter by area */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-sm text-muted-foreground font-medium flex items-center gap-1"><MapPin size={13} /> Filtrar por área:</span>
-        <button
-          onClick={() => setFilterArea('todas')}
-          className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${filterArea === 'todas' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-border hover:bg-muted'}`}
-        >
-          Todas as áreas ({allTags.length})
-        </button>
-        {AREAS_OPERACIONAIS.map(loc => {
-          const count = allTags.filter(t => t.localizacao_texto === loc).length;
-          if (count === 0) return null;
-          return (
-            <button
-              key={loc}
-              onClick={() => setFilterArea(loc)}
-              className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${filterArea === loc ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-border hover:bg-muted'}`}
-            >
-              {AREA_LABEL[loc] ?? loc} ({count})
-            </button>
-          );
-        })}
-      </div>
 
       {/* ─── MODO GRÁFICOS ─── */}
       {viewMode === 'graficos' && (

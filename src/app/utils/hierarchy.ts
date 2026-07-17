@@ -21,7 +21,7 @@ export const HIERARQUIA = {
     ]
   },
   "Recuperação e Utilidades": {
-    areas: ["CDF2 / ETAC2", "CDF1 / ETAC1", "Tratamento de Efluentes"],
+    areas: ["CDF II", "ETAC II", "CDF I", "ETAC I"],
     cargos: [
       "Aprendiz", "Operador II", "Operador III", "Operador Lider",
       "Coordenador", "Especialista", "Engenheiro", "Assistente Tecnico"
