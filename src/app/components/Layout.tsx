@@ -71,10 +71,7 @@ export function Layout() {
                   KLABIN · SISTEMA TAG
                 </div>
                 <div className="text-[0.7rem] tracking-[0.2em] text-primary-foreground/80 uppercase font-medium mt-0.5">
-                  {user?.coordenacao && (
-                    <span className="opacity-90">{user.coordenacao} • </span>
-                  )}
-                  {user?.areas_coordenadas?.[0] || user?.area || 'OPERAÇÕES INDUSTRIAIS'}
+                  {user?.coordenacao || user?.areas_coordenadas?.[0] || user?.area || 'OPERAÇÕES INDUSTRIAIS'}
                 </div>
               </div>
             </div>
