@@ -25,7 +25,11 @@ export function AreaProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (user?.gerencia && !initialized) {
-      setSelectedGerencia(user.gerencia);
+      // Usuários de Manutenção inicializam na gerência operacional padrão
+      const gerenciaInicial = user.gerencia === 'Manutenção'
+        ? 'Recuperação e Utilidades'
+        : user.gerencia;
+      setSelectedGerencia(gerenciaInicial);
       setInitialized(true);
     }
   }, [user, initialized]);
