@@ -26,52 +26,38 @@ export function AreaProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (user?.gerencia && !initialized) {
       const raw = user.gerencia;
-      // Normaliza: Manutenção inicializa em gerência operacional; demais normalizam aliases
       const normalized = raw === 'Manutenção'
         ? 'Recuperação e Utilidades'
         : normalizeGerencia(raw);
       setSelectedGerencia(normalized);
 
-      // Limpa áreas legadas inválidas (ex: "Gerência de Manutenção" salvo no lugar da área)
+      // Limpa áreas legadas inválidas
       const validAreas = getAllOperationalAreas();
       const userAreas = (user.areas_coordenadas || []).filter(a => validAreas.includes(a as Area)) as Area[];
       
-      const cargo = user.cargo || '';
-      const podeVerTudo = ['Gestor de Manutenção', 'Engenheiro', 'Técnico'].includes(cargo);
-
-      // Define as áreas visíveis
+      // Define as áreas visíveis ESTRITAMENTE para o que o usuário tem cadastrado
       let areasDoUsuario: Area[] = [];
-      if (podeVerTudo || userAreas.length === 0) {
-        areasDoUsuario = getAreasByGerencia(normalized);
+      if (userAreas.length === 0) {
+        // Fallback apenas caso o cadastro antigo esteja totalmente quebrado
+        areasDoUsuario = [getAreasByGerencia(normalized)[0]];
       } else {
         areasDoUsuario = userAreas;
       }
 
       setAvailableAreas(areasDoUsuario);
-      setSelectedArea(areasDoUsuario[0] ?? getAreasByGerencia(normalized)[0]);
+      setSelectedArea(areasDoUsuario[0]);
       setInitialized(true);
     }
   }, [user, initialized]);
 
   useEffect(() => {
-    // Quando muda a gerência manualmente no header, recarrega as áreas da gerência
     if (!initialized) return;
 
     const validAreas = getAllOperationalAreas();
     const userAreas = (user?.areas_coordenadas || []).filter(a => validAreas.includes(a as Area)) as Area[];
-    const cargo = user?.cargo || '';
-    const podeVerTudo = ['Gestor de Manutenção', 'Engenheiro', 'Técnico'].includes(cargo);
-    const userGerenciaNorm = user?.gerencia ? normalizeGerencia(user.gerencia) : '';
-
-    let newAreas: Area[];
-
-    if (podeVerTudo) {
-      newAreas = getAreasByGerencia(selectedGerencia);
-    } else if (userAreas.length > 0 && userGerenciaNorm === selectedGerencia) {
-      newAreas = userAreas;
-    } else {
-      newAreas = getAreasByGerencia(selectedGerencia);
-    }
+    
+    // Novamente, respeitando ESTRITAMENTE o cadastro do usuário
+    let newAreas: Area[] = userAreas.length > 0 ? userAreas : [getAreasByGerencia(selectedGerencia)[0]];
     
     setAvailableAreas(newAreas);
 
