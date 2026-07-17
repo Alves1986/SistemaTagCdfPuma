@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase, UserProfile } from '../lib/supabase';
 import * as api from '../services/api';
-import { User, Phone, Camera, Save, MapPin, Briefcase } from 'lucide-react';
+import { User, Phone, Camera, Save, MapPin, Briefcase, X, Check } from 'lucide-react';
+import Cropper from 'react-easy-crop';
+import getCroppedImg from '../../utils/cropImage';
 
 export function ProfilePage() {
   const { user } = useAuth();
@@ -11,6 +13,12 @@ export function ProfilePage() {
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
+
+  // Cropper states
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
 
   useEffect(() => {
     if (user) {
@@ -36,24 +44,40 @@ export function ProfilePage() {
     setSaving(false);
   };
 
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
-    
-    setUploading(true);
+  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.addEventListener('load', () =>
+        setImageSrc(reader.result?.toString() || null)
+      );
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const onCropComplete = useCallback((_croppedArea: any, croppedAreaPixels: any) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  }, []);
+
+  const handleCropSave = async () => {
+    if (!imageSrc || !croppedAreaPixels || !user) return;
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      setUploading(true);
+      const croppedImage = await getCroppedImg(imageSrc, croppedAreaPixels);
+      if (!croppedImage) throw new Error("Falha ao cortar a imagem");
+      
+      const fileName = `${user.id}-${Date.now()}.jpg`;
       const filePath = `perfis/${fileName}`;
       
       const { error: uploadError } = await supabase.storage
         .from('fotos')
-        .upload(filePath, file, { upsert: true });
+        .upload(filePath, croppedImage, { upsert: true, contentType: 'image/jpeg' });
 
       if (uploadError) throw uploadError;
 
       const { data } = supabase.storage.from('fotos').getPublicUrl(filePath);
       setFormData(prev => ({ ...prev, foto_url: data.publicUrl }));
+      setImageSrc(null); // close cropper
     } catch (error) {
       console.error('Erro no upload da foto:', error);
       alert('Erro ao fazer upload da foto. Verifique se o bucket "fotos" foi criado.');
@@ -79,7 +103,7 @@ export function ProfilePage() {
             <label className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity text-white text-sm font-bold">
               <Camera size={24} className="mb-1" />
               Alterar
-              <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={uploading} />
+              <input type="file" accept="image/*" className="hidden" onChange={onFileChange} disabled={uploading} />
             </label>
           </div>
 
@@ -166,6 +190,74 @@ export function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Cropper Modal */}
+      {imageSrc && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-card w-full max-w-md rounded-xl shadow-xl overflow-hidden flex flex-col h-[80vh] max-h-[600px]">
+            <div className="p-4 border-b border-border flex justify-between items-center bg-muted/30">
+              <h3 className="font-semibold text-lg">Ajustar Foto</h3>
+              <button onClick={() => setImageSrc(null)} className="p-1 hover:bg-muted rounded-full transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="relative flex-1 bg-black/90">
+              <Cropper
+                image={imageSrc}
+                crop={crop}
+                zoom={zoom}
+                aspect={1}
+                cropShape="round"
+                showGrid={false}
+                onCropChange={setCrop}
+                onCropComplete={onCropComplete}
+                onZoomChange={setZoom}
+              />
+            </div>
+            
+            <div className="p-4 bg-muted/30 border-t border-border space-y-4">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Zoom</label>
+                <input
+                  type="range"
+                  value={zoom}
+                  min={1}
+                  max={3}
+                  step={0.1}
+                  aria-labelledby="Zoom"
+                  onChange={(e) => setZoom(Number(e.target.value))}
+                  className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
+                />
+              </div>
+              
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => setImageSrc(null)}
+                  className="flex-1 py-2 px-4 rounded-lg border border-border font-medium hover:bg-muted transition-colors text-sm"
+                  disabled={uploading}
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleCropSave}
+                  disabled={uploading}
+                  className="flex-1 py-2 px-4 rounded-lg bg-primary text-primary-foreground font-medium hover:brightness-110 transition-all text-sm flex items-center justify-center gap-2"
+                >
+                  {uploading ? (
+                    <span className="animate-pulse">Salvando...</span>
+                  ) : (
+                    <>
+                      <Check size={18} />
+                      Recortar e Salvar
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
