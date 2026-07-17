@@ -195,7 +195,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                       className={inputClass}
                     >
                       {GERENCIAS.filter(g => g !== 'Manutenção').map(g => (
-                        <option key={g} value={g}>{g}</option>
+                        <option key={g} value={g} className="text-gray-900 bg-white">{g}</option>
                       ))}
                     </select>
                   </div>
@@ -215,9 +215,9 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                         }}
                         className={inputClass}
                       >
-                        <option value="" disabled>Selecione uma coordenação</option>
+                        <option value="" disabled className="text-gray-900 bg-white">Selecione uma coordenação</option>
                         {Object.keys(getCoordenacoesByGerencia(gerencia)!).map(c => (
-                          <option key={c} value={c}>{c}</option>
+                          <option key={c} value={c} className="text-gray-900 bg-white">{c}</option>
                         ))}
                       </select>
                     </div>
@@ -233,7 +233,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                       className={inputClass}
                     >
                       {getCargosByGerencia(gerencia).map(c => (
-                        <option key={c} value={c}>{c}</option>
+                        <option key={c} value={c} className="text-gray-900 bg-white">{c}</option>
                       ))}
                     </select>
                   </div>
