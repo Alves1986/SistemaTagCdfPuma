@@ -4,6 +4,7 @@ import { Search, Camera, QrCode, AlertTriangle, Wrench, Tag, X, Clock, Scan } fr
 import { Scanner } from '@yudiel/react-qr-scanner';
 import { Tag as TagType } from '../types';
 import * as api from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const RECENT_TAGS_KEY = 'klabin_recent_tags';
 const MAX_RECENT = 5;
@@ -33,12 +34,19 @@ export { saveRecentTag };
 
 export function SearchPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<TagType[]>([]);
   const [loading, setLoading] = useState(false);
   const [recentTags, setRecentTags] = useState<RecentTag[]>([]);
   const [showQrModal, setShowQrModal] = useState(false);
   const [qrStatus, setQrStatus] = useState<'scanning' | 'not_found' | 'found'>('scanning');
+
+  useEffect(() => {
+    if (user?.gerencia === 'Manutenção') {
+      navigate('/admin/manutencao');
+    }
+  }, [user, navigate]);
 
   useEffect(() => {
     try {

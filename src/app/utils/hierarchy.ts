@@ -28,7 +28,7 @@ export const HIERARQUIA = {
     ]
   },
   "Manutenção": {
-    areas: ["Gerência de Manutenção"],
+    areas: ["CDF II", "ETAC II", "CDF I", "ETAC I"],
     cargos: ["Gestor de Manutenção", "Engenheiro", "Especialista", "Técnico"]
   }
 };
@@ -44,4 +44,14 @@ export function getCargosByGerencia(gerencia: string): string[] {
     "Aprendiz", "Operador II", "Operador III", "Operador Lider",
     "Coordenador", "Especialista", "Engenheiro", "Assistente Tecnico"
   ];
+}
+
+export function getLocalizacaoFromArea(area: string) {
+  switch (area) {
+    case 'ETAC II': return 'ETAC 2';
+    case 'CDF II': return 'Caldeira 2';
+    case 'ETAC I': return 'ETAC 1';
+    case 'CDF I': return 'Caldeira 1';
+    default: return area;
+  }
 }

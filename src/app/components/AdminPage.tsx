@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router';
+import { Link, useSearchParams, useNavigate } from 'react-router';
 import { Tag } from '../types';
 import {
   AlertTriangle, Camera, QrCode, Download, Edit, Wrench, Search,
@@ -10,6 +10,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useArea } from '../contexts/AreaContext';
 import * as api from '../services/api';
 import { QRCodeSVG } from 'qrcode.react';
+import { getLocalizacaoFromArea } from '../utils/hierarchy';
 
 type FilterKey = 'all' | 'com_nota' | 'operacional' | 'manutenção' | 'inativo';
 
@@ -17,6 +18,13 @@ export function AdminPage() {
   const { user } = useAuth();
   const { selectedArea } = useArea();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user?.gerencia === 'Manutenção') {
+      navigate('/admin/manutencao');
+    }
+  }, [user, navigate]);
 
   return <AdminPageContent selectedArea={selectedArea} initialFilter={(searchParams.get('filter') as FilterKey) || 'all'} />;
 }
@@ -76,16 +84,6 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
       console.error('Erro ao carregar TAGs:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const getLocalizacaoFromArea = (area: string) => {
-    switch (area) {
-      case 'ETAC II': return 'ETAC 2';
-      case 'CDF II': return 'Caldeira 2';
-      case 'ETAC I': return 'ETAC 1';
-      case 'CDF I': return 'Caldeira 1';
-      default: return area;
     }
   };
 

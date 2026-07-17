@@ -1,18 +1,22 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router';
-import { Search, Settings, LogOut, User, AlertTriangle, Flame, ChevronDown, ArrowRight } from 'lucide-react';
+import { Search, Settings, LogOut, User, AlertTriangle, Flame, ChevronDown, ArrowRight, Wrench } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useArea } from '../contexts/AreaContext';
 import { useState, useEffect, useRef } from 'react';
 import * as api from '../services/api';
+import { GERENCIAS } from '../utils/hierarchy';
 
 export function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const { selectedArea, setSelectedArea, areas } = useArea();
+  const { selectedGerencia, setSelectedGerencia, selectedArea, setSelectedArea, areas } = useArea();
   const [notasAbertas, setNotasAbertas] = useState(0);
+  const [showGerenciaDropdown, setShowGerenciaDropdown] = useState(false);
   const [showAreaDropdown, setShowAreaDropdown] = useState(false);
+  const gerenciaDropdownRef = useRef<HTMLDivElement>(null);
   const areaDropdownRef = useRef<HTMLDivElement>(null);
+  const isManutencao = user?.gerencia === 'Manutenção';
 
   useEffect(() => {
     loadNotasCount();
@@ -22,6 +26,9 @@ export function Layout() {
     const handler = (e: MouseEvent) => {
       if (areaDropdownRef.current && !areaDropdownRef.current.contains(e.target as Node)) {
         setShowAreaDropdown(false);
+      }
+      if (gerenciaDropdownRef.current && !gerenciaDropdownRef.current.contains(e.target as Node)) {
+        setShowGerenciaDropdown(false);
       }
     };
     document.addEventListener('mousedown', handler);
@@ -39,7 +46,11 @@ export function Layout() {
   };
 
   const handleAlertBarClick = () => {
-    navigate('/admin?filter=com_nota');
+    if (isManutencao) {
+      navigate('/admin/manutencao');
+    } else {
+      navigate('/admin?filter=com_nota');
+    }
   };
 
   const badgeCount = notasAbertas > 99 ? '99+' : notasAbertas;
@@ -65,8 +76,37 @@ export function Layout() {
               </div>
             </div>
 
-            {/* Area selector */}
-            <div className="relative flex-shrink-0" ref={areaDropdownRef}>
+            {/* Filters container */}
+            <div className="flex flex-col sm:flex-row items-center gap-2 flex-shrink-0">
+              
+              {/* Gerencia selector */}
+              <div className="relative flex-shrink-0" ref={gerenciaDropdownRef}>
+                <button
+                  onClick={() => setShowGerenciaDropdown(v => !v)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-primary-foreground/30 text-primary-foreground/90 text-sm font-medium transition-colors hover:bg-white/10 hover:border-primary-foreground/50"
+                >
+                  <span>{selectedGerencia}</span>
+                  <ChevronDown size={13} className={`transition-transform duration-150 ${showGerenciaDropdown ? 'rotate-180' : ''}`} />
+                </button>
+                {showGerenciaDropdown && (
+                  <div className="absolute left-0 top-full mt-1.5 bg-card rounded border border-border shadow-lg z-50 min-w-[200px]">
+                    {GERENCIAS.map(gerencia => (
+                      <button
+                        key={gerencia}
+                        onClick={() => { setSelectedGerencia(gerencia); setShowGerenciaDropdown(false); }}
+                        className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-muted ${
+                          selectedGerencia === gerencia ? 'text-primary font-semibold bg-primary/5' : 'text-foreground'
+                        }`}
+                      >
+                        {gerencia}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Area selector */}
+              <div className="relative flex-shrink-0" ref={areaDropdownRef}>
               <button
                 onClick={() => setShowAreaDropdown(v => !v)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-primary-foreground/30 text-primary-foreground/90 text-sm font-medium transition-colors hover:bg-white/10 hover:border-primary-foreground/50"
@@ -89,37 +129,59 @@ export function Layout() {
                   ))}
                 </div>
               )}
+              </div>
             </div>
 
             {/* Center nav */}
             <nav className="flex items-center gap-1">
-              <Link
-                to="/"
-                className={`flex items-center gap-2 px-4 py-2 rounded transition-all duration-150 text-sm font-medium ${
-                  location.pathname === '/'
-                    ? 'bg-accent text-accent-foreground'
-                    : 'text-primary-foreground/70 hover:text-primary-foreground hover:bg-white/10'
-                }`}
-              >
-                <Search size={16} />
-                <span className="hidden sm:inline">Buscar</span>
-              </Link>
-              <Link
-                to="/admin"
-                className={`relative flex items-center gap-2 px-4 py-2 rounded transition-all duration-150 text-sm font-medium ${
-                  location.pathname === '/admin'
-                    ? 'bg-accent text-accent-foreground'
-                    : 'text-primary-foreground/70 hover:text-primary-foreground hover:bg-white/10'
-                }`}
-              >
-                <Settings size={16} />
-                <span className="hidden sm:inline">Gestão</span>
-                {notasAbertas > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[0.6rem] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-0.5 shadow-sm">
-                    {badgeCount}
-                  </span>
-                )}
-              </Link>
+              {!isManutencao && (
+                <Link
+                  to="/"
+                  className={`flex items-center gap-2 px-4 py-2 rounded transition-all duration-150 text-sm font-medium ${
+                    location.pathname === '/'
+                      ? 'bg-accent text-accent-foreground'
+                      : 'text-primary-foreground/70 hover:text-primary-foreground hover:bg-white/10'
+                  }`}
+                >
+                  <Search size={16} />
+                  <span className="hidden sm:inline">Buscar</span>
+                </Link>
+              )}
+              {!isManutencao ? (
+                <Link
+                  to="/admin"
+                  className={`relative flex items-center gap-2 px-4 py-2 rounded transition-all duration-150 text-sm font-medium ${
+                    location.pathname === '/admin'
+                      ? 'bg-accent text-accent-foreground'
+                      : 'text-primary-foreground/70 hover:text-primary-foreground hover:bg-white/10'
+                  }`}
+                >
+                  <Settings size={16} />
+                  <span className="hidden sm:inline">Gestão</span>
+                  {notasAbertas > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[0.6rem] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-0.5 shadow-sm">
+                      {badgeCount}
+                    </span>
+                  )}
+                </Link>
+              ) : (
+                <Link
+                  to="/admin/manutencao"
+                  className={`relative flex items-center gap-2 px-4 py-2 rounded transition-all duration-150 text-sm font-medium ${
+                    location.pathname === '/admin/manutencao'
+                      ? 'bg-accent text-accent-foreground'
+                      : 'text-primary-foreground/70 hover:text-primary-foreground hover:bg-white/10'
+                  }`}
+                >
+                  <Wrench size={16} />
+                  <span className="hidden sm:inline">Dashboard</span>
+                  {notasAbertas > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[0.6rem] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-0.5 shadow-sm">
+                      {badgeCount}
+                    </span>
+                  )}
+                </Link>
+              )}
             </nav>
 
             {/* Right: user + logout */}

@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router';
-import { ArrowLeft, Wrench, Eye, Settings, Play, CheckCircle } from 'lucide-react';
+import { useNavigate } from 'react-router';
+import { Wrench, Eye, Settings, Play, CheckCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useArea } from '../contexts/AreaContext';
 import { Tag } from '../types';
 import * as api from '../services/api';
+import { getLocalizacaoFromArea } from '../utils/hierarchy';
 
 type Especialidade = 'Mecânica' | 'Elétrica' | 'Instrumentação' | 'Automação';
 
@@ -18,13 +19,13 @@ export function MaintenanceDashboard() {
   const [activeTab, setActiveTab] = useState<Especialidade>('Mecânica');
 
   useEffect(() => {
-    // Acesso restrito
-    if (user?.cargo !== 'Gestor de Manutenção') {
+    // Acesso restrito à gerência de Manutenção
+    if (user && user.gerencia !== 'Manutenção') {
       navigate('/admin');
       return;
     }
-    loadData();
-  }, [user, navigate]);
+    if (user) loadData();
+  }, [user, navigate, selectedArea]);
 
   const loadData = async () => {
     try {
@@ -33,7 +34,8 @@ export function MaintenanceDashboard() {
       
       // Filtra por área (se preenchida) e se tem nota
       const filtered = allTags.filter(tag => {
-        const matchesArea = !selectedArea || tag.localizacao_texto?.includes(selectedArea);
+        const expectedLocalizacao = getLocalizacaoFromArea(selectedArea);
+        const matchesArea = !selectedArea || tag.localizacao_texto === expectedLocalizacao;
         return matchesArea && tag.nota_manutencao;
       });
       
@@ -93,9 +95,6 @@ export function MaintenanceDashboard() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link to="/admin" className="p-2 -ml-2 rounded-full hover:bg-muted text-muted-foreground transition-colors">
-            <ArrowLeft size={20} />
-          </Link>
           <div>
             <h1 className="text-2xl font-bold text-foreground">Gestão de Manutenção</h1>
             <p className="text-sm text-muted-foreground">Área atual: {selectedArea || 'Todas as Áreas'}</p>
