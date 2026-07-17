@@ -11,6 +11,7 @@ export interface Tag {
   atualizado_em: string;
   atualizado_por?: string;
   nota_manutencao?: NotaManutencao;
+  historico_notas?: NotaManutencao[];
 }
 
 export interface NotaManutencao {
@@ -21,6 +22,13 @@ export interface NotaManutencao {
   aberta_por: string;
   especialidade?: 'Mecânica' | 'Elétrica' | 'Instrumentação' | 'Automação';
   status_manutencao?: 'aberta' | 'visualizada' | 'em_tratamento' | 'finalizada_manutencao';
+  data_finalizacao?: string;
+  finalizado_por?: string;
+}
+
+export interface HistoricoNota extends NotaManutencao {
+  data_finalizacao: string;
+  finalizado_por: string;
 }
 
 export interface Photo {

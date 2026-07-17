@@ -368,6 +368,29 @@ export async function removeNotaManutencao(tagId: number): Promise<Tag> {
   return updateTag(tagId, { nota_manutencao: null as any } as Partial<Tag>);
 }
 
+// Finaliza a nota com histórico: salva no historico_notas antes de limpar nota_manutencao
+export async function finalizarNota(
+  tagId: number,
+  finalizadoPor: string
+): Promise<Tag> {
+  const tag = await getTagById(tagId);
+  if (!tag.nota_manutencao) throw new Error('TAG não possui nota aberta');
+
+  const notaFinalizada = {
+    ...tag.nota_manutencao,
+    status_manutencao: 'finalizada_manutencao' as const,
+    data_finalizacao: new Date().toISOString(),
+    finalizado_por: finalizadoPor,
+  };
+
+  const historicoAtual = tag.historico_notas || [];
+
+  return updateTag(tagId, {
+    nota_manutencao: null as any,
+    historico_notas: [...historicoAtual, notaFinalizada],
+  } as Partial<Tag>);
+}
+
 // ============ COMENTÁRIOS ============
 
 export async function getComentarios(tagId: number): Promise<Comentario[]> {

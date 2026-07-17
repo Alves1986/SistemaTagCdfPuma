@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router';
-import { Wrench, Eye, Settings, Play, CheckCircle, BarChart2, List, MapPin } from 'lucide-react';
+import { Wrench, Eye, Settings, Play, CheckCircle, BarChart2, List, MapPin, History } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useArea } from '../contexts/AreaContext';
-import { Tag } from '../types';
+import { Tag, NotaManutencao } from '../types';
 import * as api from '../services/api';
 import { getLocalizacaoFromArea } from '../utils/hierarchy';
 
 type Especialidade = 'Mecânica' | 'Elétrica' | 'Instrumentação' | 'Automação';
-type ViewMode = 'notas' | 'graficos';
+type ViewMode = 'notas' | 'graficos' | 'historico';
 
 const AREAS_OPERACIONAIS = ['Caldeira 2', 'ETAC 2', 'Caldeira 1', 'ETAC 1'];
 
@@ -39,6 +39,7 @@ export function MaintenanceDashboard() {
   const navigate = useNavigate();
 
   const [allTags, setAllTags] = useState<Tag[]>([]);
+  const [allTagsComHistorico, setAllTagsComHistorico] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Especialidade>('Mecânica');
   const [viewMode, setViewMode] = useState<ViewMode>('notas');
@@ -55,13 +56,19 @@ export function MaintenanceDashboard() {
     try {
       setLoading(true);
       const data = await api.getAllTags();
-      // Filtra pela área selecionada no header (ou todas as operacionais)
+      // Notas ativas: filtra pela área selecionada no header (ou todas as operacionais)
       const comNota = data.filter(tag => {
         const localizacao = getLocalizacaoFromArea(selectedArea);
         const matchesArea = !selectedArea || tag.localizacao_texto === localizacao;
         return matchesArea && tag.nota_manutencao && AREAS_OPERACIONAIS.includes(tag.localizacao_texto);
       });
       setAllTags(comNota);
+      // Histórico: tags com notas já finalizadas
+      const comHistorico = data.filter(tag =>
+        tag.historico_notas && tag.historico_notas.length > 0 &&
+        AREAS_OPERACIONAIS.includes(tag.localizacao_texto)
+      );
+      setAllTagsComHistorico(comHistorico);
     } catch (error) {
       console.error('Erro ao buscar dados:', error);
     } finally {
@@ -153,6 +160,17 @@ export function MaintenanceDashboard() {
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-all ${viewMode === 'graficos' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
           >
             <BarChart2 size={14} /> Gráficos
+          </button>
+          <button
+            onClick={() => setViewMode('historico')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-all ${viewMode === 'historico' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+          >
+            <History size={14} /> Histórico
+            {allTagsComHistorico.reduce((acc, t) => acc + (t.historico_notas?.length ?? 0), 0) > 0 && (
+              <span className="ml-1 px-1.5 py-0.5 bg-primary text-primary-foreground rounded-full text-[10px] font-bold">
+                {allTagsComHistorico.reduce((acc, t) => acc + (t.historico_notas?.length ?? 0), 0)}
+              </span>
+            )}
           </button>
         </div>
       </div>
@@ -267,7 +285,7 @@ export function MaintenanceDashboard() {
                 <h3 className="text-sm font-medium text-foreground">Tudo limpo!</h3>
                 <p className="text-xs text-muted-foreground mt-1">
                   Nenhuma nota aberta para a especialidade {activeTab}
-                  {filterArea !== 'todas' ? ` em ${AREA_LABEL[filterArea] ?? filterArea}` : ''}.
+                  {selectedArea ? ` em ${AREA_LABEL[getLocalizacaoFromArea(selectedArea)] ?? selectedArea}` : ''}.
                 </p>
               </div>
             ) : (
@@ -354,6 +372,69 @@ export function MaintenanceDashboard() {
             )}
           </div>
         </>
+      )}
+
+      {/* ─── MODO HISTÓRICO ─── */}
+      {viewMode === 'historico' && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground border-b border-border pb-3">
+            <History size={15} />
+            <span>Notas finalizadas — registro de todas as intervenções de manutenção</span>
+          </div>
+
+          {allTagsComHistorico.length === 0 ? (
+            <div className="p-12 text-center bg-muted/10 border border-border rounded-lg border-dashed">
+              <History className="mx-auto h-8 w-8 text-muted-foreground/50 mb-3" />
+              <h3 className="text-sm font-medium text-foreground">Nenhum histórico ainda</h3>
+              <p className="text-xs text-muted-foreground mt-1">As notas finalizadas aparecerão aqui.</p>
+            </div>
+          ) : (
+            allTagsComHistorico.flatMap(tag =>
+              (tag.historico_notas ?? []).map((nota: NotaManutencao, idx: number) => {
+                const areaLabel = AREA_LABEL[tag.localizacao_texto] ?? tag.localizacao_texto;
+                return (
+                  <div key={`${tag.id}-${idx}`} className="bg-card border border-border rounded-xl p-4 shadow-sm opacity-90">
+                    <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                          <h3 className="font-bold text-base text-foreground">{tag.tag_completo}</h3>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${PRIORIDADE_BG[nota.prioridade] ?? 'bg-muted text-foreground'}`}>
+                            {nota.prioridade}
+                          </span>
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-green-100 text-green-800">
+                            Finalizada
+                          </span>
+                          <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-primary/10 text-primary border border-primary/20">
+                            <MapPin size={10} /> {areaLabel}
+                          </span>
+                        </div>
+                        <div className="text-sm text-muted-foreground space-y-0.5">
+                          <p><span className="font-medium text-foreground">Equipamento:</span> {tag.nome_equipamento}</p>
+                          <p><span className="font-medium text-foreground">Nota:</span> {nota.numero_nota}</p>
+                          <p><span className="font-medium text-foreground">Especialidade:</span> {nota.especialidade}</p>
+                          <p><span className="font-medium text-foreground">Descrição:</span> {nota.descricao}</p>
+                          <p className="text-xs mt-1.5 text-muted-foreground/70">
+                            Aberta por <strong>{nota.aberta_por}</strong> em {new Date(nota.data_abertura).toLocaleDateString('pt-BR')}
+                            {nota.data_finalizacao && (
+                              <> · Finalizada em {new Date(nota.data_finalizacao).toLocaleDateString('pt-BR')}
+                              {nota.finalizado_por && <> por <strong>{nota.finalizado_por}</strong></>}</>
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                      <Link
+                        to={`/tag/${tag.id}`}
+                        className="px-3 py-1.5 bg-transparent hover:bg-muted text-foreground text-xs font-medium rounded border border-border transition-colors text-center shrink-0"
+                      >
+                        Ver TAG
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })
+            )
+          )}
+        </div>
       )}
     </div>
   );
