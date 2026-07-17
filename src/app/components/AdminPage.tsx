@@ -231,16 +231,16 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
       const filePath = `tags/${fileName}`;
       
       const { error: uploadError } = await supabase.storage
-        .from('equipamentos')
+        .from('fotos')
         .upload(filePath, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
-      const { data } = supabase.storage.from('equipamentos').getPublicUrl(filePath);
+      const { data } = supabase.storage.from('fotos').getPublicUrl(filePath);
       setFormData(prev => ({ ...prev, foto_url: data.publicUrl }));
     } catch (error) {
       console.error('Erro no upload da foto do TAG:', error);
-      alert('Erro ao fazer upload da foto. Verifique se o bucket "equipamentos" existe e possui permissões públicas.');
+      alert('Erro ao fazer upload da foto. Verifique se o bucket "fotos" foi criado.');
     } finally {
       setUploadingTagPhoto(false);
     }
