@@ -37,20 +37,20 @@ export function LoginPage() {
   const inputClass = "w-full px-3 py-2.5 rounded border border-border bg-muted/30 text-sm text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20";
 
   return (
-    <div className="min-h-screen flex bg-background">
-      {/* Left panel – branding */}
-      <div 
-        className="hidden lg:flex flex-col justify-between w-2/5 relative overflow-hidden"
-        style={{ 
-          backgroundImage: 'url(/capa.jpg)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center'
-        }}
-      >
-        <div className="absolute inset-0 bg-primary/85 mix-blend-multiply" />
-        <div className="absolute inset-0 bg-gradient-to-t from-primary/90 to-transparent" />
-        
-        <div className="relative z-10 flex flex-col h-full justify-between p-12">
+    <div 
+      className="min-h-screen flex relative overflow-hidden"
+      style={{ 
+        backgroundImage: 'url(/capa.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      }}
+    >
+      <div className="absolute inset-0 bg-primary/85 mix-blend-multiply" />
+      <div className="absolute inset-0 bg-gradient-to-tr from-primary/95 via-primary/70 to-transparent" />
+      
+      <div className="relative z-10 w-full flex flex-col lg:flex-row max-w-7xl mx-auto">
+        {/* Left panel – branding */}
+        <div className="hidden lg:flex flex-col justify-between w-1/2 lg:w-3/5 p-12 py-16">
           <div className="flex items-center gap-3">
           <img src="/logo.svg" alt="Klabin Logo" className="h-10 w-auto object-contain" />
           <span className="text-primary-foreground font-semibold tracking-widest uppercase text-sm">
@@ -85,21 +85,20 @@ export function LoginPage() {
             © {new Date().getFullYear()} Klabin S/A — Uso interno
           </p>
         </div>
-      </div>
 
-      {/* Right panel – form */}
-      <div className="flex-1 flex items-center justify-center p-6">
+        {/* Right panel – form */}
+        <div className="flex-1 flex items-center justify-center p-6 lg:justify-end lg:pr-12">
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <div className="flex items-center gap-3 mb-8 lg:hidden">
-            <img src="/logo.svg" alt="Klabin Logo" className="h-9 w-auto object-contain" />
+            <img src="/logo.svg" alt="Klabin Logo" className="h-10 w-auto object-contain brightness-0 invert" />
             <div className="flex-1">
-              <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-1">Klabin S/A</p>
-              <p className="text-xs text-muted-foreground">Sistema TAG</p>
+              <p className="text-xs font-semibold uppercase tracking-widest text-primary-foreground mb-1">Klabin S/A</p>
+              <p className="text-xs text-primary-foreground/80">Sistema TAG</p>
             </div>
           </div>
 
-          <div className="bg-card rounded p-8 shadow-sm border border-border">
+          <div className="bg-card/95 backdrop-blur-md rounded-lg p-8 shadow-2xl border border-white/20">
             <h2 className="mb-1 text-foreground font-semibold text-[1.3rem]">
               Acesso ao sistema
             </h2>

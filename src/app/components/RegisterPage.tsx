@@ -63,9 +63,42 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6 bg-background">
-        <div className="w-full max-w-md">
-          <div className="bg-card rounded p-8 shadow-sm border border-border text-center">
+      <div 
+        className="min-h-screen flex relative overflow-hidden"
+        style={{ 
+          backgroundImage: 'url(/capa.jpg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        }}
+      >
+        <div className="absolute inset-0 bg-primary/85 mix-blend-multiply" />
+        <div className="absolute inset-0 bg-gradient-to-tr from-primary/95 via-primary/70 to-transparent" />
+        
+        <div className="relative z-10 w-full flex flex-col lg:flex-row max-w-7xl mx-auto">
+          {/* Left panel – branding */}
+          <div className="hidden lg:flex flex-col justify-between w-1/2 lg:w-3/5 p-12 py-16">
+            <div className="flex items-center gap-3">
+              <img src="/logo.svg" alt="Klabin Logo" className="h-10 w-auto object-contain" />
+              <span className="text-primary-foreground font-semibold tracking-widest uppercase text-sm">
+                KLABIN S/A
+              </span>
+            </div>
+            <div>
+              <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-6 text-primary-foreground">
+                Sistema TAG
+              </h1>
+              <p className="text-primary-foreground/80 leading-relaxed text-[0.9rem]">
+                Gestão de equipamentos, notas de manutenção e histórico de operações em tempo real.
+              </p>
+            </div>
+            <p className="text-primary-foreground/50 text-[0.75rem]">
+              © {new Date().getFullYear()} Klabin S/A — Uso interno
+            </p>
+          </div>
+
+          <div className="flex-1 flex items-center justify-center p-6 lg:justify-end lg:pr-12">
+            <div className="w-full max-w-md">
+              <div className="bg-card/95 backdrop-blur-md rounded-lg p-8 shadow-2xl border border-white/20 text-center">
             <div className="w-14 h-14 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
               <CheckCircle size={28} className="text-accent" />
             </div>
@@ -85,24 +118,60 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
               Ir para o Login
             </button>
           </div>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-background">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="flex items-center gap-3 mb-8">
-          <img src="/logo.svg" alt="Klabin Logo" className="h-9 w-auto object-contain" />
-          <div className="flex-1">
-            <p className="font-semibold text-sm text-primary">KLABIN S/A</p>
-            <p className="text-xs text-muted-foreground">Sistema TAG</p>
+    <div 
+      className="min-h-screen flex relative overflow-hidden"
+      style={{ 
+        backgroundImage: 'url(/capa.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      }}
+    >
+      <div className="absolute inset-0 bg-primary/85 mix-blend-multiply" />
+      <div className="absolute inset-0 bg-gradient-to-tr from-primary/95 via-primary/70 to-transparent" />
+      
+      <div className="relative z-10 w-full flex flex-col lg:flex-row max-w-7xl mx-auto">
+        {/* Left panel – branding */}
+        <div className="hidden lg:flex flex-col justify-between w-1/2 lg:w-3/5 p-12 py-16">
+          <div className="flex items-center gap-3">
+            <img src="/logo.svg" alt="Klabin Logo" className="h-10 w-auto object-contain" />
+            <span className="text-primary-foreground font-semibold tracking-widest uppercase text-sm">
+              KLABIN S/A
+            </span>
           </div>
+          <div>
+            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-6 text-primary-foreground">
+              Sistema TAG
+            </h1>
+            <p className="text-primary-foreground/80 leading-relaxed text-[0.9rem]">
+              Crie sua conta para acessar a gestão de equipamentos e notas de manutenção.
+            </p>
+          </div>
+          <p className="text-primary-foreground/50 text-[0.75rem]">
+            © {new Date().getFullYear()} Klabin S/A — Uso interno
+          </p>
         </div>
 
-        <div className="bg-card rounded p-8 shadow-sm border border-border">
+        {/* Right panel – form */}
+        <div className="flex-1 flex items-center justify-center p-6 lg:justify-end lg:pr-12">
+          <div className="w-full max-w-md max-h-screen overflow-y-auto py-6">
+            {/* Mobile logo */}
+            <div className="flex items-center gap-3 mb-8 lg:hidden">
+              <img src="/logo.svg" alt="Klabin Logo" className="h-10 w-auto object-contain brightness-0 invert" />
+              <div className="flex-1">
+                <p className="font-semibold text-xs uppercase tracking-widest text-primary-foreground mb-1">Klabin S/A</p>
+                <p className="text-xs text-primary-foreground/80">Sistema TAG</p>
+              </div>
+            </div>
+
+            <div className="bg-card/95 backdrop-blur-md rounded-lg p-8 shadow-2xl border border-white/20">
           <h2 className="mb-1 text-foreground font-semibold text-[1.3rem]">Criar conta</h2>
           <p className="mb-6 text-sm text-muted-foreground">
             Preencha os dados para registrar seu acesso
@@ -350,6 +419,8 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
             <p>• Seu e-mail será usado para acessar o sistema</p>
             <p>• O PRN identifica você nas notas e comentários</p>
             <p>• Um e-mail de confirmação será enviado após o cadastro</p>
+          </div>
+            </div>
           </div>
         </div>
       </div>
