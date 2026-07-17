@@ -171,9 +171,9 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
               </div>
             </div>
 
-            <div className="bg-card/95 backdrop-blur-md rounded-lg p-8 shadow-2xl border border-white/20">
-          <h2 className="mb-1 text-foreground font-semibold text-[1.3rem]">Criar conta</h2>
-          <p className="mb-6 text-sm text-muted-foreground">
+            <div className="bg-white/10 backdrop-blur-md rounded-lg p-8 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] border border-white/20">
+          <h2 className="mb-1 text-white font-semibold text-[1.3rem]">Criar conta</h2>
+          <p className="mb-6 text-sm text-white/70">
             Preencha os dados para registrar seu acesso
           </p>
 
@@ -185,12 +185,12 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
               </div>
             )}
 
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground pt-1">
+            <p className="text-xs font-semibold uppercase tracking-wider text-white/50 pt-1">
               Identificação
             </p>
 
             <div>
-              <label className="block mb-1.5 text-sm font-medium text-foreground">
+              <label className="block mb-1.5 text-sm font-medium text-white/90">
                 Nome Completo *
               </label>
               <input
@@ -204,7 +204,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
             </div>
 
             <div>
-              <label className="block mb-1.5 text-sm font-medium text-foreground">
+              <label className="block mb-1.5 text-sm font-medium text-white/90">
                 PRN (Número de Registro Pessoal) *
               </label>
               <input
@@ -214,11 +214,11 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                 placeholder="Mínimo 4 caracteres"
                 className={inputClass}
               />
-              <p className="mt-1 text-xs text-muted-foreground">Mínimo 4 caracteres</p>
+              <p className="mt-1 text-xs text-white/50">Mínimo 4 caracteres</p>
             </div>
 
             <div>
-              <label className="block mb-1.5 text-sm font-medium text-foreground">
+              <label className="block mb-1.5 text-sm font-medium text-white/90">
                 Gerência *
               </label>
               <select
@@ -241,7 +241,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
 
             {getCoordenacoesByGerencia(gerencia) && (
               <div>
-                <label className="block mb-1.5 text-sm font-medium text-foreground">
+                <label className="block mb-1.5 text-sm font-medium text-white/90">
                   Coordenação *
                 </label>
                 <select
@@ -263,15 +263,15 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
             )}
 
             <div>
-              <label className="block mb-2 text-sm font-medium text-foreground">
-                Áreas de Trabalho * <span className="text-xs text-muted-foreground">(selecione todas as suas áreas)</span>
+              <label className="block mb-2 text-sm font-medium text-white/90">
+                Áreas de Trabalho * <span className="text-xs text-white/50">(selecione todas as suas áreas)</span>
               </label>
-              <div className="grid grid-cols-2 gap-2 p-3 rounded border border-border bg-muted/20">
+              <div className="grid grid-cols-2 gap-2 p-3 rounded border border-white/20 bg-white/5">
                 {(coordenacao ? getAreasByCoordenacao(gerencia, coordenacao) : getAreasByGerencia(gerencia)).map(a => (
                   <label key={a} className={`flex items-center gap-2 p-2 rounded cursor-pointer text-sm transition-colors ${
                     areas.includes(a)
-                      ? 'bg-primary/10 text-primary border border-primary/30 font-medium'
-                      : 'hover:bg-muted/50 text-foreground border border-transparent'
+                      ? 'bg-primary/20 text-white border border-primary/50 font-medium'
+                      : 'hover:bg-white/10 text-white/90 border border-transparent'
                   }`}>
                     <input
                       type="checkbox"
@@ -294,7 +294,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
 
 
             <div>
-              <label className="block mb-1.5 text-sm font-medium text-foreground">
+              <label className="block mb-1.5 text-sm font-medium text-white/90">
                 Função / Cargo *
               </label>
               <select
@@ -309,12 +309,12 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
             </div>
 
 
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground pt-2">
+            <p className="text-xs font-semibold uppercase tracking-wider text-white/50 pt-2">
               Credenciais de acesso
             </p>
 
             <div>
-              <label className="block mb-1.5 text-sm font-medium text-foreground">
+              <label className="block mb-1.5 text-sm font-medium text-white/90">
                 E-mail *
               </label>
               <input
@@ -328,7 +328,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
             </div>
 
             <div>
-              <label className="block mb-1.5 text-sm font-medium text-foreground">
+              <label className="block mb-1.5 text-sm font-medium text-white/90">
                 Senha *
               </label>
               <div className="relative">
@@ -340,11 +340,11 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                   autoComplete="new-password"
                   className={`${inputClass} pr-10`}
                 />
-                <button
+                  <button
                   type="button"
                   onClick={() => setShowSenha(v => !v)}
                   tabIndex={-1}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors"
                 >
                   {showSenha ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -360,7 +360,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
             </div>
 
             <div>
-              <label className="block mb-1.5 text-sm font-medium text-foreground">
+              <label className="block mb-1.5 text-sm font-medium text-white/90">
                 Confirmar senha *
               </label>
               <div className="relative">
@@ -378,7 +378,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                   type="button"
                   onClick={() => setShowConfirmar(v => !v)}
                   tabIndex={-1}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors"
                 >
                   {showConfirmar ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -404,18 +404,18 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
             </div>
           </form>
 
-          <div className="mt-5 pt-5 border-t border-border">
+          <div className="mt-5 pt-5 border-t border-white/10">
             <button
               onClick={onBackToLogin}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded border border-border text-muted-foreground text-sm font-medium transition-colors bg-transparent hover:bg-muted"
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded border border-white/30 text-white/70 text-sm font-medium transition-colors bg-transparent hover:bg-white/10 hover:text-white"
             >
               <ArrowLeft size={16} />
               Voltar para Login
             </button>
           </div>
 
-          <div className="mt-4 p-3 rounded text-xs space-y-1 bg-primary/5 text-primary/80">
-            <p className="font-medium">📋 Informações importantes</p>
+          <div className="mt-4 p-3 rounded text-xs space-y-1 bg-white/5 border border-white/10 text-white/80">
+            <p className="font-medium text-white">📋 Informações importantes</p>
             <p>• Seu e-mail será usado para acessar o sistema</p>
             <p>• O PRN identifica você nas notas e comentários</p>
             <p>• Um e-mail de confirmação será enviado após o cadastro</p>
