@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useArea } from '../contexts/AreaContext';
+import { supabase } from '../lib/supabase';
 import * as api from '../services/api';
 import { QRCodeSVG } from 'qrcode.react';
 import { getLocalizacaoFromArea } from '../utils/hierarchy';
@@ -38,6 +39,7 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
   const [showQrModal, setShowQrModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [uploadingTagPhoto, setUploadingTagPhoto] = useState(false);
 
   // QR modal state
   const [qrPage, setQrPage] = useState(1);
@@ -215,6 +217,32 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
     } catch (error) {
       console.error('Erro ao criar TAG:', error);
       alert('Erro ao criar TAG. Tente novamente.');
+    }
+  };
+
+  const handleTagPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    
+    setUploadingTagPhoto(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `tag-${Date.now()}.${fileExt}`;
+      const filePath = `tags/${fileName}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('fotos')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from('fotos').getPublicUrl(filePath);
+      setFormData(prev => ({ ...prev, foto_url: data.publicUrl }));
+    } catch (error) {
+      console.error('Erro no upload da foto do TAG:', error);
+      alert('Erro ao fazer upload da foto.');
+    } finally {
+      setUploadingTagPhoto(false);
     }
   };
 
@@ -609,26 +637,49 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
             </div>
 
             <form onSubmit={handleCreateTag} className="p-5 space-y-4">
-              {[
-                { id: 'tag_completo', label: 'TAG Completo *', placeholder: 'Ex: CAL-BOI-0001', hint: 'Deve terminar com 4 dígitos', type: 'text', required: true },
-                { id: 'nome_equipamento', label: 'Nome do Equipamento *', placeholder: 'Ex: Válvula de Alívio B01', type: 'text', required: true },
-                { id: 'foto_url', label: 'URL da Foto (opcional)', placeholder: 'https://exemplo.com/foto.jpg', hint: 'URL completa da imagem', type: 'url', required: false },
-              ].map(field => (
-                <div key={field.id}>
-                  <label className="block mb-1.5 text-sm font-medium text-foreground">{field.label}</label>
-                  <input
-                    id={field.id}
-                    name={field.id}
-                    type={field.type}
-                    required={field.required}
-                    value={(formData as any)[field.id]}
-                    onChange={handleInputChange}
-                    placeholder={field.placeholder}
-                    className={inputClass}
-                  />
-                  {(field as any).hint && <p className="mt-1 text-xs text-muted-foreground">{(field as any).hint}</p>}
-                </div>
-              ))}
+              <div>
+                <label className="block mb-1.5 text-sm font-medium text-foreground">TAG Completo *</label>
+                <input
+                  id="tag_completo"
+                  name="tag_completo"
+                  type="text"
+                  required
+                  value={formData.tag_completo}
+                  onChange={handleInputChange}
+                  placeholder="Ex: CAL-BOI-0001"
+                  className={inputClass}
+                />
+                <p className="mt-1 text-xs text-muted-foreground">Deve terminar com 4 dígitos</p>
+              </div>
+
+              <div>
+                <label className="block mb-1.5 text-sm font-medium text-foreground">Nome do Equipamento *</label>
+                <input
+                  id="nome_equipamento"
+                  name="nome_equipamento"
+                  type="text"
+                  required
+                  value={formData.nome_equipamento}
+                  onChange={handleInputChange}
+                  placeholder="Ex: Válvula de Alívio B01"
+                  className={inputClass}
+                />
+              </div>
+
+              <div>
+                <label className="block mb-1.5 text-sm font-medium text-foreground">Foto do Equipamento (opcional)</label>
+                <input
+                  id="foto_url"
+                  name="foto_url"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleTagPhotoUpload}
+                  disabled={uploadingTagPhoto}
+                  className={`${inputClass} cursor-pointer file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20`}
+                />
+                {uploadingTagPhoto && <p className="mt-1 text-xs text-primary animate-pulse">Enviando foto...</p>}
+                {formData.foto_url && !uploadingTagPhoto && <p className="mt-1 text-xs text-green-600 font-medium">Foto anexada com sucesso!</p>}
+              </div>
 
               <div>
                 <label className="block mb-1.5 text-sm font-medium text-foreground">Localização *</label>
