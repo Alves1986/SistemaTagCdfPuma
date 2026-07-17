@@ -108,6 +108,7 @@ export function TagDetailPage() {
   const [descricaoNota, setDescricaoNota] = useState('');
   const [prioridadeNota, setPrioridadeNota] = useState<'baixa' | 'média' | 'alta' | 'urgente'>('média');
   const [especialidadeNota, setEspecialidadeNota] = useState<'Mecânica' | 'Elétrica' | 'Instrumentação' | 'Automação'>('Mecânica');
+  const [mudarParaManutencao, setMudarParaManutencao] = useState(false);
 
   useEffect(() => { loadTagData(); }, [id]);
 
@@ -225,14 +226,20 @@ export function TagDetailPage() {
       alert('Por favor, preencha todos os campos'); return;
     }
     try {
-      const updatedTag = await api.addNotaManutencao(tag.id, {
+      let updatedTag = await api.addNotaManutencao(tag.id, {
         numero_nota: numeroNota, descricao: descricaoNota,
         prioridade: prioridadeNota, aberta_por: user.nome,
         especialidade: especialidadeNota
       });
+
+      if (mudarParaManutencao && updatedTag.status !== 'manutenção') {
+        updatedTag = await api.updateTagStatus(tag.id, 'manutenção', user.nome);
+      }
+
       setTag(updatedTag);
       setShowNotaModal(false);
       setNumeroNota(''); setDescricaoNota(''); setPrioridadeNota('média'); setEspecialidadeNota('Mecânica');
+      setMudarParaManutencao(false);
     } catch { alert('Erro ao abrir nota de manutenção'); }
   };
 
@@ -679,6 +686,18 @@ export function TagDetailPage() {
                 className={inputClass}
                 rows={4}
               />
+            </div>
+            <div className="flex items-center gap-2 mt-2 bg-amber-50 p-3 rounded-md border border-amber-200">
+              <input
+                type="checkbox"
+                id="mudarManutencao"
+                checked={mudarParaManutencao}
+                onChange={(e) => setMudarParaManutencao(e.target.checked)}
+                className="w-4 h-4 text-amber-600 rounded border-amber-300 focus:ring-amber-500"
+              />
+              <label htmlFor="mudarManutencao" className="text-sm font-medium text-amber-900 cursor-pointer">
+                Equipamento removido para conserto (Mudar status para Manutenção)
+              </label>
             </div>
             <div className="p-3 rounded border text-xs bg-amber-50 border-amber-200 text-amber-800">
               <p className="font-medium mb-0.5">⚠️ Atenção</p>
