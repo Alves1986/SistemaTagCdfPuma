@@ -30,6 +30,7 @@ function buildProfileFromAuthUser(supabaseUser: SupabaseUser): UserProfile {
     prn: meta.prn ?? '0000',
     cargo: meta.cargo ?? 'Operador II',
     gerencia: meta.gerencia ?? '',
+    coordenacao: meta.coordenacao ?? '',
     area: meta.area ?? '',
     areas_coordenadas: meta.areas_coordenadas ?? (meta.area ? [meta.area] : []),
     email: supabaseUser.email ?? '',
@@ -41,7 +42,7 @@ async function resolveProfile(supabaseUser: SupabaseUser): Promise<UserProfile> 
   try {
     const { data } = await supabase
       .from('profiles')
-      .select('id, nome, prn, cargo, foto_url, whatsapp, gerencia, area, areas_coordenadas')
+      .select('id, nome, prn, cargo, foto_url, whatsapp, gerencia, coordenacao, area, areas_coordenadas')
       .eq('id', supabaseUser.id)
       .maybeSingle();
 
@@ -129,6 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     prn: string;
     cargo: string;
     gerencia: string;
+    coordenacao?: string;
     areas_coordenadas: string[];   // substitui o campo 'area' simples
     email: string;
     senha: string;
@@ -142,6 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           prn: dados.prn,
           cargo: dados.cargo,
           gerencia: dados.gerencia,
+          coordenacao: dados.coordenacao,
           area: dados.areas_coordenadas[0] ?? '',          // compat. legada
           areas_coordenadas: dados.areas_coordenadas,
         },

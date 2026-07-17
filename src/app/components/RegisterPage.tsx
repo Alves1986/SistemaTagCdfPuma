@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { UserPlus, AlertCircle, ArrowLeft, Flame, Eye, EyeOff, CheckCircle } from 'lucide-react';
-import { GERENCIAS, getAreasByGerencia, getCargosByGerencia } from '../utils/hierarchy';
+import { GERENCIAS, getAreasByGerencia, getCargosByGerencia, getCoordenacoesByGerencia, getAreasByCoordenacao } from '../utils/hierarchy';
 
 interface RegisterPageProps {
   onBackToLogin: () => void;
@@ -11,6 +11,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
   const [nome, setNome] = useState('');
   const [prn, setPrn] = useState('');
   const [gerencia, setGerencia] = useState(GERENCIAS.filter(g => g !== 'Manutenção')[0]);
+  const [coordenacao, setCoordenacao] = useState('');
   const [areas, setAreas] = useState<string[]>([getAreasByGerencia(GERENCIAS.filter(g => g !== 'Manutenção')[0])[0]]);
   const [cargo, setCargo] = useState(getCargosByGerencia(GERENCIAS.filter(g => g !== 'Manutenção')[0])[0]);
   const [email, setEmail] = useState('');
@@ -48,7 +49,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
     }
 
     setSubmitting(true);
-    const result = await register({ nome, prn, cargo, gerencia, areas_coordenadas: areas, email: email.trim(), senha });
+    const result = await register({ nome, prn, cargo, gerencia, coordenacao, areas_coordenadas: areas, email: email.trim(), senha });
     setSubmitting(false);
 
     if (!result.success) {
@@ -156,6 +157,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                 onChange={(e) => {
                   const newGerencia = e.target.value;
                   setGerencia(newGerencia);
+                  setCoordenacao('');
                   const firstArea = getAreasByGerencia(newGerencia)[0];
                   setAreas(firstArea ? [firstArea] : []);
                   setCargo(getCargosByGerencia(newGerencia)[0]);
@@ -168,12 +170,35 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
               </select>
             </div>
 
+            {getCoordenacoesByGerencia(gerencia) && (
+              <div>
+                <label className="block mb-1.5 text-sm font-medium text-foreground">
+                  Coordenação *
+                </label>
+                <select
+                  value={coordenacao}
+                  onChange={(e) => {
+                    const newCoordenacao = e.target.value;
+                    setCoordenacao(newCoordenacao);
+                    const firstArea = getAreasByCoordenacao(gerencia, newCoordenacao)[0];
+                    setAreas(firstArea ? [firstArea] : []);
+                  }}
+                  className={inputClass}
+                >
+                  <option value="" disabled>Selecione uma coordenação</option>
+                  {Object.keys(getCoordenacoesByGerencia(gerencia)!).map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <div>
               <label className="block mb-2 text-sm font-medium text-foreground">
                 Áreas de Trabalho * <span className="text-xs text-muted-foreground">(selecione todas as suas áreas)</span>
               </label>
               <div className="grid grid-cols-2 gap-2 p-3 rounded border border-border bg-muted/20">
-                {getAreasByGerencia(gerencia).map(a => (
+                {(coordenacao ? getAreasByCoordenacao(gerencia, coordenacao) : getAreasByGerencia(gerencia)).map(a => (
                   <label key={a} className={`flex items-center gap-2 p-2 rounded cursor-pointer text-sm transition-colors ${
                     areas.includes(a)
                       ? 'bg-primary/10 text-primary border border-primary/30 font-medium'

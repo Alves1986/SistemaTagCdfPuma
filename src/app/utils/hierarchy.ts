@@ -1,4 +1,10 @@
-export const HIERARQUIA = {
+type HierarchyData = {
+  areas: string[];
+  cargos: string[];
+  coordenacoes?: Record<string, string[]>;
+};
+
+export const HIERARQUIA: Record<string, HierarchyData> = {
   "Fibras": {
     areas: ["Produção Fibras", "Preparo de Madeira"],
     cargos: [
@@ -14,14 +20,18 @@ export const HIERARQUIA = {
     ]
   },
   "Recuperação e Utilidades": {
-    areas: ["CDR1/EVAP1", "CDR2/EVAP2", "CDF1/ETAC1", "CDF2/ETAC2", "ETA/ETE", "ENERGIA"],
+    coordenacoes: {
+      "Recuperação": ["CDR1/EVAP1", "CDR2/EVAP2", "Planta Quimica (PQ)", "Gaseificação", "Caustificação"],
+      "Utilidades": ["CDF1/ETAC1", "CDF2/ETAC2", "ETA/ETE", "ENERGIA (TG)"]
+    },
+    areas: ["CDR1/EVAP1", "CDR2/EVAP2", "Planta Quimica (PQ)", "Gaseificação", "Caustificação", "CDF1/ETAC1", "CDF2/ETAC2", "ETA/ETE", "ENERGIA (TG)"],
     cargos: [
       "Aprendiz", "Operador II", "Operador III", "Operador Lider",
       "Coordenador", "Especialista", "Engenheiro", "Assistente Tecnico"
     ]
   },
   "Manutenção": {
-    areas: ["CDR1/EVAP1", "CDR2/EVAP2", "CDF1/ETAC1", "CDF2/ETAC2", "ETA/ETE", "ENERGIA",
+    areas: ["CDR1/EVAP1", "CDR2/EVAP2", "Planta Quimica (PQ)", "Gaseificação", "Caustificação", "CDF1/ETAC1", "CDF2/ETAC2", "ETA/ETE", "ENERGIA (TG)",
             "Produção Fibras", "Preparo de Madeira",
             "MC25", "MC26", "MP27", "MP28", "Cozinha Couche"],
     cargos: ["Aprendiz", "Gestor de Manutenção", "Engenheiro", "Especialista", "Técnico"]
@@ -39,6 +49,18 @@ export function getAllOperationalAreas(): string[] {
 
 export function getAreasByGerencia(gerencia: string): string[] {
   return HIERARQUIA[gerencia as keyof typeof HIERARQUIA]?.areas || ["A Definir"];
+}
+
+export function getCoordenacoesByGerencia(gerencia: string): Record<string, string[]> | undefined {
+  return HIERARQUIA[gerencia as keyof typeof HIERARQUIA]?.coordenacoes;
+}
+
+export function getAreasByCoordenacao(gerencia: string, coordenacao: string): string[] {
+  const coord = getCoordenacoesByGerencia(gerencia);
+  if (coord && coord[coordenacao]) {
+    return coord[coordenacao];
+  }
+  return getAreasByGerencia(gerencia);
 }
 
 export function getCargosByGerencia(gerencia: string): string[] {

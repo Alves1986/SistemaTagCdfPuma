@@ -4,7 +4,7 @@ import { useArea } from '../contexts/AreaContext';
 import { supabase, UserProfile } from '../lib/supabase';
 import * as api from '../services/api';
 import { Users, Phone, Camera, Save, X, Edit2, ShieldAlert } from 'lucide-react';
-import { GERENCIAS, getAreasByGerencia, getCargosByGerencia, normalizeGerencia } from '../utils/hierarchy';
+import { GERENCIAS, getAreasByGerencia, getCargosByGerencia, normalizeGerencia, getCoordenacoesByGerencia, getAreasByCoordenacao } from '../utils/hierarchy';
 
 export function TeamPage() {
   const { user } = useAuth();
@@ -19,6 +19,7 @@ export function TeamPage() {
     foto_url: '',
     cargo: '',
     gerencia: '',
+    coordenacao: '',
     area: '',
     areas_coordenadas: [] as string[]
   });
@@ -44,7 +45,8 @@ export function TeamPage() {
       whatsapp: profile.whatsapp || '',
       foto_url: profile.foto_url || '',
       cargo: profile.cargo || 'Operador II',
-      gerencia: profile.gerencia || 'Recuperação e Utilidades',
+      gerencia: profile.gerencia || '',
+      coordenacao: profile.coordenacao || '',
       area: areasAtual[0] || '',
       areas_coordenadas: areasAtual
     });
@@ -54,6 +56,9 @@ export function TeamPage() {
     if (!editingProfile) return;
     const payload = {
       ...formData,
+      cargo: formData.cargo,
+      gerencia: formData.gerencia,
+      coordenacao: formData.coordenacao,
       area: formData.areas_coordenadas[0] ?? formData.area,  // compat. legada
       areas_coordenadas: formData.areas_coordenadas
     };
@@ -234,6 +239,8 @@ export function TeamPage() {
                     setFormData(prev => ({
                       ...prev,
                       gerencia: newGerencia,
+                      coordenacao: '',
+                      areas_coordenadas: [getAreasByGerencia(newGerencia)[0]],
                       area: getAreasByGerencia(newGerencia)[0],
                       cargo: getCargosByGerencia(newGerencia)[0]
                     }));
@@ -246,10 +253,34 @@ export function TeamPage() {
                 </select>
               </div>
 
+              {getCoordenacoesByGerencia(formData.gerencia) && (
+                <div>
+                  <label className="block text-sm font-medium mb-1">Coordenação</label>
+                  <select
+                    value={formData.coordenacao}
+                    onChange={e => {
+                      const newCoordenacao = e.target.value;
+                      setFormData(prev => ({
+                        ...prev,
+                        coordenacao: newCoordenacao,
+                        areas_coordenadas: [getAreasByCoordenacao(prev.gerencia, newCoordenacao)[0]],
+                        area: getAreasByCoordenacao(prev.gerencia, newCoordenacao)[0]
+                      }));
+                    }}
+                    className="w-full px-3 py-2 rounded border border-border bg-muted/50 text-foreground outline-none focus:border-primary"
+                  >
+                    <option value="" disabled>Selecione</option>
+                    {Object.keys(getCoordenacoesByGerencia(formData.gerencia)!).map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-medium mb-2">Áreas de Trabalho</label>
-                <div className="grid grid-cols-2 gap-1.5 p-2.5 rounded border border-border bg-muted/20">
-                  {getAreasByGerencia(formData.gerencia).map(a => (
+                <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-2 border border-border rounded bg-muted/20">
+                  {(formData.coordenacao ? getAreasByCoordenacao(formData.gerencia, formData.coordenacao) : getAreasByGerencia(formData.gerencia)).map(a => (
                     <label key={a} className={`flex items-center gap-1.5 p-1.5 rounded cursor-pointer text-xs transition-colors ${
                       formData.areas_coordenadas.includes(a)
                         ? 'bg-primary/10 text-primary border border-primary/30 font-medium'
