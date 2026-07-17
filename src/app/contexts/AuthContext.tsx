@@ -31,6 +31,7 @@ function buildProfileFromAuthUser(supabaseUser: SupabaseUser): UserProfile {
     cargo: meta.cargo ?? 'Operador II',
     gerencia: meta.gerencia ?? '',
     area: meta.area ?? '',
+    areas_coordenadas: meta.areas_coordenadas ?? (meta.area ? [meta.area] : []),
     email: supabaseUser.email ?? '',
   };
 }
@@ -40,12 +41,16 @@ async function resolveProfile(supabaseUser: SupabaseUser): Promise<UserProfile> 
   try {
     const { data } = await supabase
       .from('profiles')
-      .select('id, nome, prn, cargo, foto_url, whatsapp, gerencia, area')
+      .select('id, nome, prn, cargo, foto_url, whatsapp, gerencia, area, areas_coordenadas')
       .eq('id', supabaseUser.id)
       .maybeSingle();
 
     if (data) {
-      return { ...data, email: supabaseUser.email ?? '' };
+      // Se não tem areas_coordenadas salvo, deriva do campo area (retrocompat.)
+      const areas = data.areas_coordenadas?.length
+        ? data.areas_coordenadas
+        : data.area ? [data.area] : [];
+      return { ...data, areas_coordenadas: areas, email: supabaseUser.email ?? '' };
     }
   } catch {
     // Tabela não existe ou erro de rede — usa fallback
@@ -124,7 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     prn: string;
     cargo: string;
     gerencia: string;
-    area: string;
+    areas_coordenadas: string[];   // substitui o campo 'area' simples
     email: string;
     senha: string;
   }): Promise<{ success: boolean; error?: string }> => {
@@ -137,7 +142,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           prn: dados.prn,
           cargo: dados.cargo,
           gerencia: dados.gerencia,
-          area: dados.area,
+          area: dados.areas_coordenadas[0] ?? '',          // compat. legada
+          areas_coordenadas: dados.areas_coordenadas,
         },
       },
     });

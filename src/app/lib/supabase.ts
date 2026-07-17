@@ -26,5 +26,6 @@ export type UserProfile = {
   foto_url?: string;
   whatsapp?: string;
   gerencia?: string;
-  area?: string;
+  area?: string;                    // área principal (compat. legada)
+  areas_coordenadas?: string[];     // áreas selecionadas pelo usuário no cadastro
 };

@@ -32,15 +32,28 @@ export function AreaProvider({ children }: { children: ReactNode }) {
         ? 'Recuperação e Utilidades'
         : normalizeGerencia(raw);
       setSelectedGerencia(normalized);
+
+      // Define as áreas visíveis a partir do que o usuário selecionou no cadastro
+      const areasDoUsuario = user.areas_coordenadas?.length
+        ? user.areas_coordenadas
+        : getAreasByGerencia(normalized);   // fallback: todas da gerência
+
+      setAvailableAreas(areasDoUsuario);
+      setSelectedArea(areasDoUsuario[0] ?? '');
       setInitialized(true);
     }
   }, [user, initialized]);
 
   useEffect(() => {
-    const newAreas = getAreasByGerencia(selectedGerencia);
+    // Quando muda a gerência manualmente no header, recarrega as áreas da gerência
+    // (Não executa na inicialização, pois areas_coordenadas já foram definidas no effect acima)
+    if (!initialized) return;
+    const newAreas = user?.areas_coordenadas?.length && user.gerencia && normalizeGerencia(user.gerencia) === selectedGerencia
+      ? user.areas_coordenadas
+      : getAreasByGerencia(selectedGerencia);
     setAvailableAreas(newAreas);
-    
-    // Se a área selecionada não faz parte da nova gerência, muda para a primeira área da gerência
+
+    // Se a área atual não está na nova lista, muda para a primeira
     if (!newAreas.includes(selectedArea) && newAreas.length > 0) {
       setSelectedArea(newAreas[0]);
     }

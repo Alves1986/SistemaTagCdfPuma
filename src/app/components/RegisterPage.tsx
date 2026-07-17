@@ -10,9 +10,9 @@ interface RegisterPageProps {
 export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
   const [nome, setNome] = useState('');
   const [prn, setPrn] = useState('');
-  const [gerencia, setGerencia] = useState(GERENCIAS[0]);
-  const [area, setArea] = useState(getAreasByGerencia(GERENCIAS[0])[0]);
-  const [cargo, setCargo] = useState(getCargosByGerencia(GERENCIAS[0])[0]);
+  const [gerencia, setGerencia] = useState(GERENCIAS.filter(g => g !== 'Manutenção')[0]);
+  const [areas, setAreas] = useState<string[]>([getAreasByGerencia(GERENCIAS.filter(g => g !== 'Manutenção')[0])[0]]);
+  const [cargo, setCargo] = useState(getCargosByGerencia(GERENCIAS.filter(g => g !== 'Manutenção')[0])[0]);
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
@@ -30,8 +30,8 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
     e.preventDefault();
     setError('');
 
-    if (!nome || !prn || !cargo || !email || !senha || !confirmarSenha) {
-      setError('Por favor, preencha todos os campos');
+    if (!nome || !prn || !cargo || !email || !senha || !confirmarSenha || areas.length === 0) {
+      setError('Por favor, preencha todos os campos e selecione pelo menos uma área');
       return;
     }
     if (prn.length < 4) {
@@ -48,7 +48,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
     }
 
     setSubmitting(true);
-    const result = await register({ nome, prn, cargo, gerencia, area, email: email.trim(), senha });
+    const result = await register({ nome, prn, cargo, gerencia, areas_coordenadas: areas, email: email.trim(), senha });
     setSubmitting(false);
 
     if (!result.success) {
@@ -156,48 +156,64 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                 onChange={(e) => {
                   const newGerencia = e.target.value;
                   setGerencia(newGerencia);
-                  setArea(getAreasByGerencia(newGerencia)[0]);
+                  const firstArea = getAreasByGerencia(newGerencia)[0];
+                  setAreas(firstArea ? [firstArea] : []);
                   setCargo(getCargosByGerencia(newGerencia)[0]);
                 }}
                 className={inputClass}
               >
-                {GERENCIAS.map(g => (
+                {GERENCIAS.filter(g => g !== 'Manutenção').map(g => (
                   <option key={g} value={g}>{g}</option>
                 ))}
               </select>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block mb-1.5 text-sm font-medium text-foreground">
-                  Área / Setor *
-                </label>
-                <select
-                  value={area}
-                  onChange={(e) => setArea(e.target.value)}
-                  className={inputClass}
-                >
-                  {getAreasByGerencia(gerencia).map(a => (
-                    <option key={a} value={a}>{a}</option>
-                  ))}
-                </select>
+            <div>
+              <label className="block mb-2 text-sm font-medium text-foreground">
+                Áreas de Trabalho * <span className="text-xs text-muted-foreground">(selecione todas as suas áreas)</span>
+              </label>
+              <div className="grid grid-cols-2 gap-2 p-3 rounded border border-border bg-muted/20">
+                {getAreasByGerencia(gerencia).map(a => (
+                  <label key={a} className={`flex items-center gap-2 p-2 rounded cursor-pointer text-sm transition-colors ${
+                    areas.includes(a)
+                      ? 'bg-primary/10 text-primary border border-primary/30 font-medium'
+                      : 'hover:bg-muted/50 text-foreground border border-transparent'
+                  }`}>
+                    <input
+                      type="checkbox"
+                      checked={areas.includes(a)}
+                      onChange={() => {
+                        setAreas(prev =>
+                          prev.includes(a) ? prev.filter(x => x !== a) : [...prev, a]
+                        );
+                      }}
+                      className="accent-primary w-3.5 h-3.5"
+                    />
+                    {a}
+                  </label>
+                ))}
               </div>
-
-              <div>
-                <label className="block mb-1.5 text-sm font-medium text-foreground">
-                  Função / Cargo *
-                </label>
-                <select
-                  value={cargo}
-                  onChange={(e) => setCargo(e.target.value)}
-                  className={inputClass}
-                >
-                  {getCargosByGerencia(gerencia).map(c => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-              </div>
+              {areas.length === 0 && (
+                <p className="mt-1.5 text-xs text-destructive">Selecione pelo menos uma área</p>
+              )}
             </div>
+
+
+            <div>
+              <label className="block mb-1.5 text-sm font-medium text-foreground">
+                Função / Cargo *
+              </label>
+              <select
+                value={cargo}
+                onChange={(e) => setCargo(e.target.value)}
+                className={inputClass}
+              >
+                {getCargosByGerencia(gerencia).map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+
 
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground pt-2">
               Credenciais de acesso

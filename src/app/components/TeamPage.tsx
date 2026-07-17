@@ -17,7 +17,8 @@ export function TeamPage() {
     foto_url: '',
     cargo: '',
     gerencia: '',
-    area: ''
+    area: '',
+    areas_coordenadas: [] as string[]
   });
   const [uploading, setUploading] = useState(false);
 
@@ -34,20 +35,29 @@ export function TeamPage() {
 
   const openEditModal = (profile: UserProfile) => {
     setEditingProfile(profile);
+    const areasAtual = profile.areas_coordenadas?.length
+      ? profile.areas_coordenadas
+      : profile.area ? [profile.area] : [];
     setFormData({
       whatsapp: profile.whatsapp || '',
       foto_url: profile.foto_url || '',
       cargo: profile.cargo || 'Operador II',
-      gerencia: profile.gerencia || 'Utilidades',
-      area: profile.area || 'CDF2 / ETAC2'
+      gerencia: profile.gerencia || 'Recuperação e Utilidades',
+      area: areasAtual[0] || '',
+      areas_coordenadas: areasAtual
     });
   };
 
   const handleSave = async () => {
     if (!editingProfile) return;
-    const success = await api.updateProfile(editingProfile.id, formData);
+    const payload = {
+      ...formData,
+      area: formData.areas_coordenadas[0] ?? formData.area,  // compat. legada
+      areas_coordenadas: formData.areas_coordenadas
+    };
+    const success = await api.updateProfile(editingProfile.id, payload);
     if (success) {
-      setProfiles(prev => prev.map(p => p.id === editingProfile.id ? { ...p, ...formData } : p));
+      setProfiles(prev => prev.map(p => p.id === editingProfile.id ? { ...p, ...payload } : p));
       setEditingProfile(null);
     } else {
       alert('Erro ao atualizar perfil.');
@@ -139,9 +149,14 @@ export function TeamPage() {
                       <span className="font-semibold uppercase">Gerência:</span> {profile.gerencia}
                     </div>
                   )}
-                  {profile.area && (
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground justify-center">
-                      <span className="font-semibold uppercase">Área:</span> {profile.area}
+                  {(profile.areas_coordenadas?.length || profile.area) && (
+                    <div className="text-xs text-muted-foreground">
+                      <span className="font-semibold uppercase">Áreas:</span>
+                      <div className="flex flex-wrap gap-1 justify-center mt-1">
+                        {(profile.areas_coordenadas?.length ? profile.areas_coordenadas : [profile.area!]).map(a => (
+                          <span key={a} className="px-1.5 py-0.5 bg-primary/10 text-primary rounded text-[10px] font-medium">{a}</span>
+                        ))}
+                      </div>
                     </div>
                   )}
                   <div className="flex items-center gap-2 text-sm text-muted-foreground justify-center">
@@ -217,31 +232,45 @@ export function TeamPage() {
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Área / Setor</label>
-                  <select
-                    value={formData.area}
-                    onChange={e => setFormData(prev => ({ ...prev, area: e.target.value }))}
-                    className="w-full px-3 py-2 rounded border border-border bg-muted/50 text-foreground outline-none focus:border-primary"
-                  >
-                    {getAreasByGerencia(formData.gerencia).map(a => (
-                      <option key={a} value={a}>{a}</option>
-                    ))}
-                  </select>
+              <div>
+                <label className="block text-sm font-medium mb-2">Áreas de Trabalho</label>
+                <div className="grid grid-cols-2 gap-1.5 p-2.5 rounded border border-border bg-muted/20">
+                  {getAreasByGerencia(formData.gerencia).map(a => (
+                    <label key={a} className={`flex items-center gap-1.5 p-1.5 rounded cursor-pointer text-xs transition-colors ${
+                      formData.areas_coordenadas.includes(a)
+                        ? 'bg-primary/10 text-primary border border-primary/30 font-medium'
+                        : 'hover:bg-muted/50 text-foreground border border-transparent'
+                    }`}>
+                      <input
+                        type="checkbox"
+                        checked={formData.areas_coordenadas.includes(a)}
+                        onChange={() => {
+                          setFormData(prev => ({
+                            ...prev,
+                            areas_coordenadas: prev.areas_coordenadas.includes(a)
+                              ? prev.areas_coordenadas.filter(x => x !== a)
+                              : [...prev.areas_coordenadas, a]
+                          }));
+                        }}
+                        className="accent-primary w-3 h-3"
+                      />
+                      {a}
+                    </label>
+                  ))}
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Função / Cargo</label>
-                  <select
-                    value={formData.cargo}
-                    onChange={e => setFormData(prev => ({ ...prev, cargo: e.target.value }))}
-                    className="w-full px-3 py-2 rounded border border-border bg-muted/50 text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-                  >
-                    {getCargosByGerencia(formData.gerencia).map(c => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Função / Cargo</label>
+                <select
+                  value={formData.cargo}
+                  onChange={e => setFormData(prev => ({ ...prev, cargo: e.target.value }))}
+                  className="w-full px-3 py-2 rounded border border-border bg-muted/50 text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                >
+                  {getCargosByGerencia(formData.gerencia).map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
               </div>
 
               {/* Input WhatsApp */}
