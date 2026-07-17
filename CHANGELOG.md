@@ -5,6 +5,21 @@ Este documento serve como o registro principal (Changelog) de todas as alteraç�
 
 ---
 
+## [1.3.4] - Ajustes de Coordenação, Layout Mobile e Uploads
+
+### 🚀 Novas Funcionalidades
+* **Nova Estrutura Hierárquica:** A tabela `profiles` agora segue a ordem `Gerencia -> Coordenação -> Área`. Adicionada lógica para que o cabeçalho exiba apenas a Coordenação caso ela exista.
+* **Layout Responsivo (Mobile):** O cabeçalho (`Layout.tsx`) foi totalmente refatorado utilizando `flex-wrap` e reposicionamento inteligente, permitindo que a logo, o botão de perfil e o menu hambúrguer fiquem acessíveis em telas menores sem comprimir o design.
+* **Isolamento de Visão da Equipe (Coordenador):** Na aba de equipe, um Coordenador agora vê todos os usuários da sua equipe (áreas correspondentes à sua coordenação) sem precisar filtrar manualmente por área, e não tem acesso a operadores/gestores de outras coordenações/gerências.
+
+### 🛠️ Correções e Ajustes
+* **Filtros de Área no Cadastro:** Corrigido o bug onde apareciam áreas de outras gerências na tela de cadastro. Agora o sistema filtra rigorosamente as áreas baseando-se na Gerência e Coordenação selecionadas pelo novo usuário.
+* **Ocultação de Botões para Coordenador:** Botões operacionais como "Criar TAG", "QR Codes", "Editar", "Adicionar Foto" e "Abrir Nota Manutenção" foram escondidos para a Gestão de Coordenação, mostrando uma visão focada apenas na consulta de dados.
+* **Correção de Upload de Fotos:** Corrigido o bug que bloqueava a inserção de fotos no perfil e nos TAGs devido à falta do bucket `fotos`. Um script SQL de migração foi adicionado para criar o bucket e configurar as políticas de segurança adequadas (RLS).
+* **Limpeza do Banco de Dados:** A coluna antiga de `area` na tabela `profiles` foi removida visando manter um modelo de dados limpo e sem falhas após a introdução de `areas_coordenadas`.
+
+---
+
 ## [1.3.3] - Navegação e Filtros da Manutenção
 
 ### 🚀 Novas Funcionalidades
