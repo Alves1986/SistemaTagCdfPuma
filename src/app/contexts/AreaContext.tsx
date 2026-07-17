@@ -35,12 +35,18 @@ export function AreaProvider({ children }: { children: ReactNode }) {
       const validAreas = getAllOperationalAreas();
       const userAreas = (user.areas_coordenadas || []).filter(a => validAreas.includes(a as Area)) as Area[];
       
-      // Define as áreas visíveis ESTRITAMENTE para o que o usuário tem cadastrado
+      const isManutencao = user.gerencia === 'Manutenção';
+      
+      // Define as áreas visíveis
       let areasDoUsuario: Area[] = [];
-      if (userAreas.length === 0) {
+      if (isManutencao) {
+        // Manutenção tem acesso livre às áreas da gerência selecionada
+        areasDoUsuario = getAreasByGerencia(normalized);
+      } else if (userAreas.length === 0) {
         // Fallback apenas caso o cadastro antigo esteja totalmente quebrado
         areasDoUsuario = [getAreasByGerencia(normalized)[0]];
       } else {
+        // Operação vê ESTRITAMENTE o que tem cadastrado
         areasDoUsuario = userAreas;
       }
 
@@ -56,8 +62,15 @@ export function AreaProvider({ children }: { children: ReactNode }) {
     const validAreas = getAllOperationalAreas();
     const userAreas = (user?.areas_coordenadas || []).filter(a => validAreas.includes(a as Area)) as Area[];
     
-    // Novamente, respeitando ESTRITAMENTE o cadastro do usuário
-    let newAreas: Area[] = userAreas.length > 0 ? userAreas : [getAreasByGerencia(selectedGerencia)[0]];
+    const isManutencao = user?.gerencia === 'Manutenção';
+    
+    // Novamente, respeitando ESTRITAMENTE o cadastro do usuário (exceto manutenção)
+    let newAreas: Area[] = [];
+    if (isManutencao) {
+      newAreas = getAreasByGerencia(selectedGerencia);
+    } else {
+      newAreas = userAreas.length > 0 ? userAreas : [getAreasByGerencia(selectedGerencia)[0]];
+    }
     
     setAvailableAreas(newAreas);
 

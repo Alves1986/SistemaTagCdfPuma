@@ -112,7 +112,7 @@ export function Layout() {
                 </button>
                 {showGerenciaDropdown && (
                   <div className="absolute left-0 top-full mt-1.5 bg-card rounded border border-border shadow-lg z-50 min-w-[200px]">
-                    {[user?.gerencia ? normalizeGerencia(user.gerencia) : selectedGerencia].map(gerencia => (
+                    {(isManutencao ? GERENCIAS : [user?.gerencia ? normalizeGerencia(user.gerencia) : selectedGerencia]).map(gerencia => (
                       <button
                         key={gerencia}
                         onClick={() => { setSelectedGerencia(gerencia); setShowGerenciaDropdown(false); }}
