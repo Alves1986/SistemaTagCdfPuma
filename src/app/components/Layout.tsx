@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useArea } from '../contexts/AreaContext';
 import { useState, useEffect, useRef } from 'react';
 import * as api from '../services/api';
-import { GERENCIAS } from '../utils/hierarchy';
+import { GERENCIAS, normalizeGerencia } from '../utils/hierarchy';
 
 export function Layout() {
   const location = useLocation();
