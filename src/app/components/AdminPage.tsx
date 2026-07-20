@@ -13,28 +13,26 @@ import * as api from '../services/api';
 import { QRCodeSVG } from 'qrcode.react';
 import { getLocalizacaoFromArea } from '../utils/hierarchy';
 
-type FilterKey = 'all' | 'com_nota' | 'operacional' | 'manutenção' | 'inativo';
+type FilterKey = 'all' | 'operacional' | 'manutenção' | 'inativo';
 
 export function AdminPage() {
   const { user } = useAuth();
   const { selectedArea } = useArea();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const location = useLocation();
-  const isManutencaoRoute = location.pathname === '/admin/manutencao';
 
   useEffect(() => {
-    if (user?.gerencia === 'Manutenção' && !isManutencaoRoute) {
+    if (user?.gerencia === 'Manutenção') {
       navigate('/admin/manutencao');
     }
-  }, [user, navigate, isManutencaoRoute]);
+  }, [user, navigate]);
 
-  const initialFilter = isManutencaoRoute ? 'com_nota' : ((searchParams.get('filter') as FilterKey) || 'all');
+  const initialFilter = (searchParams.get('filter') as FilterKey) || 'all';
 
-  return <AdminPageContent selectedArea={selectedArea} initialFilter={initialFilter} isManutencaoRoute={isManutencaoRoute} />;
+  return <AdminPageContent selectedArea={selectedArea} initialFilter={initialFilter} />;
 }
 
-function AdminPageContent({ selectedArea, initialFilter, isManutencaoRoute }: { selectedArea: string; initialFilter: FilterKey; isManutencaoRoute?: boolean }) {
+function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: string; initialFilter: FilterKey }) {
   const { user } = useAuth();
   const [tags, setTags] = useState<Tag[]>([]);
   const [filter, setFilter] = useState<FilterKey>(initialFilter);
@@ -147,13 +145,9 @@ function AdminPageContent({ selectedArea, initialFilter, isManutencaoRoute }: { 
   });
 
   const filteredTags = areaTags.filter(tag => {
-    // Lógica de separação:
-    // Se estiver na aba "Notas Abertas" (filter === 'com_nota'), mostra APENAS os equipamentos com nota
-    // Se estiver na aba "Gestão" (filter !== 'com_nota'), mostra APENAS os equipamentos SEM nota
-    if (filter === 'com_nota') {
-      if (!tag.nota_manutencao || tag.nota_manutencao.status_manutencao === 'finalizada_manutencao') return false;
-    } else {
-      if (tag.nota_manutencao && tag.nota_manutencao.status_manutencao !== 'finalizada_manutencao') return false;
+    // Na aba Gestão (AdminPage), nunca mostrar equipamentos que tenham uma nota de manutenção aberta/em tratamento
+    if (tag.nota_manutencao && tag.nota_manutencao.status_manutencao !== 'finalizada_manutencao') {
+      return false;
     }
 
     const matchesSearch = searchQuery.trim() === '' ||
@@ -335,11 +329,11 @@ function AdminPageContent({ selectedArea, initialFilter, isManutencaoRoute }: { 
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5">
           <div>
             <h1 className="font-semibold text-foreground text-[1.1rem]">
-              {isManutencaoRoute ? 'Notas Abertas' : 'Gestão de TAGs'}
+              Gestão de TAGs
               <span className="ml-2 text-xs font-normal text-muted-foreground">— {selectedArea}</span>
             </h1>
               <p className="text-sm mt-0.5 text-muted-foreground">
-              {isManutencaoRoute ? 'Equipamentos com notas de manutenção em aberto' : 'Monitoramento e gerenciamento de equipamentos'}
+              Monitoramento e gerenciamento de equipamentos
             </p>
           </div>
           <div className="flex gap-2 flex-wrap items-center">
@@ -394,7 +388,7 @@ function AdminPageContent({ selectedArea, initialFilter, isManutencaoRoute }: { 
                 )}
               </>
             )}
-            {!isManutencaoRoute && isGestorManutencao && (
+            {isGestorManutencao && (
               <Link to="/admin/manutencao" className="flex items-center gap-1.5 px-3 py-2 rounded bg-amber-600 text-white text-sm font-medium transition-colors hover:bg-amber-700">
                 <Wrench size={15} />
                 Notas Abertas
@@ -404,24 +398,22 @@ function AdminPageContent({ selectedArea, initialFilter, isManutencaoRoute }: { 
         </div>
 
         {/* Stats */}
-        {!isManutencaoRoute && (
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-            {[
-              { label: 'Total', value: filteredTags.length, style: 'bg-primary/5 border-primary/20 text-primary', icon: <Activity size={16} /> },
-              { label: 'Operacionais', value: tagsOperacionais, style: 'bg-accent/5 border-accent/20 text-accent', icon: null },
-              { label: 'Manutenção', value: tagsManutencao, style: 'bg-amber-100 border-amber-200 text-amber-800', icon: <Wrench size={16} /> },
-              { label: 'Inativos', value: tagsInativos, style: 'bg-muted border-border text-muted-foreground', icon: null },
-            ].map(stat => (
-              <div key={stat.label} className={`rounded border p-3 ${stat.style}`}>
-                <div className="flex items-center gap-1.5 mb-1">
-                  {stat.icon}
-                  <span className="text-xs font-medium">{stat.label}</span>
-                </div>
-                <p className="text-xl font-bold">{stat.value}</p>
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+          {[
+            { label: 'Total', value: filteredTags.length, style: 'bg-primary/5 border-primary/20 text-primary', icon: <Activity size={16} /> },
+            { label: 'Operacionais', value: tagsOperacionais, style: 'bg-accent/5 border-accent/20 text-accent', icon: null },
+            { label: 'Manutenção', value: tagsManutencao, style: 'bg-amber-100 border-amber-200 text-amber-800', icon: <Wrench size={16} /> },
+            { label: 'Inativos', value: tagsInativos, style: 'bg-muted border-border text-muted-foreground', icon: null },
+          ].map(stat => (
+            <div key={stat.label} className={`rounded border p-3 ${stat.style}`}>
+              <div className="flex items-center gap-1.5 mb-1">
+                {stat.icon}
+                <span className="text-xs font-medium">{stat.label}</span>
               </div>
-            ))}
-          </div>
-        )}
+              <p className="text-xl font-bold">{stat.value}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Search & filters */}
@@ -437,7 +429,7 @@ function AdminPageContent({ selectedArea, initialFilter, isManutencaoRoute }: { 
           />
         </div>
         <div className="flex flex-wrap gap-1.5">
-          {!isManutencaoRoute && filterButtons.map(btn => (
+          {filterButtons.map(btn => (
             <button
               key={btn.key}
               onClick={() => setFilter(btn.key)}

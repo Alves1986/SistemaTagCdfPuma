@@ -3,6 +3,7 @@ import { Layout } from './components/Layout';
 import { SearchPage } from './components/SearchPage';
 import { TagDetailPage } from './components/TagDetailPage';
 import { AdminPage } from './components/AdminPage';
+import { MaintenanceDashboard } from './components/MaintenanceDashboard';
 import { TeamPage } from './components/TeamPage';
 import { ProfilePage } from './components/ProfilePage';
 import { DashboardPage } from './components/DashboardPage';
@@ -24,7 +25,7 @@ export const router = createBrowserRouter([
       { path: 'admin', Component: AdminPage },
       { path: 'admin/team', Component: TeamPage },
       { path: 'admin/dashboard', Component: DashboardPage },
-      { path: 'admin/manutencao', Component: AdminPage },
+      { path: 'admin/manutencao', Component: MaintenanceDashboard },
       { path: 'profile', Component: ProfilePage },
     ],
   },
