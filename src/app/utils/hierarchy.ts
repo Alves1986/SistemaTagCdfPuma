@@ -38,7 +38,23 @@ export const HIERARQUIA: Record<string, HierarchyData> = {
   }
 };
 
+export const COORDENADORES: Record<string, string> = {
+  "Recuperação": "Carlos Alberto",
+  "Utilidades": "Felipe Moreira",
+  "Produção Fibras": "Roberto Silva",
+  "Preparo de Madeira": "Antonio Carlos",
+  "MC25": "Marcos Paulo",
+  "MC26": "João Pedro",
+  "MP27": "Rafael Lima",
+  "MP28": "Diego Santos",
+  "Cozinha Couche": "Lucas Oliveira"
+};
+
 export const GERENCIAS = Object.keys(HIERARQUIA);
+
+export function getCoordenador(coordenacaoOrArea: string): string {
+  return COORDENADORES[coordenacaoOrArea] || 'A Definir';
+}
 
 // Retorna todas as áreas operacionais (todas as gerências exceto Manutenção)
 export function getAllOperationalAreas(): string[] {

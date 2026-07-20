@@ -370,12 +370,20 @@ function updateTagLocal(id: number, updates: Partial<Tag>): Tag {
     throw new Error('TAG não encontrado');
   }
 
-  tags[tagIndex] = {
+  const updatedTag = {
     ...tags[tagIndex],
     ...updates,
     atualizado_em: new Date().toISOString()
   };
 
+  if (updates.tag_completo) {
+    const ultimos4Match = updates.tag_completo.match(/\d{4}$/);
+    if (ultimos4Match) {
+      updatedTag.ultimos4 = ultimos4Match[0];
+    }
+  }
+
+  tags[tagIndex] = updatedTag;
   localStorage.setItem('tags', JSON.stringify(tags));
   return normalizeTag(tags[tagIndex]);
 }

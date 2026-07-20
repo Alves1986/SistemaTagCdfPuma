@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useSearchParams, useNavigate } from 'react-router';
+import { Link, useSearchParams, useNavigate, useLocation } from 'react-router';
 import { Tag } from '../types';
 import {
   AlertTriangle, Camera, QrCode, Download, Edit, Wrench, Search,
@@ -20,17 +20,21 @@ export function AdminPage() {
   const { selectedArea } = useArea();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isManutencaoRoute = location.pathname === '/admin/manutencao';
 
   useEffect(() => {
-    if (user?.gerencia === 'Manutenção') {
+    if (user?.gerencia === 'Manutenção' && !isManutencaoRoute) {
       navigate('/admin/manutencao');
     }
-  }, [user, navigate]);
+  }, [user, navigate, isManutencaoRoute]);
 
-  return <AdminPageContent selectedArea={selectedArea} initialFilter={(searchParams.get('filter') as FilterKey) || 'all'} />;
+  const initialFilter = isManutencaoRoute ? 'com_nota' : ((searchParams.get('filter') as FilterKey) || 'all');
+
+  return <AdminPageContent selectedArea={selectedArea} initialFilter={initialFilter} isManutencaoRoute={isManutencaoRoute} />;
 }
 
-function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: string; initialFilter: FilterKey }) {
+function AdminPageContent({ selectedArea, initialFilter, isManutencaoRoute }: { selectedArea: string; initialFilter: FilterKey; isManutencaoRoute?: boolean }) {
   const { user } = useAuth();
   const [tags, setTags] = useState<Tag[]>([]);
   const [filter, setFilter] = useState<FilterKey>(initialFilter);
@@ -143,14 +147,26 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
   });
 
   const filteredTags = areaTags.filter(tag => {
-    // Não exibir equipamentos com notas abertas nesta tela
-    if (tag.nota_manutencao) return false;
+    // Lógica de separação:
+    // Se estiver na aba "Notas Abertas" (filter === 'com_nota'), mostra APENAS os equipamentos com nota
+    // Se estiver na aba "Gestão" (filter !== 'com_nota'), mostra APENAS os equipamentos SEM nota
+    if (filter === 'com_nota') {
+      if (!tag.nota_manutencao || tag.nota_manutencao.status_manutencao === 'finalizada_manutencao') return false;
+    } else {
+      if (tag.nota_manutencao && tag.nota_manutencao.status_manutencao !== 'finalizada_manutencao') return false;
+    }
 
     const matchesSearch = searchQuery.trim() === '' ||
       tag.tag_completo.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tag.nome_equipamento.toLowerCase().includes(searchQuery.toLowerCase());
-    if (filter === 'all' || filter === 'com_nota') return matchesSearch;
-    return matchesSearch && tag.status === filter;
+
+    if (!matchesSearch) return false;
+
+    if (filter === 'operacional') return tag.status === 'operacional';
+    if (filter === 'manutenção') return tag.status === 'manutenção';
+    if (filter === 'inativo') return tag.status === 'inativo';
+
+    return true;
   });
 
   const sortedTags = [...filteredTags].sort((a, b) => {
@@ -319,11 +335,11 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5">
           <div>
             <h1 className="font-semibold text-foreground text-[1.1rem]">
-              Gestão de TAGs
+              {isManutencaoRoute ? 'Notas Abertas' : 'Gestão de TAGs'}
               <span className="ml-2 text-xs font-normal text-muted-foreground">— {selectedArea}</span>
             </h1>
               <p className="text-sm mt-0.5 text-muted-foreground">
-              Monitoramento e gerenciamento de equipamentos
+              {isManutencaoRoute ? 'Equipamentos com notas de manutenção em aberto' : 'Monitoramento e gerenciamento de equipamentos'}
             </p>
           </div>
           <div className="flex gap-2 flex-wrap items-center">
@@ -333,9 +349,9 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
                 onChange={e => setSelectedSubArea(e.target.value)}
                 className="px-3 py-2 text-sm rounded border border-border bg-background text-foreground min-w-[120px]"
               >
-                <option value="Todos">Todas as Áreas ({selectedArea})</option>
+                <option value="Todos">{selectedArea}</option>
                 {subAreas.map(sa => (
-                  <option key={sa} value={sa}>Somente {sa}</option>
+                  <option key={sa} value={sa}>{sa}</option>
                 ))}
               </select>
             )}
@@ -378,7 +394,7 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
                 )}
               </>
             )}
-            {isGestorManutencao && (
+            {!isManutencaoRoute && isGestorManutencao && (
               <Link to="/admin/manutencao" className="flex items-center gap-1.5 px-3 py-2 rounded bg-amber-600 text-white text-sm font-medium transition-colors hover:bg-amber-700">
                 <Wrench size={15} />
                 Notas Abertas
@@ -388,22 +404,24 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-          {[
-            { label: 'Total S/ Nota', value: filteredTags.length, style: 'bg-primary/5 border-primary/20 text-primary', icon: <Activity size={16} /> },
-            { label: 'Operacionais', value: tagsOperacionais, style: 'bg-accent/5 border-accent/20 text-accent', icon: null },
-            { label: 'Manutenção', value: tagsManutencao, style: 'bg-amber-100 border-amber-200 text-amber-800', icon: <Wrench size={16} /> },
-            { label: 'Inativos', value: tagsInativos, style: 'bg-muted border-border text-muted-foreground', icon: null },
-          ].map(stat => (
-            <div key={stat.label} className={`rounded border p-3 ${stat.style}`}>
-              <div className="flex items-center gap-1.5 mb-1">
-                {stat.icon}
-                <span className="text-xs font-medium">{stat.label}</span>
+        {!isManutencaoRoute && (
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            {[
+              { label: 'Total', value: filteredTags.length, style: 'bg-primary/5 border-primary/20 text-primary', icon: <Activity size={16} /> },
+              { label: 'Operacionais', value: tagsOperacionais, style: 'bg-accent/5 border-accent/20 text-accent', icon: null },
+              { label: 'Manutenção', value: tagsManutencao, style: 'bg-amber-100 border-amber-200 text-amber-800', icon: <Wrench size={16} /> },
+              { label: 'Inativos', value: tagsInativos, style: 'bg-muted border-border text-muted-foreground', icon: null },
+            ].map(stat => (
+              <div key={stat.label} className={`rounded border p-3 ${stat.style}`}>
+                <div className="flex items-center gap-1.5 mb-1">
+                  {stat.icon}
+                  <span className="text-xs font-medium">{stat.label}</span>
+                </div>
+                <p className="text-xl font-bold">{stat.value}</p>
               </div>
-              <p className="text-xl font-bold">{stat.value}</p>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Search & filters */}
@@ -419,7 +437,7 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
           />
         </div>
         <div className="flex flex-wrap gap-1.5">
-          {filterButtons.map(btn => (
+          {!isManutencaoRoute && filterButtons.map(btn => (
             <button
               key={btn.key}
               onClick={() => setFilter(btn.key)}

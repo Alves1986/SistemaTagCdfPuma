@@ -17,6 +17,7 @@ export function Layout() {
   const gerenciaDropdownRef = useRef<HTMLDivElement>(null);
   const areaDropdownRef = useRef<HTMLDivElement>(null);
   const isManutencao = user?.gerencia === 'Manutenção';
+  const canChangeFilters = user?.cargo && !['Operador Lider', 'Operador III', 'Operador II'].includes(user.cargo);
 
   useEffect(() => {
     loadNotasCount();
@@ -60,9 +61,12 @@ export function Layout() {
       {/* Top bar */}
       <header className="bg-gradient-to-r from-primary via-primary to-[#002040] shadow-md border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between gap-2 py-3 w-full">
-            {/* Brand */}
-            <div className="flex items-center gap-3 flex-shrink-0 w-auto justify-between sm:justify-start">
+          <div className="flex items-center justify-between gap-4 py-2 w-full overflow-x-auto no-scrollbar">
+            
+            {/* LEFT SECTION: Brand & Nav */}
+            <div className="flex items-center gap-6 lg:gap-8 flex-shrink-0">
+              
+              {/* Brand */}
               <div className="flex items-center gap-3">
                 <div className="bg-white/10 p-1.5 rounded-lg backdrop-blur-sm shadow-sm border border-white/20">
                   <img src="/logo.svg" alt="Klabin Logo" className="h-8 w-auto object-contain drop-shadow-sm" />
@@ -77,161 +81,140 @@ export function Layout() {
                 </div>
               </div>
               
-              {/* Right: user + logout on mobile (moved up) */}
-              <div className="flex sm:hidden items-center gap-3">
-                <Link to="/profile" className="flex items-center gap-2 hover:opacity-80 transition-opacity" title="Meu Perfil">
-                  <div className="w-8 h-8 rounded flex items-center justify-center bg-primary-foreground/10 text-primary-foreground overflow-hidden flex-shrink-0">
+              {/* Navigation */}
+              <nav className="flex items-center gap-1 hidden md:flex">
+                {!isManutencao && (
+                  <Link
+                    to="/"
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded transition-colors text-sm font-medium ${
+                      location.pathname === '/'
+                        ? 'bg-accent text-accent-foreground'
+                        : 'text-primary-foreground/70 hover:text-primary-foreground hover:bg-white/10'
+                    }`}
+                  >
+                    <Search size={15} />
+                    <span>Buscar</span>
+                  </Link>
+                )}
+                {!isManutencao && (
+                  <Link
+                    to="/admin"
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded transition-colors text-sm font-medium ${
+                      location.pathname === '/admin'
+                        ? 'bg-accent text-accent-foreground'
+                        : 'text-primary-foreground/70 hover:text-primary-foreground hover:bg-white/10'
+                    }`}
+                  >
+                    <Settings size={15} />
+                    <span>Gestão</span>
+                  </Link>
+                )}
+                <Link
+                  to="/admin/manutencao"
+                  className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded transition-colors text-sm font-medium ${
+                    location.pathname === '/admin/manutencao'
+                      ? 'bg-accent text-accent-foreground'
+                      : 'text-primary-foreground/70 hover:text-primary-foreground hover:bg-white/10'
+                  }`}
+                >
+                  <Wrench size={15} />
+                  <span>Notas Abertas</span>
+                  {notasAbertas > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[0.6rem] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-0.5 shadow-sm">
+                      {badgeCount}
+                    </span>
+                  )}
+                </Link>
+              </nav>
+
+            </div>
+
+            {/* RIGHT SECTION: Filters & Profile */}
+            <div className="flex items-center gap-4 lg:gap-6 flex-shrink-0">
+              
+              {/* Filters */}
+              <div className="flex items-center gap-2">
+                <div className="relative" ref={gerenciaDropdownRef}>
+                  <button
+                    onClick={() => canChangeFilters && setShowGerenciaDropdown(v => !v)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-primary-foreground/30 text-primary-foreground/90 text-sm font-medium transition-colors ${canChangeFilters ? 'hover:bg-white/10 cursor-pointer' : 'cursor-default opacity-90'}`}
+                  >
+                    <span>{selectedGerencia}</span>
+                    {canChangeFilters && <ChevronDown size={13} className={`transition-transform ${showGerenciaDropdown ? 'rotate-180' : ''}`} />}
+                  </button>
+                  {canChangeFilters && showGerenciaDropdown && (
+                    <div className="absolute right-0 lg:left-0 top-full mt-1.5 bg-card rounded border border-border shadow-lg z-50 min-w-[200px]">
+                      {(isManutencao ? GERENCIAS : [user?.gerencia ? normalizeGerencia(user.gerencia) : selectedGerencia]).map(gerencia => (
+                        <button
+                          key={gerencia}
+                          onClick={() => { setSelectedGerencia(gerencia); setShowGerenciaDropdown(false); }}
+                          className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-muted ${selectedGerencia === gerencia ? 'text-primary font-semibold bg-primary/5' : 'text-foreground'}`}
+                        >
+                          {gerencia}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="relative" ref={areaDropdownRef}>
+                  <button
+                    onClick={() => canChangeFilters && setShowAreaDropdown(v => !v)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-primary-foreground/30 text-primary-foreground/90 text-sm font-medium transition-colors ${canChangeFilters ? 'hover:bg-white/10 cursor-pointer' : 'cursor-default opacity-90'}`}
+                  >
+                    <span>{selectedArea}</span>
+                    {canChangeFilters && <ChevronDown size={13} className={`transition-transform ${showAreaDropdown ? 'rotate-180' : ''}`} />}
+                  </button>
+                  {canChangeFilters && showAreaDropdown && (
+                    <div className="absolute right-0 lg:left-0 top-full mt-1.5 bg-card rounded border border-border shadow-lg z-50 min-w-[140px]">
+                      {areas.map(area => (
+                        <button
+                          key={area}
+                          onClick={() => { setSelectedArea(area); setShowAreaDropdown(false); }}
+                          className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-muted ${selectedArea === area ? 'text-primary font-semibold bg-primary/5' : 'text-foreground'}`}
+                        >
+                          {area}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Profile & Weather */}
+              <div className="flex items-center gap-3">
+                <div className="hidden lg:flex items-center gap-2 pr-3 border-r border-primary-foreground/20 text-primary-foreground/80 cursor-pointer hover:text-primary-foreground" title="Previsão do Tempo">
+                  <CloudSun size={18} />
+                  <div className="leading-tight">
+                    <p className="text-xs font-semibold">24°C</p>
+                    <p className="text-[0.65rem]">Ortigueira</p>
+                  </div>
+                </div>
+                
+                <Link to="/profile" className="flex items-center gap-2 pr-3 border-r border-primary-foreground/20 hover:opacity-80">
+                  <div className="w-7 h-7 rounded flex items-center justify-center bg-primary-foreground/10 text-primary-foreground overflow-hidden">
                     {user?.foto_url ? (
                       <img src={user.foto_url} alt="Foto" className="w-full h-full object-cover" />
                     ) : (
-                      <User size={15} />
+                      <User size={14} />
                     )}
                   </div>
+                  <div className="leading-tight hidden sm:block">
+                    <p className="text-primary-foreground text-sm font-medium leading-none">{user?.nome}</p>
+                    <p className="text-xs mt-0.5 text-primary-foreground/70">{user?.cargo}</p>
+                  </div>
                 </Link>
+                
                 <button
                   onClick={logout}
-                  className="flex items-center gap-1.5 text-primary-foreground/70 hover:text-primary-foreground transition-colors"
+                  className="flex items-center gap-1.5 text-primary-foreground/70 hover:text-primary-foreground"
                   title="Sair"
                 >
-                  <LogOut size={18} />
+                  <LogOut size={16} />
+                  <span className="text-sm font-medium hidden md:inline">Sair</span>
                 </button>
               </div>
-            </div>
 
-            {/* Filters container */}
-            <div className="flex flex-row items-center justify-center gap-2 flex-shrink-0 w-auto order-3 sm:order-none">
-              
-              {/* Gerencia selector */}
-              <div className="relative flex-shrink-0" ref={gerenciaDropdownRef}>
-                <button
-                  onClick={() => setShowGerenciaDropdown(v => !v)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-primary-foreground/30 text-primary-foreground/90 text-sm font-medium transition-colors hover:bg-white/10 hover:border-primary-foreground/50"
-                >
-                  <span>{selectedGerencia}</span>
-                  <ChevronDown size={13} className={`transition-transform duration-150 ${showGerenciaDropdown ? 'rotate-180' : ''}`} />
-                </button>
-                {showGerenciaDropdown && (
-                  <div className="absolute left-0 top-full mt-1.5 bg-card rounded border border-border shadow-lg z-50 min-w-[200px]">
-                    {(isManutencao ? GERENCIAS : [user?.gerencia ? normalizeGerencia(user.gerencia) : selectedGerencia]).map(gerencia => (
-                      <button
-                        key={gerencia}
-                        onClick={() => { setSelectedGerencia(gerencia); setShowGerenciaDropdown(false); }}
-                        className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-muted ${
-                          selectedGerencia === gerencia ? 'text-primary font-semibold bg-primary/5' : 'text-foreground'
-                        }`}
-                      >
-                        {gerencia}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Area selector */}
-              <div className="relative flex-shrink-0" ref={areaDropdownRef}>
-              <button
-                onClick={() => setShowAreaDropdown(v => !v)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-primary-foreground/30 text-primary-foreground/90 text-sm font-medium transition-colors hover:bg-white/10 hover:border-primary-foreground/50"
-              >
-                <span>{selectedArea}</span>
-                <ChevronDown size={13} className={`transition-transform duration-150 ${showAreaDropdown ? 'rotate-180' : ''}`} />
-              </button>
-              {showAreaDropdown && (
-                <div className="absolute left-0 top-full mt-1.5 bg-card rounded border border-border shadow-lg z-50 min-w-[140px]">
-                  {areas.map(area => (
-                    <button
-                      key={area}
-                      onClick={() => { setSelectedArea(area); setShowAreaDropdown(false); }}
-                      className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-muted ${
-                        selectedArea === area ? 'text-primary font-semibold bg-primary/5' : 'text-foreground'
-                      }`}
-                    >
-                      {area}
-                    </button>
-                  ))}
-                </div>
-              )}
-              </div>
-            </div>
-
-            {/* Center nav */}
-            <nav className="flex items-center justify-center gap-1 w-auto lg:flex-shrink-0">
-              {!isManutencao && (
-                <Link
-                  to="/"
-                  className={`flex items-center gap-2 px-4 py-2 rounded transition-all duration-150 text-sm font-medium ${
-                    location.pathname === '/'
-                      ? 'bg-accent text-accent-foreground'
-                      : 'text-primary-foreground/70 hover:text-primary-foreground hover:bg-white/10'
-                  }`}
-                >
-                  <Search size={16} />
-                  <span className="hidden sm:inline">Buscar</span>
-                </Link>
-              )}
-              {!isManutencao && (
-                <Link
-                  to="/admin"
-                  className={`relative flex items-center gap-2 px-4 py-2 rounded transition-all duration-150 text-sm font-medium ${
-                    location.pathname === '/admin'
-                      ? 'bg-accent text-accent-foreground'
-                      : 'text-primary-foreground/70 hover:text-primary-foreground hover:bg-white/10'
-                  }`}
-                >
-                  <Settings size={16} />
-                  <span className="hidden sm:inline">Gestão</span>
-                </Link>
-              )}
-              
-              <Link
-                to="/admin/manutencao"
-                className={`relative flex items-center gap-2 px-4 py-2 rounded transition-all duration-150 text-sm font-medium ${
-                  location.pathname === '/admin/manutencao'
-                    ? 'bg-accent text-accent-foreground'
-                    : 'text-primary-foreground/70 hover:text-primary-foreground hover:bg-white/10'
-                }`}
-              >
-                <Wrench size={16} />
-                <span className="hidden sm:inline">Notas Abertas</span>
-                {notasAbertas > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[0.6rem] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-0.5 shadow-sm">
-                    {badgeCount}
-                  </span>
-                )}
-              </Link>
-            </nav>
-
-            <div className="hidden sm:flex items-center gap-2 lg:gap-4 lg:flex-shrink-0">
-              {/* Weather Placeholder */}
-              <div className="flex items-center gap-2 pr-4 border-r border-primary-foreground/20 text-primary-foreground/80 hover:text-primary-foreground transition-colors cursor-pointer" title="Previsão do Tempo (Em breve)">
-                <CloudSun size={18} />
-                <div className="leading-tight hidden lg:block">
-                  <p className="text-xs font-semibold">24°C</p>
-                  <p className="text-[0.65rem]">Ortigueira</p>
-                </div>
-              </div>
-              
-              <Link to="/profile" className="flex items-center gap-2 pr-3 border-r border-primary-foreground/20 hover:opacity-80 transition-opacity" title="Meu Perfil">
-                <div className="w-8 h-8 rounded flex items-center justify-center bg-primary-foreground/10 text-primary-foreground overflow-hidden flex-shrink-0">
-                  {user?.foto_url ? (
-                    <img src={user.foto_url} alt="Foto" className="w-full h-full object-cover" />
-                  ) : (
-                    <User size={15} />
-                  )}
-                </div>
-                <div className="leading-tight">
-                  <p className="text-primary-foreground text-sm font-medium leading-none">{user?.nome}</p>
-                  <p className="text-xs mt-0.5 text-primary-foreground/70">{user?.cargo}</p>
-                </div>
-              </Link>
-              <button
-                onClick={logout}
-                className="flex items-center gap-1.5 text-primary-foreground/70 hover:text-primary-foreground transition-colors"
-                title="Sair"
-              >
-                <LogOut size={16} />
-                <span className="text-sm font-medium hidden md:inline">Sair</span>
-              </button>
             </div>
           </div>
         </div>

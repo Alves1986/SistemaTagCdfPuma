@@ -105,6 +105,7 @@ export function TagDetailPage() {
   const [isCapa, setIsCapa] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [editTagCompleto, setEditTagCompleto] = useState('');
   const [editNomeEquipamento, setEditNomeEquipamento] = useState('');
   const [editLocalizacao, setEditLocalizacao] = useState('');
   const [editStatus, setEditStatus] = useState<'operacional' | 'manutenção' | 'inativo'>('operacional');
@@ -128,6 +129,7 @@ export function TagDetailPage() {
       setTag(tagData);
       setPhotos(fotosData);
       setComentarios(comentariosData);
+      setEditTagCompleto(tagData.tag_completo);
       setEditNomeEquipamento(tagData.nome_equipamento);
       setEditLocalizacao(tagData.localizacao_texto);
       setEditStatus(tagData.status);
@@ -216,8 +218,16 @@ export function TagDetailPage() {
 
   const handleSaveEdit = async () => {
     if (!tag || !user) return;
+    
+    const ultimos4Match = editTagCompleto.match(/\d{4}$/);
+    if (!ultimos4Match) {
+      alert('O TAG deve terminar com 4 dígitos (ex: CAL-BOI-0001)');
+      return;
+    }
+
     try {
       const updatedTag = await api.updateTag(tag.id, {
+        tag_completo: editTagCompleto,
         nome_equipamento: editNomeEquipamento,
         localizacao_texto: editLocalizacao,
         status: editStatus,
@@ -644,6 +654,10 @@ export function TagDetailPage() {
       {showEditModal && (
         <Modal title="Editar Equipamento" onClose={() => setShowEditModal(false)}>
           <div className="space-y-4">
+            <div>
+              <label className="block mb-1.5 text-sm font-medium text-foreground">TAG (Código)</label>
+              <input type="text" value={editTagCompleto} onChange={(e) => setEditTagCompleto(e.target.value)} className={inputClass} />
+            </div>
             <div>
               <label className="block mb-1.5 text-sm font-medium text-foreground">Nome do Equipamento</label>
               <input type="text" value={editNomeEquipamento} onChange={(e) => setEditNomeEquipamento(e.target.value)} className={inputClass} />
