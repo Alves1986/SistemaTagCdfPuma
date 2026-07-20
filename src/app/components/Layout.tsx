@@ -60,7 +60,7 @@ export function Layout() {
       {/* Top bar */}
       <header className="bg-gradient-to-r from-primary via-primary to-[#002040] shadow-md border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-wrap items-center justify-between gap-3 py-3 md:py-0 md:h-16">
+          <div className="flex flex-wrap items-center justify-between gap-4 py-3">
             {/* Brand */}
             <div className="flex items-center gap-3 flex-shrink-0 w-full sm:w-auto justify-between sm:justify-start">
               <div className="flex items-center gap-3">
@@ -155,7 +155,7 @@ export function Layout() {
             </div>
 
             {/* Center nav */}
-            <nav className="flex items-center justify-center gap-1 w-full sm:w-auto order-2 sm:order-none">
+            <nav className="flex flex-wrap items-center justify-center gap-1 w-full sm:w-auto order-2 sm:order-none">
               {!isManutencao && (
                 <Link
                   to="/"
@@ -188,34 +188,22 @@ export function Layout() {
                 </Link>
               )}
               
-              {!isManutencao && (
-                <Link
-                  to="/admin?filter=com_nota"
-                  className={`relative flex items-center gap-2 px-4 py-2 rounded transition-all duration-150 text-sm font-medium text-primary-foreground/70 hover:text-primary-foreground hover:bg-white/10`}
-                >
-                  <Wrench size={16} />
-                  <span className="hidden sm:inline">Em Manutenção</span>
-                </Link>
-              )}
-              
-              {isManutencao && (
-                <Link
-                  to="/admin/manutencao"
-                  className={`relative flex items-center gap-2 px-4 py-2 rounded transition-all duration-150 text-sm font-medium ${
-                    location.pathname === '/admin/manutencao'
-                      ? 'bg-accent text-accent-foreground'
-                      : 'text-primary-foreground/70 hover:text-primary-foreground hover:bg-white/10'
-                  }`}
-                >
-                  <Wrench size={16} />
-                  <span className="hidden sm:inline">Dashboard</span>
-                  {notasAbertas > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[0.6rem] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-0.5 shadow-sm">
-                      {badgeCount}
-                    </span>
-                  )}
-                </Link>
-              )}
+              <Link
+                to="/admin/manutencao"
+                className={`relative flex items-center gap-2 px-4 py-2 rounded transition-all duration-150 text-sm font-medium ${
+                  location.pathname === '/admin/manutencao'
+                    ? 'bg-accent text-accent-foreground'
+                    : 'text-primary-foreground/70 hover:text-primary-foreground hover:bg-white/10'
+                }`}
+              >
+                <Wrench size={16} />
+                <span className="hidden sm:inline">Notas Abertas</span>
+                {notasAbertas > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[0.6rem] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-0.5 shadow-sm">
+                    {badgeCount}
+                  </span>
+                )}
+              </Link>
             </nav>
 
             <div className="hidden sm:flex items-center gap-4">
@@ -253,22 +241,6 @@ export function Layout() {
           </div>
         </div>
 
-        {/* Maintenance alert bar — clicável */}
-        {notasAbertas > 0 && (
-          <button
-            onClick={handleAlertBarClick}
-            className="w-full border-t flex items-center gap-2 px-4 py-2 bg-amber-500/10 border-amber-500/20 hover:bg-amber-500/20 transition-colors text-left group"
-          >
-            <div className="max-w-7xl mx-auto w-full flex items-center gap-2 sm:px-6 lg:px-8">
-              <AlertTriangle size={15} className="text-amber-500 flex-shrink-0" />
-              <span className="text-sm text-amber-500 font-medium flex-1">
-                <span className="font-bold">{notasAbertas}</span>{' '}
-                equipamento{notasAbertas > 1 ? 's' : ''} com nota de manutenção aberta
-              </span>
-              <ArrowRight size={14} className="text-amber-500 flex-shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
-            </div>
-          </button>
-        )}
       </header>
 
       {/* Page content */}

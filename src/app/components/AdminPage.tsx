@@ -143,11 +143,13 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
   });
 
   const filteredTags = areaTags.filter(tag => {
+    // Não exibir equipamentos com notas abertas nesta tela
+    if (tag.nota_manutencao) return false;
+
     const matchesSearch = searchQuery.trim() === '' ||
       tag.tag_completo.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tag.nome_equipamento.toLowerCase().includes(searchQuery.toLowerCase());
-    if (filter === 'all') return matchesSearch;
-    if (filter === 'com_nota') return matchesSearch && !!tag.nota_manutencao;
+    if (filter === 'all' || filter === 'com_nota') return matchesSearch;
     return matchesSearch && tag.status === filter;
   });
 
@@ -254,16 +256,14 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
   const handleExport = async () => {
     setExporting(true);
     await new Promise(r => setTimeout(r, 1200));
-    const exportData = exportFilter === 'com_nota' ? tags.filter(t => t.nota_manutencao) : tags;
+    const exportData = tags.filter(t => !t.nota_manutencao);
     const csv = [
-      ['TAG', 'Nome', 'Localização', 'Status', 'Nota', 'Prioridade', 'Atualizado em'].join(';'),
+      ['TAG', 'Nome', 'Localização', 'Status', 'Atualizado em'].join(';'),
       ...exportData.map(t => [
         t.tag_completo,
         t.nome_equipamento,
         t.localizacao_texto,
         t.status,
-        t.nota_manutencao?.numero_nota ?? '',
-        t.nota_manutencao?.prioridade ?? '',
         formatDate(t.atualizado_em),
       ].join(';'))
     ].join('\n');
@@ -301,7 +301,6 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
 
   const filterButtons: Array<{ key: FilterKey; label: string; activeClass: string }> = [
     { key: 'all', label: 'Todos', activeClass: 'bg-primary text-primary-foreground' },
-    { key: 'com_nota', label: 'Com Nota', activeClass: 'bg-destructive text-destructive-foreground' },
     { key: 'operacional', label: 'Operacional', activeClass: 'bg-accent text-accent-foreground' },
     { key: 'manutenção', label: 'Manutenção', activeClass: 'bg-amber-600 text-white' },
     { key: 'inativo', label: 'Inativo', activeClass: 'bg-muted-foreground text-white' },
@@ -382,7 +381,7 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
             {isGestorManutencao && (
               <Link to="/admin/manutencao" className="flex items-center gap-1.5 px-3 py-2 rounded bg-amber-600 text-white text-sm font-medium transition-colors hover:bg-amber-700">
                 <Wrench size={15} />
-                Painel Manutenção
+                Notas Abertas
               </Link>
             )}
           </div>
@@ -391,8 +390,7 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           {[
-            { label: 'Total', value: areaTags.length, style: 'bg-primary/5 border-primary/20 text-primary', icon: <Activity size={16} /> },
-            { label: 'Com Nota', value: tagsComNota, style: 'bg-destructive/5 border-destructive/20 text-destructive', icon: <AlertTriangle size={16} /> },
+            { label: 'Total S/ Nota', value: filteredTags.length, style: 'bg-primary/5 border-primary/20 text-primary', icon: <Activity size={16} /> },
             { label: 'Operacionais', value: tagsOperacionais, style: 'bg-accent/5 border-accent/20 text-accent', icon: null },
             { label: 'Manutenção', value: tagsManutencao, style: 'bg-amber-100 border-amber-200 text-amber-800', icon: <Wrench size={16} /> },
             { label: 'Inativos', value: tagsInativos, style: 'bg-muted border-border text-muted-foreground', icon: null },
