@@ -10,17 +10,18 @@ export interface Tag {
   criado_em: string;
   atualizado_em: string;
   atualizado_por?: string;
-  nota_manutencao?: NotaManutencao;
+  notas_manutencao?: NotaManutencao[];
   historico_notas?: NotaManutencao[];
 }
 
 export interface NotaManutencao {
+  id?: string;
   numero_nota: string;
   data_abertura: string;
   descricao: string;
   prioridade: 'baixa' | 'média' | 'alta' | 'urgente';
   aberta_por: string;
-  especialidade?: 'Mecânica' | 'Elétrica' | 'Instrumentação' | 'Automação';
+  especialidade?: 'Mecânica' | 'Elétrica' | 'Instrumentação' | 'Automação' | 'Civil' | 'Iluminação' | 'Lubrificação' | 'Isolamento';
   status_manutencao?: 'aberta' | 'visualizada' | 'em_tratamento' | 'finalizada_manutencao';
   data_finalizacao?: string;
   finalizado_por?: string;

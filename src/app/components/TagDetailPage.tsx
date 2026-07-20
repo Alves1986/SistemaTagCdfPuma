@@ -37,12 +37,14 @@ interface AuditEntry {
 function buildAuditLog(tag: Tag, photos: Photo[]): AuditEntry[] {
   const entries: AuditEntry[] = [];
 
-  if (tag.nota_manutencao) {
-    entries.push({
-      tipo: 'nota_aberta',
-      descricao: `Nota ${tag.nota_manutencao.numero_nota} aberta — ${tag.nota_manutencao.descricao}`,
-      autor: tag.nota_manutencao.aberta_por,
-      data: tag.nota_manutencao.data_abertura,
+  if (tag.notas_manutencao) {
+    tag.notas_manutencao.forEach(nota => {
+      entries.push({
+        tipo: 'nota_aberta',
+        descricao: `Nota ${nota.numero_nota} aberta — ${nota.descricao}`,
+        autor: nota.aberta_por,
+        data: nota.data_abertura,
+      });
     });
   }
 
@@ -100,10 +102,12 @@ export function TagDetailPage() {
   const [showQrCodeModal, setShowQrCodeModal] = useState(false);
 
   const [uploadNotes, setUploadNotes] = useState('');
+  const [isCapa, setIsCapa] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [editNomeEquipamento, setEditNomeEquipamento] = useState('');
   const [editLocalizacao, setEditLocalizacao] = useState('');
+  const [editStatus, setEditStatus] = useState<'operacional' | 'manutenção' | 'inativo'>('operacional');
   const [numeroNota, setNumeroNota] = useState('');
   const [descricaoNota, setDescricaoNota] = useState('');
   const [prioridadeNota, setPrioridadeNota] = useState<'baixa' | 'média' | 'alta' | 'urgente'>('média');
@@ -126,6 +130,7 @@ export function TagDetailPage() {
       setComentarios(comentariosData);
       setEditNomeEquipamento(tagData.nome_equipamento);
       setEditLocalizacao(tagData.localizacao_texto);
+      setEditStatus(tagData.status);
       saveRecentTag(tagData);
     } catch (error) {
       console.error('Erro ao carregar dados do TAG:', error);
@@ -192,7 +197,7 @@ export function TagDetailPage() {
       const newPhoto = await api.addFoto(tag.id, user.nome, publicUrl, uploadNotes);
       setPhotos([newPhoto, ...photos]);
       
-      if (!tag.foto_url) {
+      if (!tag.foto_url || isCapa) {
         const updatedTag = await api.updateTag(tag.id, { foto_url: publicUrl });
         setTag(updatedTag);
       }
@@ -200,6 +205,7 @@ export function TagDetailPage() {
       setShowUploadModal(false);
       setUploadFile(null);
       setUploadNotes('');
+      setIsCapa(false);
     } catch (error) { 
       console.error(error);
       alert('Erro ao enviar foto. Verifique se o bucket "equipamentos" foi criado no Supabase.');
@@ -214,6 +220,7 @@ export function TagDetailPage() {
       const updatedTag = await api.updateTag(tag.id, {
         nome_equipamento: editNomeEquipamento,
         localizacao_texto: editLocalizacao,
+        status: editStatus,
         atualizado_por: user.nome
       });
       setTag(updatedTag);
@@ -233,7 +240,7 @@ export function TagDetailPage() {
       });
 
       if (mudarParaManutencao && updatedTag.status !== 'manutenção') {
-        updatedTag = await api.updateTagStatus(tag.id, 'manutenção', user.nome);
+        updatedTag = await api.updateTag(tag.id, { status: 'manutenção', atualizado_por: user.nome });
       }
 
       setTag(updatedTag);
@@ -244,22 +251,22 @@ export function TagDetailPage() {
   };
 
   // Operador valida: nota vai para o histórico antes de ser removida
-  const handleValidarNota = async () => {
+  const handleValidarNota = async (notaId: string) => {
     if (!tag || !user) return;
     if (confirm('Confirmar validação e encerramento desta nota de manutenção?')) {
       try {
-        const updatedTag = await api.finalizarNota(tag.id, user.nome);
+        const updatedTag = await api.finalizarNota(tag.id, notaId, user.nome);
         setTag(updatedTag);
       } catch { alert('Erro ao validar nota de manutenção'); }
     }
   };
 
   // Cancelar/fechar sem registrar histórico (remoção simples)
-  const handleCancelarNota = async () => {
+  const handleCancelarNota = async (notaId: string) => {
     if (!tag) return;
     if (confirm('Deseja cancelar/fechar esta nota sem registrar no histórico?')) {
       try {
-        const updatedTag = await api.removeNotaManutencao(tag.id);
+        const updatedTag = await api.removeNotaManutencao(tag.id, notaId);
         setTag(updatedTag);
       } catch { alert('Erro ao fechar nota de manutenção'); }
     }
@@ -299,53 +306,57 @@ export function TagDetailPage() {
       </Link>
 
       {/* Maintenance alert */}
-      {tag.nota_manutencao && (
-        <div className="rounded border-2 p-4 bg-destructive/5 border-destructive">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-start gap-3 flex-1">
-              <AlertTriangle size={20} className="flex-shrink-0 mt-0.5 text-destructive" />
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <h3 className="font-semibold text-destructive">Nota de Manutenção Aberta</h3>
-                  <span className={`px-2 py-0.5 rounded text-xs font-bold ${getPriorStyle(tag.nota_manutencao.prioridade)}`}>
-                    {tag.nota_manutencao.prioridade.toUpperCase()}
-                  </span>
+      {tag.notas_manutencao && tag.notas_manutencao.length > 0 && (
+        <div className="space-y-3">
+          {tag.notas_manutencao.map(nota => (
+            <div key={nota.id} className="rounded border-2 p-4 bg-destructive/5 border-destructive">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3 flex-1">
+                  <AlertTriangle size={20} className="flex-shrink-0 mt-0.5 text-destructive" />
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="font-semibold text-destructive">Nota de Manutenção Aberta</h3>
+                      <span className={`px-2 py-0.5 rounded text-xs font-bold ${getPriorStyle(nota.prioridade)}`}>
+                        {nota.prioridade.toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="text-sm space-y-0.5 text-destructive/90">
+                      <p><span className="font-medium">Nota:</span> {nota.numero_nota}</p>
+                      <p><span className="font-medium">Descrição:</span> {nota.descricao}</p>
+                      <p><span className="font-medium">Aberta por:</span> {nota.aberta_por}</p>
+                      <p><span className="font-medium">Data:</span> {formatDate(nota.data_abertura)}</p>
+                      {nota.especialidade && (
+                        <p><span className="font-medium">Especialidade:</span> {nota.especialidade}</p>
+                      )}
+                      {nota.status_manutencao && (
+                        <p><span className="font-medium">Status da Manutenção:</span> <span className="uppercase tracking-wider font-semibold text-xs ml-1 bg-destructive/10 px-1.5 py-0.5 rounded">{nota.status_manutencao.replace('_', ' ')}</span></p>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="text-sm space-y-0.5 text-destructive/90">
-                  <p><span className="font-medium">Nota:</span> {tag.nota_manutencao.numero_nota}</p>
-                  <p><span className="font-medium">Descrição:</span> {tag.nota_manutencao.descricao}</p>
-                  <p><span className="font-medium">Aberta por:</span> {tag.nota_manutencao.aberta_por}</p>
-                  <p><span className="font-medium">Data:</span> {formatDate(tag.nota_manutencao.data_abertura)}</p>
-                  {tag.nota_manutencao.especialidade && (
-                    <p><span className="font-medium">Especialidade:</span> {tag.nota_manutencao.especialidade}</p>
-                  )}
-                  {tag.nota_manutencao.status_manutencao && (
-                    <p><span className="font-medium">Status da Manutenção:</span> <span className="uppercase tracking-wider font-semibold text-xs ml-1 bg-destructive/10 px-1.5 py-0.5 rounded">{tag.nota_manutencao.status_manutencao.replace('_', ' ')}</span></p>
-                  )}
-                </div>
+                
+                {!isCoordenador && (
+                  nota.status_manutencao === 'finalizada_manutencao' && user?.cargo !== 'Gestor de Manutenção' ? (
+                    <button
+                      onClick={() => handleValidarNota(nota.id!)}
+                      className="p-2 bg-green-600 text-white hover:bg-green-700 rounded-md transition-colors text-sm font-medium flex items-center gap-2"
+                      title="Validar e Encerrar Nota — registra no histórico"
+                    >
+                      <CheckCircle size={16} /> Validar e Encerrar Nota
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleCancelarNota(nota.id!)}
+                      className="p-1.5 bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground rounded-md transition-colors"
+                      title="Fechar/Cancelar nota (sem histórico)"
+                    >
+                      <X size={18} />
+                    </button>
+                  )
+                )}
               </div>
             </div>
-            
-            {!isCoordenador && (
-              tag.nota_manutencao.status_manutencao === 'finalizada_manutencao' && user?.cargo !== 'Gestor de Manutenção' ? (
-                <button
-                  onClick={handleValidarNota}
-                  className="p-2 bg-green-600 text-white hover:bg-green-700 rounded-md transition-colors text-sm font-medium flex items-center gap-2"
-                  title="Validar e Encerrar Nota — registra no histórico"
-                >
-                  <CheckCircle size={16} /> Validar e Encerrar Nota
-                </button>
-              ) : (
-                <button
-                  onClick={handleCancelarNota}
-                  className="p-1.5 bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground rounded-md transition-colors"
-                  title="Fechar/Cancelar nota (sem histórico)"
-                >
-                  <X size={18} />
-                </button>
-              )
-            )}
-          </div>
+          ))}
         </div>
       )}
 
@@ -416,15 +427,13 @@ export function TagDetailPage() {
                   <QrCode size={14} />
                   Gerar QR
                 </button>
-                {!tag.nota_manutencao && (
-                  <button
-                    onClick={() => setShowNotaModal(true)}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded bg-orange-600 text-white text-sm font-medium hover:bg-orange-700 transition-colors"
-                  >
-                    <Wrench size={14} />
-                    Abrir Nota Manutenção
-                  </button>
-                )}
+                <button
+                  onClick={() => setShowNotaModal(true)}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded bg-orange-600 text-white text-sm font-medium hover:bg-orange-700 transition-colors"
+                >
+                  <Wrench size={14} />
+                  Abrir Nota Manutenção
+                </button>
               </div>
             )}
           </div>
@@ -601,6 +610,18 @@ export function TagDetailPage() {
                 rows={3}
               />
             </div>
+            <div className="flex items-center gap-2 mt-2">
+              <input
+                type="checkbox"
+                id="isCapa"
+                checked={isCapa}
+                onChange={(e) => setIsCapa(e.target.checked)}
+                className="w-4 h-4 text-primary rounded border-border focus:ring-primary"
+              />
+              <label htmlFor="isCapa" className="text-sm font-medium text-foreground cursor-pointer">
+                Definir como foto principal (Substituir atual)
+              </label>
+            </div>
             <div className="p-3 rounded text-xs bg-primary/5 text-primary/80">
               Enviado por: <span className="font-medium">{user?.nome}</span>
             </div>
@@ -630,6 +651,14 @@ export function TagDetailPage() {
             <div>
               <label className="block mb-1.5 text-sm font-medium text-foreground">Localização</label>
               <textarea value={editLocalizacao} onChange={(e) => setEditLocalizacao(e.target.value)} className={inputClass} rows={3} />
+            </div>
+            <div>
+              <label className="block mb-1.5 text-sm font-medium text-foreground">Status</label>
+              <select value={editStatus} onChange={(e) => setEditStatus(e.target.value as any)} className={inputClass}>
+                <option value="operacional">Operacional</option>
+                <option value="manutenção">Manutenção</option>
+                <option value="inativo">Inativo</option>
+              </select>
             </div>
             <div className="p-3 rounded text-xs bg-primary/5 text-primary/80">
               Alteração registrada por: <span className="font-medium">{user?.nome}</span>
@@ -675,6 +704,10 @@ export function TagDetailPage() {
                 <option value="Elétrica">Elétrica</option>
                 <option value="Instrumentação">Instrumentação</option>
                 <option value="Automação">Automação</option>
+                <option value="Civil">Civil</option>
+                <option value="Iluminação">Iluminação</option>
+                <option value="Lubrificação">Lubrificação</option>
+                <option value="Isolamento">Isolamento</option>
               </select>
             </div>
             <div>

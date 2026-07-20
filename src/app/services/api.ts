@@ -352,41 +352,56 @@ export async function addNotaManutencao(
     descricao: string;
     prioridade: 'baixa' | 'média' | 'alta' | 'urgente';
     aberta_por: string;
-    especialidade?: 'Mecânica' | 'Elétrica' | 'Instrumentação' | 'Automação';
+    especialidade?: 'Mecânica' | 'Elétrica' | 'Instrumentação' | 'Automação' | 'Civil' | 'Iluminação' | 'Lubrificação' | 'Isolamento';
   }
 ): Promise<Tag> {
+  const tag = await getTagById(tagId);
+  const notasAtuais = tag.notas_manutencao || [];
+  
   const notaManutencaoCompleta = {
     ...nota,
+    id: Date.now().toString(),
     data_abertura: new Date().toISOString(),
     status_manutencao: 'aberta'
   };
 
-  return updateTag(tagId, { nota_manutencao: notaManutencaoCompleta } as Partial<Tag>);
+  return updateTag(tagId, { notas_manutencao: [...notasAtuais, notaManutencaoCompleta] } as Partial<Tag>);
 }
 
-export async function removeNotaManutencao(tagId: number): Promise<Tag> {
-  return updateTag(tagId, { nota_manutencao: null as any } as Partial<Tag>);
+export async function removeNotaManutencao(tagId: number, notaId: string): Promise<Tag> {
+  const tag = await getTagById(tagId);
+  const notasAtuais = tag.notas_manutencao || [];
+  const novasNotas = notasAtuais.filter(n => n.id !== notaId);
+  
+  return updateTag(tagId, { notas_manutencao: novasNotas.length > 0 ? novasNotas : null as any } as Partial<Tag>);
 }
 
 // Finaliza a nota com histórico: salva no historico_notas antes de limpar nota_manutencao
 export async function finalizarNota(
   tagId: number,
+  notaId: string,
   finalizadoPor: string
 ): Promise<Tag> {
   const tag = await getTagById(tagId);
-  if (!tag.nota_manutencao) throw new Error('TAG não possui nota aberta');
+  if (!tag.notas_manutencao || tag.notas_manutencao.length === 0) throw new Error('TAG não possui notas abertas');
+
+  const notaIndex = tag.notas_manutencao.findIndex(n => n.id === notaId);
+  if (notaIndex === -1) throw new Error('Nota não encontrada');
 
   const notaFinalizada = {
-    ...tag.nota_manutencao,
+    ...tag.notas_manutencao[notaIndex],
     status_manutencao: 'finalizada_manutencao' as const,
     data_finalizacao: new Date().toISOString(),
     finalizado_por: finalizadoPor,
   };
 
+  const novasNotas = [...tag.notas_manutencao];
+  novasNotas.splice(notaIndex, 1);
+
   const historicoAtual = tag.historico_notas || [];
 
   return updateTag(tagId, {
-    nota_manutencao: null as any,
+    notas_manutencao: novasNotas.length > 0 ? novasNotas : null as any,
     historico_notas: [...historicoAtual, notaFinalizada],
   } as Partial<Tag>);
 }

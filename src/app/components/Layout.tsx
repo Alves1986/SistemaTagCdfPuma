@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router';
-import { Search, Settings, LogOut, User, AlertTriangle, Flame, ChevronDown, ArrowRight, Wrench } from 'lucide-react';
+import { Search, Settings, LogOut, User, AlertTriangle, Flame, ChevronDown, ArrowRight, Wrench, Activity, CloudSun } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useArea } from '../contexts/AreaContext';
 import { useState, useEffect, useRef } from 'react';
@@ -38,7 +38,7 @@ export function Layout() {
   const loadNotasCount = async () => {
     try {
       const tags = await api.getAllTags();
-      const count = tags.filter(tag => tag.nota_manutencao).length;
+      const count = tags.filter(tag => tag.notas_manutencao && tag.notas_manutencao.length > 0).length;
       setNotasAbertas(count);
     } catch (error) {
       console.error('Erro ao carregar contagem de notas:', error);
@@ -69,7 +69,7 @@ export function Layout() {
                 </div>
                 <div className="leading-tight">
                   <div className="text-[0.95rem] tracking-wide text-primary-foreground font-bold drop-shadow-sm">
-                    KLABIN · SISTEMA TAG
+                    SISTEMA TAG
                   </div>
                   <div className="text-[0.7rem] tracking-[0.2em] text-primary-foreground/80 uppercase font-medium mt-0.5">
                     {user?.coordenacao || user?.areas_coordenadas?.[0] || user?.area || 'OPERAÇÕES INDUSTRIAIS'}
@@ -169,7 +169,7 @@ export function Layout() {
                   <span className="hidden sm:inline">Buscar</span>
                 </Link>
               )}
-              {!isManutencao ? (
+              {!isManutencao && (
                 <Link
                   to="/admin"
                   className={`relative flex items-center gap-2 px-4 py-2 rounded transition-all duration-150 text-sm font-medium ${
@@ -186,7 +186,19 @@ export function Layout() {
                     </span>
                   )}
                 </Link>
-              ) : (
+              )}
+              
+              {!isManutencao && (
+                <Link
+                  to="/admin?filter=com_nota"
+                  className={`relative flex items-center gap-2 px-4 py-2 rounded transition-all duration-150 text-sm font-medium text-primary-foreground/70 hover:text-primary-foreground hover:bg-white/10`}
+                >
+                  <Wrench size={16} />
+                  <span className="hidden sm:inline">Em Manutenção</span>
+                </Link>
+              )}
+              
+              {isManutencao && (
                 <Link
                   to="/admin/manutencao"
                   className={`relative flex items-center gap-2 px-4 py-2 rounded transition-all duration-150 text-sm font-medium ${
@@ -206,8 +218,16 @@ export function Layout() {
               )}
             </nav>
 
-            {/* Right: user + logout (desktop) */}
-            <div className="hidden sm:flex items-center gap-3">
+            <div className="hidden sm:flex items-center gap-4">
+              {/* Weather Placeholder */}
+              <div className="flex items-center gap-2 pr-4 border-r border-primary-foreground/20 text-primary-foreground/80 hover:text-primary-foreground transition-colors cursor-pointer" title="Previsão do Tempo (Em breve)">
+                <CloudSun size={18} />
+                <div className="leading-tight hidden lg:block">
+                  <p className="text-xs font-semibold">24°C</p>
+                  <p className="text-[0.65rem]">Ortigueira</p>
+                </div>
+              </div>
+              
               <Link to="/profile" className="flex items-center gap-2 pr-3 border-r border-primary-foreground/20 hover:opacity-80 transition-opacity" title="Meu Perfil">
                 <div className="w-8 h-8 rounded flex items-center justify-center bg-primary-foreground/10 text-primary-foreground overflow-hidden flex-shrink-0">
                   {user?.foto_url ? (
@@ -253,7 +273,39 @@ export function Layout() {
 
       {/* Page content */}
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-6 sm:px-6 lg:px-8">
-        <Outlet />
+        <div className="flex flex-col lg:flex-row gap-6 h-full items-start">
+          {/* Main Content */}
+          <div className="flex-1 min-w-0 w-full">
+            <Outlet />
+          </div>
+          
+          {/* Right Sidebar Dashboard */}
+          <aside className="w-full lg:w-72 xl:w-80 flex-shrink-0 flex flex-col gap-4 sticky top-6">
+            <div className="bg-card rounded-lg border border-border shadow-sm p-5">
+               <h3 className="font-semibold text-primary mb-2 flex items-center gap-2">
+                 <Activity size={16} />
+                 Visão da Área
+               </h3>
+               <p className="text-xs text-muted-foreground mb-4">
+                 Resumo operacional diário. Integração com IA para leitura da programação semanal em breve.
+               </p>
+               <div className="space-y-3">
+                 <div className="bg-muted/50 border border-border p-3 rounded-md flex justify-between items-center">
+                   <p className="text-xs text-muted-foreground uppercase font-semibold">Saúde dos Equipamentos</p>
+                   <p className="text-lg font-bold text-green-600">95%</p>
+                 </div>
+                 <div className="bg-muted/50 border border-border p-3 rounded-md flex justify-between items-center">
+                   <p className="text-xs text-muted-foreground uppercase font-semibold">Notas Abertas</p>
+                   <p className="text-lg font-bold text-destructive">{notasAbertas}</p>
+                 </div>
+                 <div className="bg-primary/5 border border-primary/20 p-3 rounded-md mt-2">
+                   <p className="text-xs text-primary uppercase font-semibold mb-1">Próxima Manutenção</p>
+                   <p className="text-sm font-medium text-foreground">Caldeira - Parada Geral (15/08)</p>
+                 </div>
+               </div>
+            </div>
+          </aside>
+        </div>
       </main>
 
       {/* Footer */}
