@@ -5,10 +5,11 @@ import * as api from '../services/api';
 import { User, Phone, Camera, Save, MapPin, Briefcase, X, Check, Users } from 'lucide-react';
 import Cropper from 'react-easy-crop';
 import getCroppedImg from '../../utils/cropImage';
-import { getCoordenador } from '../utils/hierarchy';
 
 export function ProfilePage() {
   const { user } = useAuth();
+  
+  const [coordenadorNome, setCoordenadorNome] = useState<string>('Carregando...');
   
   const [formData, setFormData] = useState({ whatsapp: '', foto_url: '' });
   const [uploading, setUploading] = useState(false);
@@ -27,6 +28,13 @@ export function ProfilePage() {
         whatsapp: user.whatsapp || '',
         foto_url: user.foto_url || ''
       });
+      
+      const targetArea = user.coordenacao || user.area || '';
+      if (targetArea) {
+        api.getCoordenadorProfile(targetArea).then(setCoordenadorNome);
+      } else {
+        setCoordenadorNome('Não informada');
+      }
     }
   }, [user]);
 
@@ -150,7 +158,7 @@ export function ProfilePage() {
                 <div className="p-2 bg-background rounded border border-border"><Users size={16} /></div>
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wider">Líder / Coordenador</p>
-                  <p className="text-foreground font-medium">{getCoordenador(user.coordenacao || user.area || '')}</p>
+                  <p className="text-foreground font-medium">{coordenadorNome}</p>
                 </div>
               </div>
             )}

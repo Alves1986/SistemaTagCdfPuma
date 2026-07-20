@@ -643,3 +643,46 @@ export async function updateProfile(id: string, updates: Partial<UserProfile>): 
   return true;
 }
 
+export async function getCoordenadorProfile(area: string): Promise<string> {
+  if (!area) return 'Não informada';
+  
+  try {
+    // Busca um usuário com cargo Coordenador que tenha a área nas áreas coordenadas
+    const { data: byAreas } = await supabase
+      .from('profiles')
+      .select('nome, areas_coordenadas')
+      .eq('cargo', 'Coordenador');
+
+    if (byAreas && byAreas.length > 0) {
+      // Filtragem manual para arrays do postgresql, supabase contains as vezes falha dependendo do setup
+      const found = byAreas.find(p => p.areas_coordenadas && p.areas_coordenadas.includes(area));
+      if (found) return found.nome;
+    }
+
+    // Tentar pela area principal
+    const { data: byArea } = await supabase
+      .from('profiles')
+      .select('nome')
+      .eq('cargo', 'Coordenador')
+      .eq('area', area)
+      .limit(1);
+
+    if (byArea && byArea.length > 0) return byArea[0].nome;
+
+    // Tentar pela coordenação
+    const { data: byCoord } = await supabase
+      .from('profiles')
+      .select('nome')
+      .eq('cargo', 'Coordenador')
+      .eq('coordenacao', area)
+      .limit(1);
+
+    if (byCoord && byCoord.length > 0) return byCoord[0].nome;
+
+    return 'Nenhum coordenador cadastrado';
+  } catch (error) {
+    console.error('Erro ao buscar coordenador:', error);
+    return 'Nenhum coordenador cadastrado';
+  }
+}
+

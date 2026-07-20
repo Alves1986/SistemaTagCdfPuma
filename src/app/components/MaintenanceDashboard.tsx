@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useArea } from '../contexts/AreaContext';
 import { Tag, NotaManutencao } from '../types';
 import * as api from '../services/api';
-import { getLocalizacaoFromArea, getAllOperationalAreas } from '../utils/hierarchy';
+import { getLocalizacaoFromArea, checkAreaMatch } from '../utils/hierarchy';
 
 // Todas as áreas operacionais (derivadas do HIERARQUIA, excluindo Manutenção)
 const AREAS_OPERACIONAIS = getAllOperationalAreas();
@@ -53,9 +53,8 @@ export function MaintenanceDashboard() {
       const data = await api.getAllTags();
       // Notas ativas: filtra pela área selecionada no header (ou todas as operacionais)
       const comNota = data.filter(tag => {
-        const localizacao = getLocalizacaoFromArea(selectedArea);
-        const matchesArea = !selectedArea || tag.localizacao_texto === localizacao;
-        return matchesArea && tag.nota_manutencao && AREAS_OPERACIONAIS.includes(tag.localizacao_texto);
+        const matchesArea = !selectedArea || checkAreaMatch(tag.localizacao_texto, selectedArea);
+        return matchesArea && tag.nota_manutencao;
       });
       setAllTags(comNota);
       setCurrentPage(1);

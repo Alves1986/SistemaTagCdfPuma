@@ -127,3 +127,36 @@ export function normalizeGerencia(gerencia: string): string {
   if (lower.includes('manuten')) return 'Manutenção';
   return gerencia;
 }
+
+export function checkAreaMatch(tagLoc: string, targetArea: string) {
+  if (!tagLoc) return false;
+  const loc = tagLoc.toUpperCase().trim();
+  const target = targetArea.toUpperCase().trim();
+
+  // Mapas de sinônimos/legado para robustez
+  const map: Record<string, string[]> = {
+    'CDF2': ['CDF2', 'CDF 2', 'CDF II', 'CALDEIRA 2', 'CDF2/ETAC2'],
+    'ETAC2': ['ETAC2', 'ETAC 2', 'ETAC II', 'CDF2/ETAC2'],
+    'CDF1': ['CDF1', 'CDF 1', 'CDF I', 'CALDEIRA 1', 'CDF1/ETAC1'],
+    'ETAC1': ['ETAC1', 'ETAC 1', 'ETAC I', 'CDF1/ETAC1'],
+    'CDR1': ['CDR1', 'CDR 1', 'CDR I', 'CDR1/EVAP1'],
+    'EVAP1': ['EVAP1', 'EVAP 1', 'EVAP I', 'CDR1/EVAP1'],
+    'CDR2': ['CDR2', 'CDR 2', 'CDR II', 'CDR2/EVAP2'],
+    'EVAP2': ['EVAP2', 'EVAP 2', 'EVAP II', 'CDR2/EVAP2'],
+    'ETA': ['ETA', 'ETA/ETE'],
+    'ETE': ['ETE', 'ETA/ETE'],
+    'ENERGIA (TG)': ['ENERGIA', 'ENERGIA (TG)', 'TG'],
+    'PLANTA QUIMICA (PQ)': ['PLANTA QUIMICA', 'PQ', 'PLANTA QUIMICA (PQ)']
+  };
+
+  if (target.includes('/')) {
+    const parts = target.split('/');
+    return parts.some(p => checkAreaMatch(tagLoc, p)) || loc.includes(target);
+  }
+
+  if (map[target] && map[target].some(alias => loc.includes(alias))) {
+    return true;
+  }
+
+  return loc.includes(target) || loc.includes(getLocalizacaoFromArea(targetArea).toUpperCase());
+}

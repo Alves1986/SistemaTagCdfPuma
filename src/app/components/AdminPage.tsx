@@ -11,7 +11,7 @@ import { useArea } from '../contexts/AreaContext';
 import { supabase } from '../lib/supabase';
 import * as api from '../services/api';
 import { QRCodeSVG } from 'qrcode.react';
-import { getLocalizacaoFromArea } from '../utils/hierarchy';
+import { getLocalizacaoFromArea, checkAreaMatch } from '../utils/hierarchy';
 
 type FilterKey = 'all' | 'operacional' | 'manutenção' | 'inativo';
 
@@ -102,39 +102,6 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
     } finally {
       setLoading(false);
     }
-  };
-
-  const checkAreaMatch = (tagLoc: string, targetArea: string) => {
-    if (!tagLoc) return false;
-    const loc = tagLoc.toUpperCase().trim();
-    const target = targetArea.toUpperCase().trim();
-
-    // Mapas de sinônimos/legado para robustez
-    const map: Record<string, string[]> = {
-      'CDF2': ['CDF2', 'CDF 2', 'CDF II', 'CALDEIRA 2', 'CDF2/ETAC2'],
-      'ETAC2': ['ETAC2', 'ETAC 2', 'ETAC II', 'CDF2/ETAC2'],
-      'CDF1': ['CDF1', 'CDF 1', 'CDF I', 'CALDEIRA 1', 'CDF1/ETAC1'],
-      'ETAC1': ['ETAC1', 'ETAC 1', 'ETAC I', 'CDF1/ETAC1'],
-      'CDR1': ['CDR1', 'CDR 1', 'CDR I', 'CDR1/EVAP1'],
-      'EVAP1': ['EVAP1', 'EVAP 1', 'EVAP I', 'CDR1/EVAP1'],
-      'CDR2': ['CDR2', 'CDR 2', 'CDR II', 'CDR2/EVAP2'],
-      'EVAP2': ['EVAP2', 'EVAP 2', 'EVAP II', 'CDR2/EVAP2'],
-      'ETA': ['ETA', 'ETA/ETE'],
-      'ETE': ['ETE', 'ETA/ETE'],
-      'ENERGIA (TG)': ['ENERGIA', 'ENERGIA (TG)', 'TG'],
-      'PLANTA QUIMICA (PQ)': ['PLANTA QUIMICA', 'PQ', 'PLANTA QUIMICA (PQ)']
-    };
-
-    if (target.includes('/')) {
-      const parts = target.split('/');
-      return parts.some(p => checkAreaMatch(tagLoc, p)) || loc.includes(target);
-    }
-
-    if (map[target] && map[target].some(alias => loc.includes(alias))) {
-      return true;
-    }
-
-    return loc.includes(target) || loc.includes(getLocalizacaoFromArea(targetArea).toUpperCase());
   };
 
   const areaTags = tags.filter(t => {
@@ -590,48 +557,7 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
         </div>
       </div>
 
-      {/* Maintenance note cards */}
-      {tagsComNota > 0 && (
-        <div className="bg-card rounded border border-border p-5 shadow-sm">
-          <h2 className="font-semibold mb-4 flex items-center gap-2 text-foreground">
-            <AlertTriangle size={17} className="text-destructive" />
-            Equipamentos com Nota de Manutenção Aberta
-            <span className="ml-1 px-2 py-0.5 rounded text-xs font-bold bg-destructive/10 text-destructive">
-              {tagsComNota}
-            </span>
-          </h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {tags.filter(t => t.nota_manutencao).map((tag) => {
-              const priorStyle = getPrioridadeStyle(tag.nota_manutencao?.prioridade);
-              return (
-                <Link
-                  key={tag.id}
-                  to={`/tag/${tag.id}`}
-                  className="block rounded border-2 border-destructive p-4 transition-shadow hover:shadow-md bg-destructive/5"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <p className="text-xs uppercase tracking-wider mb-0.5 text-muted-foreground">TAG</p>
-                      <p className="text-sm font-bold font-mono text-primary">{tag.tag_completo}</p>
-                    </div>
-                    <span className={`px-2 py-0.5 rounded text-xs font-bold ${priorStyle}`}>
-                      {tag.nota_manutencao?.prioridade.toUpperCase()}
-                    </span>
-                  </div>
-                  <p className="text-sm font-medium mb-2 text-foreground">{tag.nome_equipamento}</p>
-                  <div className="space-y-0.5 text-xs text-muted-foreground">
-                    <p><span className="font-medium text-foreground">Nota:</span> {tag.nota_manutencao?.numero_nota}</p>
-                    <p className="line-clamp-2 text-muted-foreground/80">{tag.nota_manutencao?.descricao}</p>
-                    <p className="text-xs text-muted-foreground/60">
-                      Aberta em: {tag.nota_manutencao && formatDate(tag.nota_manutencao.data_abertura)}
-                    </p>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      )}
+
 
       {/* ── Create TAG Modal ── */}
       {showCreateModal && (
