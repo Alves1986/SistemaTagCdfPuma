@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useArea } from '../contexts/AreaContext';
 import { Tag, NotaManutencao } from '../types';
 import * as api from '../services/api';
-import { getLocalizacaoFromArea, checkAreaMatch } from '../utils/hierarchy';
+import { getLocalizacaoFromArea, checkAreaMatch, getAllOperationalAreas } from '../utils/hierarchy';
 
 // Todas as áreas operacionais (derivadas do HIERARQUIA, excluindo Manutenção)
 const AREAS_OPERACIONAIS = getAllOperationalAreas();
