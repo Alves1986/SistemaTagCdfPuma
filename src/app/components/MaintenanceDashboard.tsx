@@ -48,10 +48,6 @@ export function MaintenanceDashboard() {
   const [viewMode, setViewMode] = useState<ViewMode>('notas');
 
   useEffect(() => {
-    if (user && user.gerencia !== 'Manutenção') {
-      navigate('/admin');
-      return;
-    }
     if (user) loadData();
   }, [user, navigate, selectedArea]);
 

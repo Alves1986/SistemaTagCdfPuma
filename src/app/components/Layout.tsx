@@ -60,9 +60,9 @@ export function Layout() {
       {/* Top bar */}
       <header className="bg-gradient-to-r from-primary via-primary to-[#002040] shadow-md border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-wrap items-center justify-between gap-4 py-3">
+          <div className="flex items-center justify-between gap-2 py-3 w-full">
             {/* Brand */}
-            <div className="flex items-center gap-3 flex-shrink-0 w-full sm:w-auto justify-between sm:justify-start">
+            <div className="flex items-center gap-3 flex-shrink-0 w-auto justify-between sm:justify-start">
               <div className="flex items-center gap-3">
                 <div className="bg-white/10 p-1.5 rounded-lg backdrop-blur-sm shadow-sm border border-white/20">
                   <img src="/logo.svg" alt="Klabin Logo" className="h-8 w-auto object-contain drop-shadow-sm" />
@@ -99,7 +99,7 @@ export function Layout() {
             </div>
 
             {/* Filters container */}
-            <div className="flex flex-row items-center justify-center gap-2 flex-shrink-0 w-full sm:w-auto order-3 sm:order-none">
+            <div className="flex flex-row items-center justify-center gap-2 flex-shrink-0 w-auto order-3 sm:order-none">
               
               {/* Gerencia selector */}
               <div className="relative flex-shrink-0" ref={gerenciaDropdownRef}>
@@ -155,7 +155,7 @@ export function Layout() {
             </div>
 
             {/* Center nav */}
-            <nav className="flex flex-wrap items-center justify-center gap-1 w-full sm:w-auto order-2 sm:order-none">
+            <nav className="flex items-center justify-center gap-1 w-auto lg:flex-shrink-0">
               {!isManutencao && (
                 <Link
                   to="/"
@@ -180,11 +180,6 @@ export function Layout() {
                 >
                   <Settings size={16} />
                   <span className="hidden sm:inline">Gestão</span>
-                  {notasAbertas > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[0.6rem] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-0.5 shadow-sm">
-                      {badgeCount}
-                    </span>
-                  )}
                 </Link>
               )}
               
@@ -206,7 +201,7 @@ export function Layout() {
               </Link>
             </nav>
 
-            <div className="hidden sm:flex items-center gap-4">
+            <div className="hidden sm:flex items-center gap-2 lg:gap-4 lg:flex-shrink-0">
               {/* Weather Placeholder */}
               <div className="flex items-center gap-2 pr-4 border-r border-primary-foreground/20 text-primary-foreground/80 hover:text-primary-foreground transition-colors cursor-pointer" title="Previsão do Tempo (Em breve)">
                 <CloudSun size={18} />
