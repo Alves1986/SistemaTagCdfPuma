@@ -137,12 +137,47 @@ function loginLocal(nome: string, prn: string) {
 
 // ============ TAGs ============
 
+export function normalizeTag(tag: any): Tag {
+  if (!tag) return tag;
+  
+  // Se já está no formato novo agrupado { ativas, historico }
+  if (tag.nota_manutencao && Array.isArray(tag.nota_manutencao.ativas)) {
+    tag.notas_manutencao = tag.nota_manutencao.ativas;
+    tag.historico_notas = tag.nota_manutencao.historico || [];
+    tag.nota_manutencao = tag.notas_manutencao.length > 0 ? tag.notas_manutencao[0] : undefined;
+    return tag;
+  }
+
+  // Se for um array puro (caso intermediário)
+  if (Array.isArray(tag.nota_manutencao)) {
+    tag.notas_manutencao = tag.nota_manutencao;
+    tag.historico_notas = [];
+    tag.nota_manutencao = tag.notas_manutencao.length > 0 ? tag.notas_manutencao[0] : undefined;
+    return tag;
+  }
+
+  // Se for o formato antigo (objeto único)
+  if (tag.nota_manutencao && typeof tag.nota_manutencao === 'object') {
+    tag.notas_manutencao = [tag.nota_manutencao];
+    tag.historico_notas = [];
+    // tag.nota_manutencao já é o objeto
+    return tag;
+  }
+
+  // Sem notas
+  tag.notas_manutencao = [];
+  tag.historico_notas = [];
+  tag.nota_manutencao = undefined;
+  
+  return tag;
+}
+
 export async function getAllTags(): Promise<Tag[]> {
   const isApiAvailable = await checkApiAvailability();
 
   if (!isApiAvailable) {
     const tags = JSON.parse(localStorage.getItem('tags') || '[]');
-    return tags.sort((a: Tag, b: Tag) => b.id - a.id);
+    return tags.map(normalizeTag).sort((a: Tag, b: Tag) => b.id - a.id);
   }
 
   try {
@@ -157,11 +192,11 @@ export async function getAllTags(): Promise<Tag[]> {
       throw new Error(data.error || 'Erro ao buscar TAGs');
     }
 
-    return data.tags;
+    return data.tags.map(normalizeTag);
   } catch (error) {
     console.warn('API não disponível, usando fallback local');
     const tags = JSON.parse(localStorage.getItem('tags') || '[]');
-    return tags.sort((a: Tag, b: Tag) => b.id - a.id);
+    return tags.map(normalizeTag).sort((a: Tag, b: Tag) => b.id - a.id);
   }
 }
 
@@ -172,7 +207,7 @@ export async function getTagById(id: number): Promise<Tag> {
     const tags = JSON.parse(localStorage.getItem('tags') || '[]');
     const tag = tags.find((t: Tag) => t.id === id);
     if (!tag) throw new Error('TAG não encontrado');
-    return tag;
+    return normalizeTag(tag);
   }
 
   try {
@@ -187,13 +222,13 @@ export async function getTagById(id: number): Promise<Tag> {
       throw new Error(data.error || 'Erro ao buscar TAG');
     }
 
-    return data.tag;
+    return normalizeTag(data.tag);
   } catch (error) {
     console.warn('API não disponível, usando fallback local');
     const tags = JSON.parse(localStorage.getItem('tags') || '[]');
     const tag = tags.find((t: Tag) => t.id === id);
     if (!tag) throw new Error('TAG não encontrado');
-    return tag;
+    return normalizeTag(tag);
   }
 }
 
@@ -216,10 +251,10 @@ export async function searchTags(query: string): Promise<Tag[]> {
       throw new Error(data.error || 'Erro ao buscar TAGs');
     }
 
-    return data.tags;
+    return data.tags.map(normalizeTag);
   } catch (error) {
     console.warn('API não disponível, usando fallback local');
-    return searchTagsLocal(query);
+    return searchTagsLocal(query).map(normalizeTag);
   }
 }
 
@@ -297,7 +332,7 @@ function createTagLocal(tagData: any): Tag {
 
   tags.push(newTag);
   localStorage.setItem('tags', JSON.stringify(tags));
-  return newTag;
+  return normalizeTag(newTag);
 }
 
 export async function updateTag(id: number, updates: Partial<Tag>): Promise<Tag> {
@@ -342,7 +377,7 @@ function updateTagLocal(id: number, updates: Partial<Tag>): Tag {
   };
 
   localStorage.setItem('tags', JSON.stringify(tags));
-  return tags[tagIndex];
+  return normalizeTag(tags[tagIndex]);
 }
 
 export async function addNotaManutencao(
@@ -357,6 +392,7 @@ export async function addNotaManutencao(
 ): Promise<Tag> {
   const tag = await getTagById(tagId);
   const notasAtuais = tag.notas_manutencao || [];
+  const historicoAtual = tag.historico_notas || [];
   
   const notaManutencaoCompleta = {
     ...nota,
@@ -365,15 +401,26 @@ export async function addNotaManutencao(
     status_manutencao: 'aberta'
   };
 
-  return updateTag(tagId, { notas_manutencao: [...notasAtuais, notaManutencaoCompleta] } as Partial<Tag>);
+  return updateTag(tagId, {
+    nota_manutencao: {
+      ativas: [...notasAtuais, notaManutencaoCompleta],
+      historico: historicoAtual
+    }
+  } as Partial<Tag>);
 }
 
 export async function removeNotaManutencao(tagId: number, notaId: string): Promise<Tag> {
   const tag = await getTagById(tagId);
   const notasAtuais = tag.notas_manutencao || [];
+  const historicoAtual = tag.historico_notas || [];
   const novasNotas = notasAtuais.filter(n => n.id !== notaId);
   
-  return updateTag(tagId, { notas_manutencao: novasNotas.length > 0 ? novasNotas : null as any } as Partial<Tag>);
+  return updateTag(tagId, {
+    nota_manutencao: {
+      ativas: novasNotas,
+      historico: historicoAtual
+    }
+  } as Partial<Tag>);
 }
 
 // Finaliza a nota com histórico: salva no historico_notas antes de limpar nota_manutencao
@@ -401,8 +448,10 @@ export async function finalizarNota(
   const historicoAtual = tag.historico_notas || [];
 
   return updateTag(tagId, {
-    notas_manutencao: novasNotas.length > 0 ? novasNotas : null as any,
-    historico_notas: [...historicoAtual, notaFinalizada],
+    nota_manutencao: {
+      ativas: novasNotas,
+      historico: [...historicoAtual, notaFinalizada]
+    }
   } as Partial<Tag>);
 }
 

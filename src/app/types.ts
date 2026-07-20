@@ -10,6 +10,7 @@ export interface Tag {
   criado_em: string;
   atualizado_em: string;
   atualizado_por?: string;
+  nota_manutencao?: NotaManutencao; // Legacy property mapped to notas_manutencao[0]
   notas_manutencao?: NotaManutencao[];
   historico_notas?: NotaManutencao[];
 }
