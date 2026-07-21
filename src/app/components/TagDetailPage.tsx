@@ -413,7 +413,6 @@ export function TagDetailPage() {
                   <p className="text-xs mt-0.5 text-muted-foreground">por {tag.atualizado_por}</p>
                 )}
               </div>
-              </div>
             </div>
 
             {/* Manual Técnico no card principal */}
