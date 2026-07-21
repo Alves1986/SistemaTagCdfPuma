@@ -310,7 +310,7 @@ export function TagDetailPage() {
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 items-start w-full">
-      {/* Coluna Esquerda: Informações Principais */}
+      {/* Coluna Esquerda */}
       <div className="flex-1 space-y-5 min-w-0 w-full">
       {/* Back */}
       <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-primary">
@@ -415,7 +415,15 @@ export function TagDetailPage() {
                   <p className="text-xs mt-0.5 text-muted-foreground">por {tag.atualizado_por}</p>
                 )}
               </div>
-              </div>
+            </div>
+
+            {/* Manual Técnico no card principal */}
+            <div className="mb-5 border-t border-border pt-4">
+              <h2 className="font-semibold mb-3 flex items-center gap-2 text-foreground text-sm">
+                <BookOpen size={16} className="text-primary" />
+                Manual Técnico
+              </h2>
+              <ManualTecnicoTab tagId={tag.id.toString()} tagCompleto={tag.tag_completo} />
             </div>
 
             {!isCoordenador && (
@@ -795,48 +803,18 @@ export function TagDetailPage() {
               </button>
               <button onClick={() => window.print()} className="px-4 py-2 rounded bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 flex items-center gap-2">
                 <Printer size={16} />
-      {/* QR Code Modal */}
-      {showQrCodeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
-          <div className="bg-card w-full max-w-sm rounded shadow-lg border border-border overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between p-4 border-b border-border bg-muted/30">
-              <h3 className="font-semibold text-foreground flex items-center gap-2">
-                <QrCode size={18} className="text-primary" />
-                QR Code do Equipamento
-              </h3>
-              <button onClick={() => setShowQrCodeModal(false)} className="text-muted-foreground hover:text-foreground">
-                <X size={20} />
-              </button>
-            </div>
-            <div className="p-8 flex flex-col items-center justify-center text-center bg-white" id="print-qr-area">
-              <QRCodeSVG 
-                value={`${window.location.origin}/tag/${tag.id}`} 
-                size={220} 
-                level="Q"
-                includeMargin={true}
-              />
-              <p className="mt-4 font-mono font-bold text-lg text-black">{tag.tag_completo}</p>
-              <p className="text-sm text-gray-600 font-medium">{tag.nome_equipamento}</p>
-            </div>
-            <div className="p-4 border-t border-border flex justify-end gap-2 bg-muted/30">
-              <button onClick={() => setShowQrCodeModal(false)} className="px-4 py-2 rounded border border-border text-sm font-medium text-foreground hover:bg-muted">
-                Fechar
-              </button>
-              <button onClick={() => window.print()} className="px-4 py-2 rounded bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 flex items-center gap-2">
-                <Printer size={16} />
                 Imprimir
               </button>
             </div>
           </div>
         </div>
       )}
+      </div> {/* fim coluna esquerda */}
 
-      </div> {/* Fim da coluna esquerda */}
-
-      {/* Coluna Direita: Manual Técnico (substitui Visão da Área) */}
-      <aside className="w-full lg:w-72 xl:w-80 flex-shrink-0 flex flex-col gap-4 sticky top-6">
+      {/* Coluna Direita: Manual Técnico */}
+      <aside className="w-full lg:w-72 xl:w-80 flex-shrink-0 sticky top-6">
         <div className="bg-card rounded-lg border border-border shadow-sm p-5">
-          <h2 className="font-semibold mb-4 flex items-center gap-2 text-foreground text-[1.05rem]">
+          <h2 className="font-semibold mb-4 flex items-center gap-2 text-foreground">
             <BookOpen size={18} className="text-primary" />
             Manual Técnico
           </h2>
