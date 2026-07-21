@@ -413,6 +413,16 @@ export function TagDetailPage() {
                   <p className="text-xs mt-0.5 text-muted-foreground">por {tag.atualizado_por}</p>
                 )}
               </div>
+              </div>
+            </div>
+
+            {/* Manual Técnico no card principal */}
+            <div className="mb-5 border-t border-border pt-4">
+              <h2 className="font-semibold mb-3 flex items-center gap-2 text-foreground text-sm">
+                <BookOpen size={16} className="text-primary" />
+                Manual Técnico
+              </h2>
+              <ManualTecnicoTab tagId={tag.id.toString()} tagCompleto={tag.tag_completo} />
             </div>
 
             {!isCoordenador && (
@@ -450,16 +460,6 @@ export function TagDetailPage() {
           </div>
         </div>
       </div>
-
-      {/* Manual Técnico Tab */}
-      <div className="bg-card rounded border border-border p-5 shadow-sm">
-        <h2 className="font-semibold mb-4 flex items-center gap-2 text-foreground">
-          <BookOpen size={16} className="text-primary" />
-          Manual Técnico
-        </h2>
-        <ManualTecnicoTab tagId={tag.id.toString()} tagCompleto={tag.tag_completo} />
-      </div>
-
       {/* Comments */}
       <div className="bg-card rounded border border-border p-5 shadow-sm">
         <h2 className="font-semibold mb-4 flex items-center gap-2 text-foreground">

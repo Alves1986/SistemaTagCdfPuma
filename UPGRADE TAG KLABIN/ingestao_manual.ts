@@ -170,7 +170,14 @@ async function ingestao() {
     for (const m of mentions) {
       let docId = null;
       if (m.fonte) {
-        const found = docs?.find(d => d.titulo.includes(m.fonte) || d.documento_id.includes(m.fonte));
+        // Limpar o fonte_trecho removendo diretorios e extensões
+        let cleanFonte = m.fonte;
+        if (cleanFonte.includes('/')) cleanFonte = cleanFonte.split('/').pop() || cleanFonte;
+        if (cleanFonte.endsWith('.md')) cleanFonte = cleanFonte.replace('.md', '');
+        if (cleanFonte.endsWith('.txt')) cleanFonte = cleanFonte.replace('.txt', '');
+        cleanFonte = cleanFonte.trim();
+
+        const found = docs?.find(d => d.titulo.includes(cleanFonte) || d.documento_id.includes(cleanFonte) || cleanFonte.includes(d.titulo));
         if (found) docId = found.id;
       }
       if (docId) {
