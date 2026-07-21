@@ -417,14 +417,7 @@ export function TagDetailPage() {
               </div>
             </div>
 
-            {/* Manual Técnico no card principal */}
-            <div className="mb-5 border-t border-border pt-4">
-              <h2 className="font-semibold mb-3 flex items-center gap-2 text-foreground text-sm">
-                <BookOpen size={16} className="text-primary" />
-                Manual Técnico
-              </h2>
-              <ManualTecnicoTab tagId={tag.id.toString()} tagCompleto={tag.tag_completo} />
-            </div>
+
 
             {!isCoordenador && (
               <div className="flex flex-wrap gap-2">
