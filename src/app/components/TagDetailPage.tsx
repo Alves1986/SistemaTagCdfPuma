@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router';
 import {
   ArrowLeft, Camera, Calendar, User, Upload, MessageSquare,
   Edit, Wrench, AlertTriangle, CheckCircle, X, Activity,
-  Clock, QrCode, Printer
+  Clock, QrCode, Printer, BookOpen
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useAuth } from '../contexts/AuthContext';
@@ -11,6 +11,7 @@ import { Comentario, NotaManutencao, Tag, Photo } from '../types';
 import * as api from '../services/api';
 import { saveRecentTag } from './SearchPage';
 import { supabase } from '../lib/supabase';
+import { ManualTecnicoTab } from './ManualTecnicoTab';
 
 const CARGO_BADGE: Record<string, { label: string; style: string }> = {
   'Operador Lider': { label: 'Líder', style: 'bg-primary text-primary-foreground' },
@@ -448,6 +449,15 @@ export function TagDetailPage() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* Manual Técnico Tab */}
+      <div className="bg-card rounded border border-border p-5 shadow-sm">
+        <h2 className="font-semibold mb-4 flex items-center gap-2 text-foreground">
+          <BookOpen size={16} className="text-primary" />
+          Manual Técnico
+        </h2>
+        <ManualTecnicoTab tagId={tag.id.toString()} tagCompleto={tag.tag_completo} />
       </div>
 
       {/* Comments */}

@@ -265,4 +265,57 @@ app.post("/make-server-e7ada368/tags/:id/fotos", async (c) => {
   }
 });
 
+// ============ MANUAL TÉCNICO ============
+
+app.get("/make-server-e7ada368/tags/:id/manual", async (c) => {
+  try {
+    const tagId = c.req.param("id");
+    const manual = await db.getManualByTagId(tagId);
+    return c.json({ success: true, ...manual });
+  } catch (error) {
+    console.error("Erro ao buscar manual:", error);
+    return c.json({ error: "Erro ao buscar manual: " + error.message }, 500);
+  }
+});
+
+app.get("/make-server-e7ada368/manual/search", async (c) => {
+  try {
+    const query = c.req.query("q");
+    if (!query) {
+      return c.json({ error: "Query 'q' is required" }, 400);
+    }
+    const resultados = await db.searchManual(query);
+    return c.json({ success: true, resultados });
+  } catch (error) {
+    console.error("Erro na busca do manual:", error);
+    return c.json({ error: "Erro na busca do manual: " + error.message }, 500);
+  }
+});
+
+app.post("/make-server-e7ada368/tags/:id/manual/vincular", async (c) => {
+  try {
+    const tagId = c.req.param("id");
+    const { tagRefId, status, usuario } = await c.req.json();
+    if (!tagRefId || !status || !usuario) {
+      return c.json({ error: "tagRefId, status e usuario sao obrigatorios" }, 400);
+    }
+    const vinculo = await db.criarVinculoManual(tagId, tagRefId, status, usuario);
+    return c.json({ success: true, vinculo });
+  } catch (error) {
+    console.error("Erro ao vincular manual:", error);
+    return c.json({ error: "Erro ao vincular manual: " + error.message }, 500);
+  }
+});
+
+app.delete("/make-server-e7ada368/tags/:id/manual/:vinculoId", async (c) => {
+  try {
+    const vinculoId = c.req.param("vinculoId");
+    await db.desvincularManual(vinculoId);
+    return c.json({ success: true });
+  } catch (error) {
+    console.error("Erro ao desvincular manual:", error);
+    return c.json({ error: "Erro ao desvincular manual: " + error.message }, 500);
+  }
+});
+
 Deno.serve(app.fetch);

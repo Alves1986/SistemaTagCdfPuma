@@ -686,3 +686,54 @@ export async function getCoordenadorProfile(area: string): Promise<string> {
   }
 }
 
+// ============ MANUAL TÉCNICO ============
+
+export async function fetchManualForTag(tagId: string): Promise<any> {
+  if (USE_MOCK) return { success: true, vinculos: [], mentions: [] };
+  try {
+    const res = await fetch(`${API_URL}/tags/${tagId}/manual`);
+    return await res.json();
+  } catch (error) {
+    console.error("Erro ao buscar manual para a tag:", error);
+    return { success: false, vinculos: [], mentions: [] };
+  }
+}
+
+export async function searchManual(query: string): Promise<any> {
+  if (USE_MOCK) return { success: true, resultados: [] };
+  try {
+    const res = await fetch(`${API_URL}/manual/search?q=${encodeURIComponent(query)}`);
+    return await res.json();
+  } catch (error) {
+    console.error("Erro na busca do manual:", error);
+    return { success: false, resultados: [] };
+  }
+}
+
+export async function vincularManual(tagId: string, tagRefId: string, status: string, usuario: string): Promise<any> {
+  if (USE_MOCK) return { success: true };
+  try {
+    const res = await fetch(`${API_URL}/tags/${tagId}/manual/vincular`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tagRefId, status, usuario }),
+    });
+    return await res.json();
+  } catch (error) {
+    console.error("Erro ao vincular manual:", error);
+    return { success: false };
+  }
+}
+
+export async function desvincularManual(tagId: string, vinculoId: string): Promise<any> {
+  if (USE_MOCK) return { success: true };
+  try {
+    const res = await fetch(`${API_URL}/tags/${tagId}/manual/${vinculoId}`, {
+      method: "DELETE",
+    });
+    return await res.json();
+  } catch (error) {
+    console.error("Erro ao desvincular manual:", error);
+    return { success: false };
+  }
+}

@@ -191,3 +191,89 @@ export const createFoto = async (tagId: number, uploader: string, file_path: str
   if (error) throw new Error(error.message);
   return data;
 };
+
+// ============ MANUAL TÉCNICO ============
+
+export const getManualByTagId = async (tagId: string) => {
+  const supabase = client();
+  
+  // Primeiro, buscar a tag e pegar o tag_completo
+  const { data: tag, error: tagError } = await supabase
+    .from("tags")
+    .select("tag")
+    .eq("id", tagId)
+    .single();
+    
+  if (tagError) throw new Error(tagError.message);
+  
+  // Buscar vínculos
+  const { data: vinculos, error: vinculoError } = await supabase
+    .from("manual_vinculos")
+    .select(`
+      id, tag_referencia_id, confianca, confirmado_por, confirmado_em, status,
+      equipamentos_referencia (tag_completo, prefixo, tipo_instrumento, descricao, origem)
+    `)
+    .eq("tag_id", tagId);
+    
+  if (vinculoError) throw new Error(vinculoError.message);
+
+  // Buscar menções (usando o tag.tag original como base ou via os vínculos confirmados)
+  const tagsCompletos = vinculos?.map(v => (v.equipamentos_referencia as any)?.tag_completo).filter(Boolean) || [];
+  
+  if (tagsCompletos.length === 0) {
+     tagsCompletos.push(tag.tag);
+  }
+
+  const { data: mentions, error: mentionsError } = await supabase
+    .from("manual_tag_mentions")
+    .select(`
+      id, tag_completo, trecho,
+      manual_documentos (id, documento_id, titulo, sistema, origem_tipo, pasta)
+    `)
+    .in("tag_completo", tagsCompletos);
+
+  if (mentionsError) throw new Error(mentionsError.message);
+
+  return { vinculos, mentions };
+};
+
+export const searchManual = async (query: string) => {
+  const supabase = client();
+  const { data, error } = await supabase
+    .from("manual_documentos")
+    .select("id, documento_id, titulo, sistema, origem_tipo, pasta")
+    .textSearch("conteudo_md", query);
+
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+export const criarVinculoManual = async (tagId: string, tagRefId: string, status: string, usuario: string) => {
+  const supabase = client();
+  const { data, error } = await supabase
+    .from("manual_vinculos")
+    .insert({
+      tag_id: tagId,
+      tag_referencia_id: tagRefId,
+      confianca: 'manual',
+      status: status,
+      confirmado_por: usuario,
+      confirmado_em: new Date().toISOString()
+    })
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+export const desvincularManual = async (vinculoId: string) => {
+  const supabase = client();
+  const { error } = await supabase
+    .from("manual_vinculos")
+    .delete()
+    .eq("id", vinculoId);
+
+  if (error) throw new Error(error.message);
+  return true;
+};
