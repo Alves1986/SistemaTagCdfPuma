@@ -85,61 +85,8 @@ export function ManualTecnicoTab({ tagId, tagCompleto }: ManualTecnicoTabProps) 
     return acc;
   }, {} as Record<string, any[]>);
 
-  const vinculosConfirmados = vinculos.filter(v => v.status === 'confirmado');
-  const hasConfirmado = vinculosConfirmados.length > 0;
-
   return (
     <div className="space-y-6">
-      
-      {/* Aviso se não houver vínculo confirmado */}
-      {!hasConfirmado && (
-        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 flex gap-3 items-start">
-          <AlertTriangle className="w-5 h-5 text-yellow-500 shrink-0 mt-0.5" />
-          <div>
-            <h4 className="text-sm font-medium text-yellow-500">Nenhum Vínculo Confirmado</h4>
-            <p className="text-xs text-muted-foreground mt-1">
-              As informações exibidas abaixo são sugestões baseadas no TAG original. Para garantir precisão, um líder ou coordenador deve validar e confirmar o vínculo com o catálogo de referência.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Exibição dos Vínculos */}
-      {vinculos.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="text-sm font-medium flex items-center gap-2">
-            <LinkIcon className="w-4 h-4" /> Vínculos de Referência
-          </h3>
-          <div className="grid grid-cols-1 gap-3">
-            {vinculos.map(v => (
-              <div key={v.id} className="bg-card border border-border rounded p-4 flex justify-between items-center">
-                <div>
-                  <span className="text-xs font-bold bg-primary/20 text-primary px-2 py-1 rounded">
-                    {v.equipamentos_referencia?.tag_completo}
-                  </span>
-                  <div className="text-xs text-muted-foreground mt-2">
-                    {v.equipamentos_referencia?.descricao} - {v.equipamentos_referencia?.tipo_instrumento}
-                  </div>
-                  <div className="text-[10px] text-muted-foreground mt-1">
-                    Origem: {v.equipamentos_referencia?.origem} | Status: {v.status}
-                    {v.confirmado_por && ` (por ${v.confirmado_por})`}
-                  </div>
-                </div>
-                {isGestor && (
-                  <button 
-                    onClick={() => handleDesvincular(v.id)}
-                    className="text-red-500 hover:bg-red-500/10 p-2 rounded"
-                    title="Remover Vínculo"
-                  >
-                    <XCircle className="w-5 h-5" />
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Pesquisa Manual (Gestores) */}
       {isGestor && (
         <div className="bg-card border border-border rounded p-4 space-y-3">

@@ -698,21 +698,7 @@ export async function fetchManualForTag(tagId: string): Promise<any> {
       
     if (tagError) throw new Error(tagError.message);
     
-    const { data: vinculos, error: vinculoError } = await supabase
-      .from("manual_vinculos")
-      .select(`
-        id, tag_referencia_id, confianca, confirmado_por, confirmado_em, status,
-        equipamentos_referencia (tag_completo, prefixo, tipo_instrumento, descricao, origem)
-      `)
-      .eq("tag_id", tagId);
-      
-    if (vinculoError) throw new Error(vinculoError.message);
-
-    const tagsCompletos = vinculos?.map(v => (v.equipamentos_referencia as any)?.tag_completo).filter(Boolean) || [];
-    
-    if (tagsCompletos.length === 0 && tag?.tag_completo) {
-       tagsCompletos.push(tag.tag_completo);
-    }
+    const tagsCompletos = [tag.tag_completo];
 
     const { data: mentions, error: mentionsError } = await supabase
       .from("manual_tag_mentions")
@@ -724,7 +710,7 @@ export async function fetchManualForTag(tagId: string): Promise<any> {
 
     if (mentionsError) throw new Error(mentionsError.message);
 
-    return { success: true, vinculos, mentions };
+    return { success: true, vinculos: [], mentions };
   } catch (error) {
     console.error("Erro ao buscar manual para a tag:", error);
     return { success: false, vinculos: [], mentions: [] };
@@ -749,7 +735,7 @@ export async function searchManual(query: string): Promise<any> {
 export async function vincularManual(tagId: string, tagRefId: string, status: string, usuario: string): Promise<any> {
   try {
     const { data, error } = await supabase
-      .from("manual_vinculos")
+      .from("tag_manual_vinculo")
       .insert({
         tag_id: tagId,
         tag_referencia_id: tagRefId,
@@ -772,7 +758,7 @@ export async function vincularManual(tagId: string, tagRefId: string, status: st
 export async function desvincularManual(tagId: string, vinculoId: string): Promise<any> {
   try {
     const { error } = await supabase
-      .from("manual_vinculos")
+      .from("tag_manual_vinculo")
       .delete()
       .eq("id", vinculoId);
 
