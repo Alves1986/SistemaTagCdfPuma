@@ -689,7 +689,6 @@ export async function getCoordenadorProfile(area: string): Promise<string> {
 // ============ MANUAL TÉCNICO ============
 
 export async function fetchManualForTag(tagId: string): Promise<any> {
-  if (USE_MOCK) return { success: true, vinculos: [], mentions: [] };
   try {
     const { data: tag, error: tagError } = await supabase
       .from("tags")
@@ -733,7 +732,6 @@ export async function fetchManualForTag(tagId: string): Promise<any> {
 }
 
 export async function searchManual(query: string): Promise<any> {
-  if (USE_MOCK) return { success: true, resultados: [] };
   try {
     const { data, error } = await supabase
       .from("manual_documentos")
@@ -749,7 +747,6 @@ export async function searchManual(query: string): Promise<any> {
 }
 
 export async function vincularManual(tagId: string, tagRefId: string, status: string, usuario: string): Promise<any> {
-  if (USE_MOCK) return { success: true };
   try {
     const { data, error } = await supabase
       .from("manual_vinculos")
@@ -773,7 +770,6 @@ export async function vincularManual(tagId: string, tagRefId: string, status: st
 }
 
 export async function desvincularManual(tagId: string, vinculoId: string): Promise<any> {
-  if (USE_MOCK) return { success: true };
   try {
     const { error } = await supabase
       .from("manual_vinculos")
