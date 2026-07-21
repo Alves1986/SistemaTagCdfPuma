@@ -691,8 +691,41 @@ export async function getCoordenadorProfile(area: string): Promise<string> {
 export async function fetchManualForTag(tagId: string): Promise<any> {
   if (USE_MOCK) return { success: true, vinculos: [], mentions: [] };
   try {
-    const res = await fetch(`${API_URL}/tags/${tagId}/manual`);
-    return await res.json();
+    const { data: tag, error: tagError } = await supabase
+      .from("tags")
+      .select("tag_completo")
+      .eq("id", tagId)
+      .single();
+      
+    if (tagError) throw new Error(tagError.message);
+    
+    const { data: vinculos, error: vinculoError } = await supabase
+      .from("manual_vinculos")
+      .select(`
+        id, tag_referencia_id, confianca, confirmado_por, confirmado_em, status,
+        equipamentos_referencia (tag_completo, prefixo, tipo_instrumento, descricao, origem)
+      `)
+      .eq("tag_id", tagId);
+      
+    if (vinculoError) throw new Error(vinculoError.message);
+
+    const tagsCompletos = vinculos?.map(v => (v.equipamentos_referencia as any)?.tag_completo).filter(Boolean) || [];
+    
+    if (tagsCompletos.length === 0 && tag?.tag_completo) {
+       tagsCompletos.push(tag.tag_completo);
+    }
+
+    const { data: mentions, error: mentionsError } = await supabase
+      .from("manual_tag_mentions")
+      .select(`
+        id, tag_completo, trecho,
+        manual_documentos (id, documento_id, titulo, sistema, origem_tipo, pasta)
+      `)
+      .in("tag_completo", tagsCompletos);
+
+    if (mentionsError) throw new Error(mentionsError.message);
+
+    return { success: true, vinculos, mentions };
   } catch (error) {
     console.error("Erro ao buscar manual para a tag:", error);
     return { success: false, vinculos: [], mentions: [] };
@@ -702,8 +735,13 @@ export async function fetchManualForTag(tagId: string): Promise<any> {
 export async function searchManual(query: string): Promise<any> {
   if (USE_MOCK) return { success: true, resultados: [] };
   try {
-    const res = await fetch(`${API_URL}/manual/search?q=${encodeURIComponent(query)}`);
-    return await res.json();
+    const { data, error } = await supabase
+      .from("manual_documentos")
+      .select("id, documento_id, titulo, sistema, origem_tipo, pasta")
+      .textSearch("conteudo_md", query);
+
+    if (error) throw new Error(error.message);
+    return { success: true, resultados: data };
   } catch (error) {
     console.error("Erro na busca do manual:", error);
     return { success: false, resultados: [] };
@@ -713,12 +751,21 @@ export async function searchManual(query: string): Promise<any> {
 export async function vincularManual(tagId: string, tagRefId: string, status: string, usuario: string): Promise<any> {
   if (USE_MOCK) return { success: true };
   try {
-    const res = await fetch(`${API_URL}/tags/${tagId}/manual/vincular`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tagRefId, status, usuario }),
-    });
-    return await res.json();
+    const { data, error } = await supabase
+      .from("manual_vinculos")
+      .insert({
+        tag_id: tagId,
+        tag_referencia_id: tagRefId,
+        confianca: 100,
+        confirmado_por: usuario,
+        confirmado_em: new Date().toISOString(),
+        status
+      })
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+    return { success: true, vinculo: data };
   } catch (error) {
     console.error("Erro ao vincular manual:", error);
     return { success: false };
@@ -728,10 +775,13 @@ export async function vincularManual(tagId: string, tagRefId: string, status: st
 export async function desvincularManual(tagId: string, vinculoId: string): Promise<any> {
   if (USE_MOCK) return { success: true };
   try {
-    const res = await fetch(`${API_URL}/tags/${tagId}/manual/${vinculoId}`, {
-      method: "DELETE",
-    });
-    return await res.json();
+    const { error } = await supabase
+      .from("manual_vinculos")
+      .delete()
+      .eq("id", vinculoId);
+
+    if (error) throw new Error(error.message);
+    return { success: true };
   } catch (error) {
     console.error("Erro ao desvincular manual:", error);
     return { success: false };
