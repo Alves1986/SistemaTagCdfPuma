@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BookOpen, Search, CheckCircle, XCircle, AlertTriangle, Link as LinkIcon, ExternalLink } from 'lucide-react';
 import { fetchManualForTag, searchManual, vincularManual, desvincularManual } from '../services/api';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
 
 interface ManualTecnicoTabProps {
   tagId: string;
