@@ -200,7 +200,7 @@ export const getManualByTagId = async (tagId: string) => {
   // Primeiro, buscar a tag e pegar o tag_completo
   const { data: tag, error: tagError } = await supabase
     .from("tags")
-    .select("tag")
+    .select("tag_completo")
     .eq("id", tagId)
     .single();
     
@@ -217,11 +217,11 @@ export const getManualByTagId = async (tagId: string) => {
     
   if (vinculoError) throw new Error(vinculoError.message);
 
-  // Buscar menções (usando o tag.tag original como base ou via os vínculos confirmados)
+  // Buscar menções (usando o tag_completo original como base ou via os vínculos confirmados)
   const tagsCompletos = vinculos?.map(v => (v.equipamentos_referencia as any)?.tag_completo).filter(Boolean) || [];
   
   if (tagsCompletos.length === 0) {
-     tagsCompletos.push(tag.tag);
+     tagsCompletos.push(tag.tag_completo);
   }
 
   const { data: mentions, error: mentionsError } = await supabase

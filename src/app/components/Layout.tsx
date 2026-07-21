@@ -229,32 +229,34 @@ export function Layout() {
             <Outlet />
           </div>
           
-          {/* Right Sidebar Dashboard */}
-          <aside className="w-full lg:w-72 xl:w-80 flex-shrink-0 flex flex-col gap-4 sticky top-6">
-            <div className="bg-card rounded-lg border border-border shadow-sm p-5">
-               <h3 className="font-semibold text-primary mb-2 flex items-center gap-2">
-                 <Activity size={16} />
-                 Visão da Área
-               </h3>
-               <p className="text-xs text-muted-foreground mb-4">
-                 Resumo operacional diário. Integração com IA para leitura da programação semanal em breve.
-               </p>
-               <div className="space-y-3">
-                 <div className="bg-muted/50 border border-border p-3 rounded-md flex justify-between items-center">
-                   <p className="text-xs text-muted-foreground uppercase font-semibold">Saúde dos Equipamentos</p>
-                   <p className="text-lg font-bold text-green-600">95%</p>
+          {/* Right Sidebar Dashboard - Oculto na página de detalhes do TAG */}
+          {!location.pathname.startsWith('/tag/') && (
+            <aside className="w-full lg:w-72 xl:w-80 flex-shrink-0 flex flex-col gap-4 sticky top-6">
+              <div className="bg-card rounded-lg border border-border shadow-sm p-5">
+                 <h3 className="font-semibold text-primary mb-2 flex items-center gap-2">
+                   <Activity size={16} />
+                   Visão da Área
+                 </h3>
+                 <p className="text-xs text-muted-foreground mb-4">
+                   Resumo operacional diário. Integração com IA para leitura da programação semanal em breve.
+                 </p>
+                 <div className="space-y-3">
+                   <div className="bg-muted/50 border border-border p-3 rounded-md flex justify-between items-center">
+                     <p className="text-xs text-muted-foreground uppercase font-semibold">Saúde dos Equipamentos</p>
+                     <p className="text-lg font-bold text-green-600">95%</p>
+                   </div>
+                   <div className="bg-muted/50 border border-border p-3 rounded-md flex justify-between items-center">
+                     <p className="text-xs text-muted-foreground uppercase font-semibold">Notas Abertas</p>
+                     <p className="text-lg font-bold text-destructive">{notasAbertas}</p>
+                   </div>
+                   <div className="bg-primary/5 border border-primary/20 p-3 rounded-md mt-2">
+                     <p className="text-xs text-primary uppercase font-semibold mb-1">Próxima Manutenção</p>
+                     <p className="text-sm font-medium text-foreground">Caldeira - Parada Geral (15/08)</p>
+                   </div>
                  </div>
-                 <div className="bg-muted/50 border border-border p-3 rounded-md flex justify-between items-center">
-                   <p className="text-xs text-muted-foreground uppercase font-semibold">Notas Abertas</p>
-                   <p className="text-lg font-bold text-destructive">{notasAbertas}</p>
-                 </div>
-                 <div className="bg-primary/5 border border-primary/20 p-3 rounded-md mt-2">
-                   <p className="text-xs text-primary uppercase font-semibold mb-1">Próxima Manutenção</p>
-                   <p className="text-sm font-medium text-foreground">Caldeira - Parada Geral (15/08)</p>
-                 </div>
-               </div>
-            </div>
-          </aside>
+              </div>
+            </aside>
+          )}
         </div>
       </main>
 
