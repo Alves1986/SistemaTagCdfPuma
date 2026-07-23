@@ -48,46 +48,78 @@ export function CommandRail() {
   const badgeCount = notasAbertas > 99 ? '99+' : notasAbertas;
 
   return (
-    <aside className="w-16 lg:w-60 flex-shrink-0 bg-[#001B36] text-sidebar-foreground border-r-2 border-accent flex flex-col sticky top-0 h-screen tactical">
-      {/* Brand */}
-      <div className="h-14 flex items-center gap-2 px-3 lg:px-4 border-b-2 border-accent/40">
-        <div className="w-8 h-8 bg-accent flex items-center justify-center">
-          <span className="text-[#001B36] font-black text-sm leading-none">K</span>
+    <>
+      {/* Desktop / tablet: fixed left rail (Tactical shell) */}
+      <aside className="hidden lg:flex w-60 flex-shrink-0 bg-[#001B36] text-sidebar-foreground border-r-2 border-accent flex-col sticky top-0 h-screen tactical">
+        {/* Brand */}
+        <div className="h-14 flex items-center gap-2 px-4 border-b-2 border-accent/40">
+          <div className="w-8 h-8 bg-accent flex items-center justify-center">
+            <span className="text-[#001B36] font-black text-sm leading-none">K</span>
+          </div>
+          <span className="text-sm font-bold tracking-[0.14em] mono text-accent">KOS</span>
         </div>
-        <span className="hidden lg:block text-sm font-bold tracking-[0.14em] mono text-accent">KOS</span>
-      </div>
 
-      {/* Nav */}
-      <nav className="flex-1 overflow-y-auto py-2">
-        <RailGroup label="FLUXOS">
-          {main.map(item => (
-            <RailLink key={item.to} item={item} badge={item.to === '/admin/manutencao' ? badgeCount : undefined} />
-          ))}
-        </RailGroup>
-        <RailGroup label="GESTÃO">
-          {gestao.map(item => (
-            <RailLink key={item.to} item={item} />
-          ))}
-        </RailGroup>
+        {/* Nav */}
+        <nav className="flex-1 overflow-y-auto py-2">
+          <RailGroup label="FLUXOS">
+            {main.map(item => (
+              <RailLink key={item.to} item={item} badge={item.to === '/admin/manutencao' ? badgeCount : undefined} />
+            ))}
+          </RailGroup>
+          <RailGroup label="GESTÃO">
+            {gestao.map(item => (
+              <RailLink key={item.to} item={item} />
+            ))}
+          </RailGroup>
+        </nav>
+
+        {/* Footer / user */}
+        <div className="border-t-2 border-accent/40 p-3">
+          <div className="flex items-center justify-between mb-2 px-1">
+            <span className="text-[0.6rem] mono tracking-widest text-sidebar-foreground/60 uppercase truncate">
+              {user?.nome || 'OPERADOR'}
+            </span>
+          </div>
+          <button
+            onClick={logout}
+            className="w-full flex items-center justify-start gap-2 px-2 py-2 text-sidebar-foreground/70 hover:text-accent hover:bg-white/5 transition-colors border border-transparent hover:border-accent/40"
+            title="Sair"
+          >
+            <LogOut size={16} />
+            <span className="text-xs font-semibold uppercase tracking-wider">Sair</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Mobile: bottom navigation bar (native pattern, full width) */}
+      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-50 flex items-stretch justify-around bg-[#001B36] border-t-2 border-accent tactical pb-[env(safe-area-inset-bottom)]">
+        {[...main, gestao[1], gestao[3]].map(item => (
+          <RailBottom item={item} key={item.to} badge={item.to === '/admin/manutencao' ? badgeCount : undefined} />
+        ))}
       </nav>
+    </>
+  );
+}
 
-      {/* Footer / user */}
-      <div className="border-t-2 border-accent/40 p-2 lg:p-3">
-        <div className="hidden lg:flex items-center justify-between mb-2 px-1">
-          <span className="text-[0.6rem] mono tracking-widest text-sidebar-foreground/60 uppercase truncate">
-            {user?.nome || 'OPERADOR'}
-          </span>
-        </div>
-        <button
-          onClick={logout}
-          className="w-full flex items-center justify-center lg:justify-start gap-2 px-2 py-2 text-sidebar-foreground/70 hover:text-accent hover:bg-white/5 transition-colors border border-transparent hover:border-accent/40"
-          title="Sair"
-        >
-          <LogOut size={16} />
-          <span className="hidden lg:inline text-xs font-semibold uppercase tracking-wider">Sair</span>
-        </button>
-      </div>
-    </aside>
+function RailBottom({ item, badge }: { item: RailItem; badge?: number | string }) {
+  return (
+    <NavLink
+      to={item.to}
+      end={item.to === '/'}
+      className={({ isActive }) =>
+        `relative flex-1 flex flex-col items-center justify-center gap-0.5 py-2 px-1 transition-colors ${
+          isActive ? 'text-accent' : 'text-sidebar-foreground/60 hover:text-sidebar-foreground'
+        }`
+      }
+    >
+      {item.icon}
+      <span className="text-[0.55rem] font-bold uppercase tracking-wider leading-none">{item.label}</span>
+      {badge ? (
+        <span className="absolute top-1 right-1/2 translate-x-3 bg-destructive text-destructive-foreground text-[0.6rem] font-bold min-w-[16px] h-4 flex items-center justify-center px-0.5">
+          {badge}
+        </span>
+      ) : null}
+    </NavLink>
   );
 }
 

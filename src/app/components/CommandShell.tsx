@@ -14,7 +14,7 @@ export function CommandShell() {
       <CommandRail />
       <div className="flex-1 flex flex-col min-w-0">
         <TopBar />
-        <main className="flex-1 w-full">
+        <main className="flex-1 w-full pb-20 lg:pb-0">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
