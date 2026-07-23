@@ -58,8 +58,8 @@ export function Layout() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      {/* Top bar */}
-      <header className="bg-gradient-to-r from-primary via-primary to-[#002040] shadow-md border-b border-white/10">
+      {/* Top bar — industrial navy with hard green baseline */}
+      <header className="bg-primary text-primary-foreground relative scanlines border-b-2 border-accent shadow-[var(--shadow-hard)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between gap-4 py-2 w-full overflow-x-auto no-scrollbar">
             
@@ -68,15 +68,15 @@ export function Layout() {
               
               {/* Brand */}
               <div className="flex items-center gap-3">
-                <div className="bg-white/10 p-1.5 rounded-lg backdrop-blur-sm shadow-sm border border-white/20">
+                <div className="bg-white/10 p-1.5 rounded-none backdrop-blur-sm shadow-[var(--shadow-hard)] border border-white/20">
                   <img src="/logo.svg" alt="Klabin Logo" className="h-8 w-auto object-contain drop-shadow-sm" />
                 </div>
                 <div className="leading-tight">
                   <div className="text-[0.95rem] tracking-wide text-primary-foreground font-bold drop-shadow-sm">
                     SISTEMA TAG
                   </div>
-                  <div className="text-[0.7rem] tracking-[0.2em] text-primary-foreground/80 uppercase font-medium mt-0.5">
-                    {user?.coordenacao || user?.areas_coordenadas?.[0] || user?.area || 'OPERAÇÕES INDUSTRIAIS'}
+                  <div className="text-[0.7rem] tracking-[0.2em] text-primary-foreground/80 uppercase font-medium mt-0.5 mono">
+                    {user?.coordenacao || user?.areas_coordenadas?.[0] || user?.area || 'OPERACOES INDUSTRIAIS'}
                   </div>
                 </div>
               </div>
@@ -86,7 +86,7 @@ export function Layout() {
                 {!isManutencao && (
                   <Link
                     to="/"
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded transition-colors text-sm font-medium ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-none border border-transparent transition-colors text-sm font-semibold ${
                       location.pathname === '/'
                         ? 'bg-accent text-accent-foreground'
                         : 'text-primary-foreground/70 hover:text-primary-foreground hover:bg-white/10'
@@ -99,7 +99,7 @@ export function Layout() {
                 {!isManutencao && (
                   <Link
                     to="/admin"
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded transition-colors text-sm font-medium ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-none border border-transparent transition-colors text-sm font-semibold ${
                       location.pathname === '/admin'
                         ? 'bg-accent text-accent-foreground'
                         : 'text-primary-foreground/70 hover:text-primary-foreground hover:bg-white/10'
@@ -111,7 +111,7 @@ export function Layout() {
                 )}
                 <Link
                   to="/admin/manutencao"
-                  className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded transition-colors text-sm font-medium ${
+                  className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-none border border-transparent transition-colors text-sm font-semibold ${
                     location.pathname === '/admin/manutencao'
                       ? 'bg-accent text-accent-foreground'
                       : 'text-primary-foreground/70 hover:text-primary-foreground hover:bg-white/10'
@@ -137,13 +137,13 @@ export function Layout() {
                 <div className="relative" ref={gerenciaDropdownRef}>
                   <button
                     onClick={() => canChangeFilters && setShowGerenciaDropdown(v => !v)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-primary-foreground/30 text-primary-foreground/90 text-sm font-medium transition-colors ${canChangeFilters ? 'hover:bg-white/10 cursor-pointer' : 'cursor-default opacity-90'}`}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-none border border-primary-foreground/30 text-primary-foreground/90 text-sm font-semibold transition-colors ${canChangeFilters ? 'hover:bg-white/10 cursor-pointer' : 'cursor-default opacity-90'}`}
                   >
                     <span>{selectedGerencia}</span>
                     {canChangeFilters && <ChevronDown size={13} className={`transition-transform ${showGerenciaDropdown ? 'rotate-180' : ''}`} />}
                   </button>
                   {canChangeFilters && showGerenciaDropdown && (
-                    <div className="absolute right-0 lg:left-0 top-full mt-1.5 bg-card rounded border border-border shadow-lg z-50 min-w-[200px]">
+                    <div className="absolute right-0 lg:left-0 top-full mt-1.5 bg-card rounded-none border border-border shadow-[var(--shadow-hard)] z-50 min-w-[200px]">
                       {(isManutencao ? GERENCIAS : [user?.gerencia ? normalizeGerencia(user.gerencia) : selectedGerencia]).map(gerencia => (
                         <button
                           key={gerencia}
@@ -160,13 +160,13 @@ export function Layout() {
                 <div className="relative" ref={areaDropdownRef}>
                   <button
                     onClick={() => canChangeFilters && setShowAreaDropdown(v => !v)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-primary-foreground/30 text-primary-foreground/90 text-sm font-medium transition-colors ${canChangeFilters ? 'hover:bg-white/10 cursor-pointer' : 'cursor-default opacity-90'}`}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-none border border-primary-foreground/30 text-primary-foreground/90 text-sm font-semibold transition-colors ${canChangeFilters ? 'hover:bg-white/10 cursor-pointer' : 'cursor-default opacity-90'}`}
                   >
                     <span>{selectedArea}</span>
                     {canChangeFilters && <ChevronDown size={13} className={`transition-transform ${showAreaDropdown ? 'rotate-180' : ''}`} />}
                   </button>
                   {canChangeFilters && showAreaDropdown && (
-                    <div className="absolute right-0 lg:left-0 top-full mt-1.5 bg-card rounded border border-border shadow-lg z-50 min-w-[140px]">
+                    <div className="absolute right-0 lg:left-0 top-full mt-1.5 bg-card rounded-none border border-border shadow-[var(--shadow-hard)] z-50 min-w-[140px]">
                       {areas.map(area => (
                         <button
                           key={area}
@@ -192,7 +192,7 @@ export function Layout() {
                 </div>
                 
                 <Link to="/profile" className="flex items-center gap-2 pr-3 border-r border-primary-foreground/20 hover:opacity-80">
-                  <div className="w-7 h-7 rounded flex items-center justify-center bg-primary-foreground/10 text-primary-foreground overflow-hidden">
+                  <div className="w-7 h-7 rounded-none flex items-center justify-center bg-primary-foreground/10 text-primary-foreground overflow-hidden">
                     {user?.foto_url ? (
                       <img src={user.foto_url} alt="Foto" className="w-full h-full object-cover" />
                     ) : (
@@ -232,7 +232,7 @@ export function Layout() {
           {/* Right Sidebar Dashboard - Oculto na página de detalhes do TAG */}
           {!location.pathname.startsWith('/tag/') && (
             <aside className="w-full lg:w-72 xl:w-80 flex-shrink-0 flex flex-col gap-4 sticky top-6">
-              <div className="bg-card rounded-lg border border-border shadow-sm p-5">
+              <div className="bg-card rounded-none border border-border shadow-[var(--shadow-hard)] p-5 panel">
                  <h3 className="font-semibold text-primary mb-2 flex items-center gap-2">
                    <Activity size={16} />
                    Visão da Área
@@ -241,15 +241,15 @@ export function Layout() {
                    Resumo operacional diário. Integração com IA para leitura da programação semanal em breve.
                  </p>
                  <div className="space-y-3">
-                   <div className="bg-muted/50 border border-border p-3 rounded-md flex justify-between items-center">
+                   <div className="bg-muted/50 border border-border p-3 rounded-none flex justify-between items-center">
                      <p className="text-xs text-muted-foreground uppercase font-semibold">Saúde dos Equipamentos</p>
                      <p className="text-lg font-bold text-green-600">95%</p>
                    </div>
-                   <div className="bg-muted/50 border border-border p-3 rounded-md flex justify-between items-center">
+                   <div className="bg-muted/50 border border-border p-3 rounded-none flex justify-between items-center">
                      <p className="text-xs text-muted-foreground uppercase font-semibold">Notas Abertas</p>
                      <p className="text-lg font-bold text-destructive">{notasAbertas}</p>
                    </div>
-                   <div className="bg-primary/5 border border-primary/20 p-3 rounded-md mt-2">
+                   <div className="bg-primary/5 border border-primary/20 p-3 rounded-none mt-2">
                      <p className="text-xs text-primary uppercase font-semibold mb-1">Próxima Manutenção</p>
                      <p className="text-sm font-medium text-foreground">Caldeira - Parada Geral (15/08)</p>
                    </div>
@@ -261,12 +261,12 @@ export function Layout() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t bg-card border-border">
+      <footer className="border-t-2 border-accent bg-card border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row items-center justify-between text-xs text-muted-foreground">
-          <p>
-            Sistema TAG — {user?.area || 'Operações Industriais'} © {new Date().getFullYear()} <span className="hidden sm:inline">|</span> Criado por Anderson Alves
+          <p className="mono">
+            SISTEMA TAG // {user?.area || 'OPERACOES INDUSTRIAIS'} © {new Date().getFullYear()} <span className="hidden sm:inline">|</span> CRIADO POR ANDERSON ALVES
           </p>
-          <span className="text-xs font-semibold tracking-widest uppercase text-primary">
+          <span className="text-xs font-bold tracking-widest uppercase text-primary mono">
             KLABIN S/A
           </span>
         </div>

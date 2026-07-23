@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate, Link } from 'react-router';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase, UserProfile } from '../lib/supabase';
 import * as api from '../services/api';
@@ -22,6 +23,12 @@ export function ProfilePage() {
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
 
+  // P1: validação WhatsApp (10 ou 11 dígitos)
+  const whatsappValido = formData.whatsapp.replace(/\D/g, '').length >= 10 && formData.whatsapp.replace(/\D/g, '').length <= 11;
+
+  // P3: estatísticas do usuário (tags da área + notas abertas)
+  const [stats, setStats] = useState<{ tagsArea: number; notasArea: number; carregando: boolean }>({ tagsArea: 0, notasArea: 0, carregando: true });
+
   useEffect(() => {
     if (user) {
       setFormData({
@@ -36,6 +43,24 @@ export function ProfilePage() {
         setCoordenadorNome('Não informada');
       }
     }
+  }, [user]);
+
+  // P3: carregar estatísticas da área do usuário
+  useEffect(() => {
+    let mounted = true;
+    const carregar = async () => {
+      try {
+        const tags = await api.getAllTags();
+        const area = (user?.coordenacao || user?.area || '').toLowerCase();
+        const daArea = area ? tags.filter(t => (t.localizacao_texto || '').toLowerCase().includes(area)) : [];
+        const notas = daArea.filter(t => t.nota_manutencao).length;
+        if (mounted) setStats({ tagsArea: daArea.length, notasArea: notas, carregando: false });
+      } catch {
+        if (mounted) setStats(s => ({ ...s, carregando: false }));
+      }
+    };
+    if (user) carregar();
+    return () => { mounted = false; };
   }, [user]);
 
   const handleSave = async () => {
@@ -99,7 +124,7 @@ export function ProfilePage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <div className="bg-card rounded-xl border border-border overflow-hidden shadow-md">
+      <div className="bg-card rounded-none border border-border overflow-hidden shadow-md">
         <div className="h-32 bg-gradient-to-r from-primary via-primary to-[#002040]"></div>
         
         <div className="px-8 pb-8 -mt-16 flex flex-col items-center">
@@ -129,7 +154,7 @@ export function ProfilePage() {
             </div>
           </div>
 
-          <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-8 bg-muted/30 p-4 rounded-lg border border-border">
+          <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-8 bg-muted/30 p-4 rounded-none border border-border">
             <div className="flex items-center gap-3 text-muted-foreground">
               <div className="p-2 bg-background rounded border border-border"><Briefcase size={16} /></div>
               <div>
@@ -164,6 +189,24 @@ export function ProfilePage() {
             )}
           </div>
 
+          {/* P3: estatísticas da área + P4: ação rápida */}
+          <div className="w-full grid grid-cols-2 gap-3 mb-2">
+            <div className="bg-muted/30 border border-border p-3 text-center">
+              <p className="text-2xl font-bold text-primary">{stats.carregando ? '…' : stats.tagsArea}</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wider">TAGs da área</p>
+            </div>
+            <div className="bg-muted/30 border border-border p-3 text-center">
+              <p className="text-2xl font-bold text-destructive">{stats.carregando ? '…' : stats.notasArea}</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wider">Notas abertas</p>
+            </div>
+          </div>
+          <Link
+            to="/admin/manutencao"
+            className="w-full block text-center px-4 py-2.5 border-2 border-primary text-primary text-sm font-bold uppercase tracking-wider hover:bg-primary hover:text-primary-foreground transition-colors"
+          >
+            Ver equipamentos da minha área
+          </Link>
+
           <div className="w-full space-y-4">
             <h3 className="font-bold text-lg border-b border-border pb-2">Informações de Contato</h3>
             
@@ -184,9 +227,27 @@ export function ProfilePage() {
                   }}
                   placeholder="(00) 00000-0000"
                   maxLength={15}
-                  className="w-full pl-9 pr-3 py-2.5 rounded border border-border bg-background text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                  className={`w-full pl-9 pr-9 py-2.5 rounded border bg-background text-foreground outline-none focus:ring-1 transition-colors ${
+                    whatsappValido 
+                      ? 'border-green-500 focus:border-green-500 focus:ring-green-500' 
+                      : formData.whatsapp.length > 0 
+                        ? 'border-destructive focus:border-destructive focus:ring-destructive' 
+                        : 'border-border focus:border-primary focus:ring-primary'
+                  }`}
                 />
+                {formData.whatsapp.length > 0 && (
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2">
+                    {whatsappValido ? (
+                      <Check size={16} className="text-green-600" />
+                    ) : (
+                      <X size={16} className="text-destructive" />
+                    )}
+                  </span>
+                )}
               </div>
+              {formData.whatsapp.length > 0 && !whatsappValido && (
+                <p className="text-xs text-destructive mt-1">WhatsApp deve ter 10 ou 11 dígitos.</p>
+              )}
             </div>
           </div>
 
@@ -212,7 +273,7 @@ export function ProfilePage() {
       {/* Cropper Modal */}
       {imageSrc && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="bg-card w-full max-w-md rounded-xl shadow-xl overflow-hidden flex flex-col h-[80vh] max-h-[600px]">
+          <div className="bg-card w-full max-w-md rounded-none shadow-xl overflow-hidden flex flex-col h-[80vh] max-h-[600px]">
             <div className="p-4 border-b border-border flex justify-between items-center bg-muted/30">
               <h3 className="font-semibold text-lg">Ajustar Foto</h3>
               <button onClick={() => setImageSrc(null)} className="p-1 hover:bg-muted rounded-full transition-colors">
@@ -245,14 +306,14 @@ export function ProfilePage() {
                   step={0.1}
                   aria-labelledby="Zoom"
                   onChange={(e) => setZoom(Number(e.target.value))}
-                  className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
+                  className="w-full h-2 bg-muted rounded-none appearance-none cursor-pointer accent-primary"
                 />
               </div>
               
               <div className="flex gap-3 pt-2">
                 <button
                   onClick={() => setImageSrc(null)}
-                  className="flex-1 py-2 px-4 rounded-lg border border-border font-medium hover:bg-muted transition-colors text-sm"
+                  className="flex-1 py-2 px-4 rounded-none border border-border font-medium hover:bg-muted transition-colors text-sm"
                   disabled={uploading}
                 >
                   Cancelar
@@ -260,7 +321,7 @@ export function ProfilePage() {
                 <button
                   onClick={handleCropSave}
                   disabled={uploading}
-                  className="flex-1 py-2 px-4 rounded-lg bg-primary text-primary-foreground font-medium hover:brightness-110 transition-all text-sm flex items-center justify-center gap-2"
+                  className="flex-1 py-2 px-4 rounded-none bg-primary text-primary-foreground font-medium hover:brightness-110 transition-all text-sm flex items-center justify-center gap-2"
                 >
                   {uploading ? (
                     <span className="animate-pulse">Salvando...</span>

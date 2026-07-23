@@ -309,6 +309,40 @@ export async function createTag(tagData: {
   }
 }
 
+export async function importTags(
+  rows: Array<{ tag_completo: string; nome_equipamento: string; localizacao_texto: string; status: 'operacional' | 'manutenção' | 'inativo'; foto_url?: string }>,
+  userNome?: string
+): Promise<{ created: number; errors: Array<{ row: number; tag_completo: string; error: string }> }> {
+  let created = 0;
+  const errors: Array<{ row: number; tag_completo: string; error: string }> = [];
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    const ultimos4 = r.tag_completo.match(/\d{4}$/);
+    if (!ultimos4) {
+      errors.push({ row: i + 1, tag_completo: r.tag_completo, error: 'TAG deve terminar com 4 dígitos' });
+      continue;
+    }
+    if (!r.nome_equipamento || !r.localizacao_texto) {
+      errors.push({ row: i + 1, tag_completo: r.tag_completo, error: 'nome_equipamento e localizacao_texto obrigatórios' });
+      continue;
+    }
+    try {
+      await createTag({
+        tag_completo: r.tag_completo,
+        nome_equipamento: r.nome_equipamento,
+        localizacao_texto: r.localizacao_texto,
+        status: r.status,
+        foto_url: r.foto_url || undefined,
+        user_nome: userNome,
+      });
+      created++;
+    } catch (e) {
+      errors.push({ row: i + 1, tag_completo: r.tag_completo, error: e instanceof Error ? e.message : String(e) });
+    }
+  }
+  return { created, errors };
+}
+
 function createTagLocal(tagData: any): Tag {
   const tags = JSON.parse(localStorage.getItem('tags') || '[]');
   const ultimos4Match = tagData.tag_completo.match(/\d{4}$/);
@@ -686,31 +720,49 @@ export async function getCoordenadorProfile(area: string): Promise<string> {
   }
 }
 
-// ============ MANUAL TÉCNICO ============
+// ============ MANUAL TÉCNICO (schema canônico MANUAL TECNICO.SQL) ============
 
 export async function fetchManualForTag(tagId: string): Promise<any> {
+  const isApiAvailable = await checkApiAvailability();
+  if (!isApiAvailable) return fetchManualForTagLocal(tagId);
+
   try {
     const { data: tag, error: tagError } = await supabase
       .from("tags")
       .select("tag_completo")
       .eq("id", tagId)
       .single();
-      
+
     if (tagError) throw new Error(tagError.message);
-    
-    const tagsCompletos = [tag.tag_completo];
+
+    // Buscar vínculos reais (tag_manual_vinculo, campo tag_referencia)
+    const { data: vinculos, error: vinculoError } = await supabase
+      .from("tag_manual_vinculo")
+      .select(`
+        id, tag_referencia, origem, confianca, vinculado_por, criado_em,
+        equipamentos_referencia (tag_completo, prefixo, tipo_instrumento, descricao, localizacao, sistema)
+      `)
+      .eq("tag_id", tagId);
+
+    if (vinculoError) throw new Error(vinculoError.message);
+
+    const tagsCompletos = (vinculos || [])
+      .map((v: any) => (v.equipamentos_referencia as any)?.tag_completo)
+      .filter(Boolean) as string[];
+
+    if (tagsCompletos.length === 0) tagsCompletos.push(tag.tag_completo);
 
     const { data: mentions, error: mentionsError } = await supabase
       .from("manual_tag_mentions")
       .select(`
-        id, tag_completo, trecho,
+        id, tag_completo, trecho, linha,
         manual_documentos (id, documento_id, titulo, sistema, origem_tipo, pasta)
       `)
       .in("tag_completo", tagsCompletos);
 
     if (mentionsError) throw new Error(mentionsError.message);
 
-    return { success: true, vinculos: [], mentions };
+    return { success: true, vinculos: vinculos || [], mentions: mentions || [] };
   } catch (error) {
     console.error("Erro ao buscar manual para a tag:", error);
     return { success: false, vinculos: [], mentions: [] };
@@ -718,6 +770,9 @@ export async function fetchManualForTag(tagId: string): Promise<any> {
 }
 
 export async function searchManual(query: string): Promise<any> {
+  const isApiAvailable = await checkApiAvailability();
+  if (!isApiAvailable) return searchManualLocal(query);
+
   try {
     const { data, error } = await supabase
       .from("manual_documentos")
@@ -732,17 +787,19 @@ export async function searchManual(query: string): Promise<any> {
   }
 }
 
-export async function vincularManual(tagId: string, tagRefId: string, status: string, usuario: string): Promise<any> {
+export async function vincularManual(tagId: string, tagRefId: string, confianca: string, usuario: string): Promise<any> {
+  const isApiAvailable = await checkApiAvailability();
+  if (!isApiAvailable) return vincularManualLocal(tagId, tagRefId, usuario);
+
   try {
     const { data, error } = await supabase
       .from("tag_manual_vinculo")
       .insert({
         tag_id: tagId,
-        tag_referencia_id: tagRefId,
-        confianca: 100,
-        confirmado_por: usuario,
-        confirmado_em: new Date().toISOString(),
-        status
+        tag_referencia: tagRefId,
+        origem: 'manual',
+        confianca: confianca || 'confirmado',
+        vinculado_por: usuario
       })
       .select()
       .single();
@@ -756,6 +813,9 @@ export async function vincularManual(tagId: string, tagRefId: string, status: st
 }
 
 export async function desvincularManual(tagId: string, vinculoId: string): Promise<any> {
+  const isApiAvailable = await checkApiAvailability();
+  if (!isApiAvailable) return desvincularManualLocal(vinculoId);
+
   try {
     const { error } = await supabase
       .from("tag_manual_vinculo")
@@ -767,5 +827,232 @@ export async function desvincularManual(tagId: string, vinculoId: string): Promi
   } catch (error) {
     console.error("Erro ao desvincular manual:", error);
     return { success: false };
+  }
+}
+
+// ---- Fallback local (localStorage) para módulo manual ----
+function getLocalVinculos(tagId: string) {
+  try {
+    const raw = localStorage.getItem('tag_manual_vinculo');
+    const all = raw ? JSON.parse(raw) : [];
+    return all.filter((v: any) => String(v.tag_id) === String(tagId));
+  } catch { return []; }
+}
+function fetchManualForTagLocal(tagId: string) {
+  const vinculos = getLocalVinculos(tagId).map((v: any) => ({
+    ...v,
+    equipamentos_referencia: { tag_completo: v.tag_referencia }
+  }));
+  return { success: true, vinculos, mentions: [] };
+}
+async function searchManualLocal(query: string) {
+  try {
+    const raw = localStorage.getItem('manual_documentos');
+    const all = raw ? JSON.parse(raw) : [];
+    const q = query.toLowerCase();
+    const resultados = all.filter((d: any) =>
+      (d.titulo || '').toLowerCase().includes(q) ||
+      (d.conteudo_md || '').toLowerCase().includes(q)
+    ).slice(0, 50);
+    return { success: true, resultados };
+  } catch { return { success: false, resultados: [] }; }
+}
+function vincularManualLocal(tagId: string, tagRefId: string, usuario: string) {
+  try {
+    const raw = localStorage.getItem('tag_manual_vinculo');
+    const all = raw ? JSON.parse(raw) : [];
+    all.push({
+      id: `local-${Date.now()}`, tag_id: tagId, tag_referencia: tagRefId,
+      origem: 'manual', confianca: 'confirmado', vinculado_por: usuario, criado_em: new Date().toISOString()
+    });
+    localStorage.setItem('tag_manual_vinculo', JSON.stringify(all));
+    return { success: true };
+  } catch { return { success: false }; }
+}
+function desvincularManualLocal(vinculoId: string) {
+  try {
+    const raw = localStorage.getItem('tag_manual_vinculo');
+    const all = raw ? JSON.parse(raw) : [];
+    localStorage.setItem('tag_manual_vinculo', JSON.stringify(all.filter((v: any) => v.id !== vinculoId)));
+    return { success: true };
+  } catch { return { success: false }; }
+}
+
+// ============ AGENTE BIBLIOTECÁRIO (IA) ============
+// Responde perguntas com base SOMENTE na Base KOS (contexto recuperado do Supabase).
+// Provedor configurável via .env: OPENAI_BASE_URL / OPENAI_API_KEY / VITE_LLM_MODEL
+// (atualmente NVIDIA NIM). Fallback: busca full-text retorna trechos como resposta.
+
+export async function perguntarBibliotecario(tagCompleto: string, pergunta: string): Promise<any> {
+  // 1) Recuperar contexto da Base KOS
+  let contexto = '';
+  let fontes: string[] = [];
+  try {
+    const { data: docs, error } = await supabase
+      .from('manual_documentos')
+      .select('titulo, conteudo_md, sistema')
+      .textSearch('conteudo_md', tagCompleto.replace(/[^a-zA-Z0-9 -]/g, ' '))
+      .limit(8);
+    if (!error && docs) {
+      contexto = docs.map((d: any) => `### ${d.titulo}\n${d.conteudo_md}`).join('\n\n');
+      fontes = docs.map((d: any) => d.titulo);
+    }
+    // também puxa menções diretas do tag
+    const { data: ments } = await supabase
+      .from('manual_tag_mentions')
+      .select('trecho, manual_documentos (titulo)')
+      .eq('tag_completo', tagCompleto)
+      .limit(15);
+    if (ments && ments.length) {
+      const trechos = ments.map((m: any) => `- ${m.trecho} ${(m.manual_documentos?.titulo ? '(ref: ' + m.manual_documentos.titulo + ')' : '')}`).join('\n');
+      contexto += `\n\n### Relacionamentos diretos do TAG ${tagCompleto}\n${trechos}`;
+    }
+  } catch (e) {
+    console.error('Erro ao recuperar contexto KOS:', e);
+  }
+
+  const baseUrl = import.meta.env.OPENAI_BASE_URL || '';
+  const apiKey = import.meta.env.OPENAI_API_KEY || '';
+  const model = import.meta.env.VITE_LLM_MODEL || 'meta/llama-3.1-8b-instruct';
+
+  // 2) Fallback (sem chave): retorna trechos como resposta
+  if (!apiKey || !baseUrl) {
+    if (!contexto) {
+      return { success: true, resposta: `Não encontrei conteúdo da Base KOS para o TAG ${tagCompleto}.`, fontes: [], fallback: true };
+    }
+    return {
+      success: true,
+      resposta: `Encontrei os seguintes trechos da Base KOS para "${tagCompleto}". Configure a chave de LLM no .env para obter uma resposta interpretada:\n\n${contexto.slice(0, 4000)}`,
+      fontes,
+      fallback: true
+    };
+  }
+
+  // 3) Chamada ao LLM (NVIDIA NIM / OpenAI-compatible)
+  try {
+    const promptSistema = `Você é o "Bibliotecário" da Base KOS da Caldeira de Força 2 (Klabin Puma II). ` +
+      `Responda com base EXCLUSIVA no contexto abaixo. Se o contexto não tiver a resposta, diga que não há informação na Base KOS. ` +
+      `Seja direto, técnico e use português. Cite o nome dos documentos de origem quando possível.`;
+    const promptUsuario = `CONTEXTO DA BASE KOS:\n${contexto.slice(0, 12000)}\n\nPERGUNTA: ${pergunta}`;
+
+    const resp = await fetch(`${baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: 'system', content: promptSistema },
+          { role: 'user', content: promptUsuario }
+        ],
+        temperature: 0.3,
+        max_tokens: 800
+      })
+    });
+
+    if (!resp.ok) {
+      const errText = await resp.text();
+      throw new Error(`LLM ${resp.status}: ${errText.slice(0, 200)}`);
+    }
+
+    const json = await resp.json();
+    const resposta = json?.choices?.[0]?.message?.content || 'Sem resposta do modelo.';
+    return { success: true, resposta, fontes, fallback: false };
+  } catch (error) {
+    console.error('Erro no LLM:', error);
+    // fallback de busca em caso de erro de API
+    if (contexto) {
+      return {
+        success: true,
+        resposta: `Houve um erro ao consultar o modelo de IA. Retornando trechos da Base KOS como fallback:\n\n${contexto.slice(0, 4000)}`,
+        fontes,
+        fallback: true
+      };
+    }
+    return { success: false, resposta: 'Erro ao consultar o Bibliotecário KOS.', fontes: [], fallback: true };
+  }
+}
+
+// Pergunta geral (sem TAG específico): recupera contexto por textSearch da pergunta.
+export async function perguntarBibliotecarioGeral(pergunta: string): Promise<any> {
+  let contexto = '';
+  let fontes: string[] = [];
+  try {
+    const q = pergunta.replace(/[^a-zA-Z0-9 -]/g, ' ').trim();
+    if (q.length >= 3) {
+      const { data: docs, error } = await supabase
+        .from('manual_documentos')
+        .select('titulo, conteudo_md, sistema')
+        .textSearch('conteudo_md', q)
+        .limit(8);
+      if (!error && docs) {
+        contexto = docs.map((d: any) => `### ${d.titulo}\n${d.conteudo_md}`).join('\n\n');
+        fontes = docs.map((d: any) => d.titulo);
+      }
+    }
+  } catch (e) {
+    console.error('Erro ao recuperar contexto KOS (geral):', e);
+  }
+
+  const baseUrl = import.meta.env.OPENAI_BASE_URL || '';
+  const apiKey = import.meta.env.OPENAI_API_KEY || '';
+  const model = import.meta.env.VITE_LLM_MODEL || 'meta/llama-3.1-8b-instruct';
+
+  if (!apiKey || !baseUrl) {
+    if (!contexto) {
+      return { success: true, resposta: 'Não encontrei conteúdo da Base KOS para esta pergunta. Configure a chave de LLM no .env para obter uma resposta interpretada.', fontes: [], fallback: true };
+    }
+    return {
+      success: true,
+      resposta: `Encontrei os seguintes trechos da Base KOS. Configure a chave de LLM no .env para obter uma resposta interpretada:\n\n${contexto.slice(0, 4000)}`,
+      fontes,
+      fallback: true
+    };
+  }
+
+  try {
+    const promptSistema = `Você é o "Bibliotecário" da Base KOS da Caldeira de Força 2 (Klabin Puma II). ` +
+      `Responda com base EXCLUSIVA no contexto abaixo. Se o contexto não tiver a resposta, diga que não há informação na Base KOS. ` +
+      `Seja direto, técnico e use português. Cite o nome dos documentos de origem quando possível.`;
+    const promptUsuario = `CONTEXTO DA BASE KOS:\n${contexto.slice(0, 12000)}\n\nPERGUNTA: ${pergunta}`;
+
+    const resp = await fetch(`${baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: 'system', content: promptSistema },
+          { role: 'user', content: promptUsuario }
+        ],
+        temperature: 0.3,
+        max_tokens: 800
+      })
+    });
+
+    if (!resp.ok) {
+      const errText = await resp.text();
+      throw new Error(`LLM ${resp.status}: ${errText.slice(0, 200)}`);
+    }
+
+    const json = await resp.json();
+    const resposta = json?.choices?.[0]?.message?.content || 'Sem resposta do modelo.';
+    return { success: true, resposta, fontes, fallback: false };
+  } catch (error) {
+    console.error('Erro no LLM (geral):', error);
+    if (contexto) {
+      return {
+        success: true,
+        resposta: `Houve um erro ao consultar o modelo de IA. Retornando trechos da Base KOS como fallback:\n\n${contexto.slice(0, 4000)}`,
+        fontes,
+        fallback: true
+      };
+    }
+    return { success: false, resposta: 'Erro ao consultar o Bibliotecário KOS.', fontes: [], fallback: true };
   }
 }

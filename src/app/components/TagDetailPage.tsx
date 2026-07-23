@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router';
 import {
   ArrowLeft, Camera, Calendar, User, Upload, MessageSquare,
   Edit, Wrench, AlertTriangle, CheckCircle, X, Activity,
-  Clock, QrCode, Printer, BookOpen
+  Clock, QrCode, Printer, BookOpen, Sparkles
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useAuth } from '../contexts/AuthContext';
@@ -12,6 +12,7 @@ import * as api from '../services/api';
 import { saveRecentTag } from './SearchPage';
 import { supabase } from '../lib/supabase';
 import { ManualTecnicoTab } from './ManualTecnicoTab';
+import { BibliotecarioTab } from './BibliotecarioTab';
 
 const CARGO_BADGE: Record<string, { label: string; style: string }> = {
   'Operador Lider': { label: 'Líder', style: 'bg-primary text-primary-foreground' },
@@ -284,6 +285,7 @@ export function TagDetailPage() {
   };
 
   const inputClass = "w-full px-3 py-2.5 rounded border border-border bg-muted/30 text-foreground text-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20";
+  const [activeKosTab, setActiveKosTab] = useState<'kos' | 'biblio'>('kos');
 
   if (loading) {
     return (
@@ -352,7 +354,7 @@ export function TagDetailPage() {
                   nota.status_manutencao === 'finalizada_manutencao' && user?.cargo !== 'Gestor de Manutenção' ? (
                     <button
                       onClick={() => handleValidarNota(nota.id!)}
-                      className="p-2 bg-green-600 text-white hover:bg-green-700 rounded-md transition-colors text-sm font-medium flex items-center gap-2"
+                      className="p-2 bg-green-600 text-white hover:bg-green-700 rounded-none transition-colors text-sm font-medium flex items-center gap-2"
                       title="Validar e Encerrar Nota — registra no histórico"
                     >
                       <CheckCircle size={16} /> Validar e Encerrar Nota
@@ -360,7 +362,7 @@ export function TagDetailPage() {
                   ) : (
                     <button
                       onClick={() => handleCancelarNota(nota.id!)}
-                      className="p-1.5 bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground rounded-md transition-colors"
+                      className="p-1.5 bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground rounded-none transition-colors"
                       title="Fechar/Cancelar nota (sem histórico)"
                     >
                       <X size={18} />
@@ -374,7 +376,7 @@ export function TagDetailPage() {
       )}
 
       {/* Main info */}
-      <div className="bg-card rounded border border-border shadow-sm overflow-hidden">
+      <div className="bg-card rounded-none border-2 border-border shadow-[var(--shadow-hard)] overflow-hidden panel">
         <div className="md:flex">
           <div className="md:w-2/5 bg-muted min-h-[280px]">
             {tag.foto_url ? (
@@ -389,13 +391,13 @@ export function TagDetailPage() {
           <div className="md:w-3/5 p-6">
             <div className="flex items-start justify-between mb-3">
               <div>
-                <p className="text-xs uppercase tracking-wider mb-0.5 text-muted-foreground">TAG Completo</p>
+                <p className="text-xs uppercase tracking-wider mb-0.5 text-muted-foreground font-semibold mono">TAG // COMPLETO</p>
                 <h1 className="font-bold font-mono text-primary text-[1.6rem] leading-tight">{tag.tag_completo}</h1>
                 <p className="text-xs mt-1 text-muted-foreground">
                   Últimos 4 dígitos: <span className="font-mono font-medium">{tag.ultimos4}</span>
                 </p>
               </div>
-              <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium flex-shrink-0 ${statusStyle.container}`}>
+              <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-none text-xs font-semibold flex-shrink-0 ${statusStyle.container}`}>
                 <span className={`w-1.5 h-1.5 rounded-full ${statusStyle.dot}`} />
                 {tag.status}
               </span>
@@ -423,28 +425,28 @@ export function TagDetailPage() {
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => setShowUploadModal(true)}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-none bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
                 >
                   <Upload size={14} />
                   Adicionar Foto
                 </button>
                 <button
                   onClick={() => setShowEditModal(true)}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded border border-border text-muted-foreground text-sm font-medium hover:bg-muted transition-colors bg-transparent"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-none border border-border text-muted-foreground text-sm font-medium hover:bg-muted transition-colors bg-transparent"
                 >
                   <Edit size={14} />
                   Editar
                 </button>
                 <button
                   onClick={() => setShowQrCodeModal(true)}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded border border-border text-muted-foreground text-sm font-medium hover:bg-muted transition-colors bg-transparent"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-none border border-border text-muted-foreground text-sm font-medium hover:bg-muted transition-colors bg-transparent"
                 >
                   <QrCode size={14} />
                   Gerar QR
                 </button>
                 <button
                   onClick={() => setShowNotaModal(true)}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded bg-orange-600 text-white text-sm font-medium hover:bg-orange-700 transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-none bg-orange-600 text-white text-sm font-medium hover:bg-orange-700 transition-colors"
                 >
                   <Wrench size={14} />
                   Abrir Nota Manutenção
@@ -738,7 +740,7 @@ export function TagDetailPage() {
                 rows={4}
               />
             </div>
-            <div className="flex items-center gap-2 mt-2 bg-amber-50 p-3 rounded-md border border-amber-200">
+            <div className="flex items-center gap-2 mt-2 bg-amber-50 p-3 rounded-none border border-amber-200">
               <input
                 type="checkbox"
                 id="mudarManutencao"
@@ -804,14 +806,39 @@ export function TagDetailPage() {
       )}
       </div> {/* fim coluna esquerda */}
 
-      {/* Coluna Direita: Manual Técnico */}
-      <aside className="w-full lg:w-72 xl:w-80 flex-shrink-0 sticky top-6">
-        <div className="bg-card rounded-lg border border-border shadow-sm p-5">
-          <h2 className="font-semibold mb-4 flex items-center gap-2 text-foreground">
-            <BookOpen size={18} className="text-primary" />
-            Manual Técnico
-          </h2>
-          <ManualTecnicoTab tagId={tag.id.toString()} tagCompleto={tag.tag_completo} />
+      {/* Coluna Direita: Base KOS / Bibliotecário (abas industriais) */}
+      <aside className="w-full lg:w-80 xl:w-96 flex-shrink-0 sticky top-6">
+        <div className="bg-card border-2 border-border shadow-[var(--shadow-hard)]">
+          {/* Tab strip */}
+          <div className="flex border-b-2 border-border">
+            <button
+              onClick={() => setActiveKosTab('kos')}
+              className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 text-xs font-bold uppercase tracking-[0.1em] border-r-2 border-border transition-colors ${
+                activeKosTab === 'kos'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted/40 text-muted-foreground hover:bg-muted'
+              }`}
+            >
+              <BookOpen size={14} /> Base KOS
+            </button>
+            <button
+              onClick={() => setActiveKosTab('biblio')}
+              className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 text-xs font-bold uppercase tracking-[0.1em] transition-colors ${
+                activeKosTab === 'biblio'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted/40 text-muted-foreground hover:bg-muted'
+              }`}
+            >
+              <Sparkles size={14} /> Bibliotecário
+            </button>
+          </div>
+          <div className="p-4">
+            {activeKosTab === 'kos' ? (
+              <ManualTecnicoTab tagId={tag.id.toString()} tagCompleto={tag.tag_completo} />
+            ) : (
+              <BibliotecarioTab tagCompleto={tag.tag_completo} />
+            )}
+          </div>
         </div>
       </aside>
     </div>
@@ -821,10 +848,10 @@ export function TagDetailPage() {
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
     <div className="fixed inset-0 flex items-center justify-center p-4 z-50 bg-black/40 backdrop-blur-md transition-all">
-      <div className="bg-card rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] w-full max-w-md border border-border/40 transform transition-all">
+      <div className="bg-card rounded-none shadow-[0_8px_30px_rgb(0,0,0,0.12)] w-full max-w-md border border-border/40 transform transition-all">
         <div className="flex items-center justify-between px-5 py-4 border-b border-border/40">
           <h3 className="font-semibold text-sm text-foreground">{title}</h3>
-          <button onClick={onClose} className="p-1.5 rounded-md transition-colors text-muted-foreground hover:bg-muted hover:text-foreground">
+          <button onClick={onClose} className="p-1.5 rounded-none transition-colors text-muted-foreground hover:bg-muted hover:text-foreground">
             <X size={16} />
           </button>
         </div>

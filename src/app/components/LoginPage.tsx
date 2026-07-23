@@ -34,7 +34,7 @@ export function LoginPage() {
     return <RegisterPage onBackToLogin={() => setShowRegister(false)} />;
   }
 
-  const inputClass = "w-full px-4 py-3 rounded-xl border border-white/30 bg-white/10 text-sm text-white placeholder:text-white/60 outline-none transition-all focus:border-white focus:ring-4 focus:ring-white/20 focus:bg-white/20";
+  const inputClass = "w-full px-4 py-3 rounded-none border border-white/30 bg-white/10 text-sm text-white placeholder:text-white/60 outline-none transition-all focus:border-white focus:ring-4 focus:ring-white/20 focus:bg-white/20";
 
   return (
     <div 
@@ -157,7 +157,7 @@ export function LoginPage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full flex items-center justify-center gap-2 py-3.5 mt-2 rounded-xl bg-primary text-primary-foreground text-[0.95rem] font-bold shadow-lg transition-all hover:bg-primary/90 hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
+                className="w-full flex items-center justify-center gap-2 py-3.5 mt-2 rounded-none bg-primary text-primary-foreground text-[0.95rem] font-bold shadow-lg transition-all hover:bg-primary/90 hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
                 {submitting ? (
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -174,7 +174,7 @@ export function LoginPage() {
               </p>
               <button
                 onClick={() => setShowRegister(true)}
-                className="w-full py-3.5 rounded-xl border-2 border-white/40 text-white text-[0.95rem] font-bold transition-all bg-white/10 hover:bg-white/20 hover:scale-[1.02] shadow-lg"
+                className="w-full py-3.5 rounded-none border-2 border-white/40 text-white text-[0.95rem] font-bold transition-all bg-white/10 hover:bg-white/20 hover:scale-[1.02] shadow-lg"
               >
                 Criar Nova Conta
               </button>

@@ -69,7 +69,7 @@ export function InstallPrompt() {
       </button>
       
       <div className="flex items-start gap-4 pr-6">
-        <div className="bg-primary/10 p-3 rounded-xl flex-shrink-0">
+        <div className="bg-primary/10 p-3 rounded-none flex-shrink-0">
           <img src="/icon.svg" alt="App Icon" className="w-10 h-10 object-contain" />
         </div>
         <div>
@@ -80,7 +80,7 @@ export function InstallPrompt() {
           <div className="flex gap-2">
             <button 
               onClick={handleInstallClick}
-              className="flex-1 bg-primary text-primary-foreground text-sm font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
+              className="flex-1 bg-primary text-primary-foreground text-sm font-semibold py-2 px-4 rounded-none shadow-sm hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
             >
               <Download size={16} />
               Instalar Agora

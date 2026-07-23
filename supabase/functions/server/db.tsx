@@ -192,49 +192,51 @@ export const createFoto = async (tagId: number, uploader: string, file_path: str
   return data;
 };
 
-// ============ MANUAL TÉCNICO ============
+// ============ MANUAL TÉCNICO (schema canônico MANUAL TECNICO.SQL) ============
 
 export const getManualByTagId = async (tagId: string) => {
   const supabase = client();
-  
+
   // Primeiro, buscar a tag e pegar o tag_completo
   const { data: tag, error: tagError } = await supabase
     .from("tags")
     .select("tag_completo")
     .eq("id", tagId)
     .single();
-    
+
   if (tagError) throw new Error(tagError.message);
-  
-  // Buscar vínculos
+
+  // Buscar vínculos (tabela canônica tag_manual_vinculo, campo tag_referencia)
   const { data: vinculos, error: vinculoError } = await supabase
-    .from("manual_vinculos")
+    .from("tag_manual_vinculo")
     .select(`
-      id, tag_referencia_id, confianca, confirmado_por, confirmado_em, status,
+      id, tag_referencia, origem, confianca, vinculado_por, criado_em,
       equipamentos_referencia (tag_completo, prefixo, tipo_instrumento, descricao, origem)
     `)
     .eq("tag_id", tagId);
-    
+
   if (vinculoError) throw new Error(vinculoError.message);
 
   // Buscar menções (usando o tag_completo original como base ou via os vínculos confirmados)
-  const tagsCompletos = vinculos?.map(v => (v.equipamentos_referencia as any)?.tag_completo).filter(Boolean) || [];
-  
+  const tagsCompletos = (vinculos || [])
+    .map((v: any) => (v.equipamentos_referencia as any)?.tag_completo)
+    .filter(Boolean) as string[];
+
   if (tagsCompletos.length === 0) {
-     tagsCompletos.push(tag.tag_completo);
+    tagsCompletos.push(tag.tag_completo);
   }
 
   const { data: mentions, error: mentionsError } = await supabase
     .from("manual_tag_mentions")
     .select(`
-      id, tag_completo, trecho,
+      id, tag_completo, trecho, linha,
       manual_documentos (id, documento_id, titulo, sistema, origem_tipo, pasta)
     `)
     .in("tag_completo", tagsCompletos);
 
   if (mentionsError) throw new Error(mentionsError.message);
 
-  return { vinculos, mentions };
+  return { vinculos: vinculos || [], mentions: mentions || [] };
 };
 
 export const searchManual = async (query: string) => {
@@ -248,17 +250,18 @@ export const searchManual = async (query: string) => {
   return data;
 };
 
-export const criarVinculoManual = async (tagId: string, tagRefId: string, status: string, usuario: string) => {
+export const criarVinculoManual = async (
+  tagId: string, tagRefId: string, confianca: string, usuario: string
+) => {
   const supabase = client();
   const { data, error } = await supabase
-    .from("manual_vinculos")
+    .from("tag_manual_vinculo")
     .insert({
       tag_id: tagId,
-      tag_referencia_id: tagRefId,
-      confianca: 'manual',
-      status: status,
-      confirmado_por: usuario,
-      confirmado_em: new Date().toISOString()
+      tag_referencia: tagRefId,
+      origem: 'manual',
+      confianca: confianca || 'confirmado',
+      vinculado_por: usuario
     })
     .select()
     .single();
@@ -270,7 +273,7 @@ export const criarVinculoManual = async (tagId: string, tagRefId: string, status
 export const desvincularManual = async (vinculoId: string) => {
   const supabase = client();
   const { error } = await supabase
-    .from("manual_vinculos")
+    .from("tag_manual_vinculo")
     .delete()
     .eq("id", vinculoId);
 

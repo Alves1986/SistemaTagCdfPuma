@@ -59,7 +59,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
     }
   };
 
-  const inputClass = "w-full px-4 py-3 rounded-xl border border-white/30 bg-white/10 text-sm text-white placeholder:text-white/60 outline-none transition-all focus:border-white focus:ring-4 focus:ring-white/20 focus:bg-white/20 shadow-inner";
+  const inputClass = "w-full px-4 py-3 rounded-none border border-white/30 bg-white/10 text-sm text-white placeholder:text-white/60 outline-none transition-all focus:border-white focus:ring-4 focus:ring-white/20 focus:bg-white/20 shadow-inner";
 
   if (success) {
     return (
@@ -84,13 +84,13 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
               <p className="text-[0.95rem] text-white/90 mb-2 font-medium">
                 Um e-mail de confirmação foi enviado para:
               </p>
-              <p className="text-sm font-bold text-white mb-6 p-3 bg-white/10 rounded-xl shadow-inner">{email}</p>
+              <p className="text-sm font-bold text-white mb-6 p-3 bg-white/10 rounded-none shadow-inner">{email}</p>
               <p className="text-xs text-white/80 mb-8 font-medium">
                 Confirme seu e-mail antes de fazer o primeiro acesso. Verifique também a pasta de spam.
               </p>
               <button
                 onClick={onBackToLogin}
-                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-primary text-primary-foreground text-[0.95rem] font-bold shadow-lg transition-all hover:bg-primary/90 hover:scale-[1.02]"
+                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-none bg-primary text-primary-foreground text-[0.95rem] font-bold shadow-lg transition-all hover:bg-primary/90 hover:scale-[1.02]"
               >
                 <ArrowLeft size={16} />
                 Ir para o Login
@@ -137,7 +137,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
 
             <form onSubmit={handleSubmit}>
               {error && (
-                <div className="flex items-start gap-2 p-3 mb-6 rounded-xl border border-destructive/30 bg-destructive/20 text-white text-sm shadow-sm backdrop-blur-md">
+                <div className="flex items-start gap-2 p-3 mb-6 rounded-none border border-destructive/30 bg-destructive/20 text-white text-sm shadow-sm backdrop-blur-md">
                   <AlertCircle size={16} className="flex-shrink-0 mt-0.5 text-red-400" />
                   <p className="font-medium text-red-100">{error}</p>
                 </div>
@@ -327,7 +327,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                     <label className="block mb-1.5 text-sm font-semibold text-white drop-shadow-md">
                       Áreas de Trabalho * <span className="text-xs text-white/70 font-medium ml-1">(selecione todas)</span>
                     </label>
-                    <div className="grid grid-cols-2 gap-2 p-3 rounded-xl border border-white/20 bg-white/5 max-h-[140px] overflow-y-auto">
+                    <div className="grid grid-cols-2 gap-2 p-3 rounded-none border border-white/20 bg-white/5 max-h-[140px] overflow-y-auto">
                       {(coordenacao ? getAreasByCoordenacao(gerencia, coordenacao) : getAreasByGerencia(gerencia)).map(a => (
                         <label key={a} className={`flex items-center gap-2 p-2 rounded cursor-pointer text-sm transition-colors ${
                           areas.includes(a)
@@ -361,7 +361,7 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full md:w-2/3 flex items-center justify-center gap-2 py-3.5 rounded-xl bg-primary text-primary-foreground text-[0.95rem] font-bold shadow-lg transition-all hover:bg-primary/90 hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  className="w-full md:w-2/3 flex items-center justify-center gap-2 py-3.5 rounded-none bg-primary text-primary-foreground text-[0.95rem] font-bold shadow-lg transition-all hover:bg-primary/90 hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
                   {submitting ? (
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -374,14 +374,14 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                 <button
                   type="button"
                   onClick={onBackToLogin}
-                  className="w-full md:w-1/3 flex items-center justify-center gap-2 py-3.5 rounded-xl border-2 border-white/40 text-white text-[0.95rem] font-bold transition-all bg-white/10 hover:bg-white/20 hover:scale-[1.02] shadow-lg"
+                  className="w-full md:w-1/3 flex items-center justify-center gap-2 py-3.5 rounded-none border-2 border-white/40 text-white text-[0.95rem] font-bold transition-all bg-white/10 hover:bg-white/20 hover:scale-[1.02] shadow-lg"
                 >
                   <ArrowLeft size={16} />
                   Voltar
                 </button>
               </div>
 
-              <div className="mt-6 flex flex-col md:flex-row gap-4 justify-between items-center text-xs bg-white/5 border border-white/10 text-white/80 p-4 rounded-xl shadow-inner">
+              <div className="mt-6 flex flex-col md:flex-row gap-4 justify-between items-center text-xs bg-white/5 border border-white/10 text-white/80 p-4 rounded-none shadow-inner">
                 <div className="flex items-center gap-2 font-medium text-white">
                   <span>📋</span>
                   Informações importantes:

@@ -42,6 +42,29 @@ export function SearchPage() {
   const [showQrModal, setShowQrModal] = useState(false);
   const [qrStatus, setQrStatus] = useState<'scanning' | 'not_found' | 'found'>('scanning');
 
+  // C1-C4: filtro rápido de status + ordenação + highlight + limpar
+  const [filtroStatus, setFiltroStatus] = useState<'todos' | 'operacional' | 'manutenção' | 'inativo'>('todos');
+  const [sortBy, setSortBy] = useState<'tag' | 'nome' | 'nota'>('tag');
+
+  const resultadosVisiveis = (() => {
+    let lista = [...results];
+    if (filtroStatus !== 'todos') lista = lista.filter(t => t.status === filtroStatus);
+    if (sortBy === 'tag') lista.sort((a, b) => a.tag_completo.localeCompare(b.tag_completo));
+    else if (sortBy === 'nome') lista.sort((a, b) => a.nome_equipamento.localeCompare(b.nome_equipamento));
+    else lista.sort((a, b) => (b.nota_manutencao ? 1 : 0) - (a.nota_manutencao ? 1 : 0));
+    return lista;
+  })();
+
+  const highlight = (text: string) => {
+    const q = query.trim();
+    if (!q || q.length < 2) return text;
+    const idx = text.toLowerCase().indexOf(q.toLowerCase());
+    if (idx === -1) return text;
+    return (
+      <>{text.slice(0, idx)}<mark className="bg-accent/30 text-foreground">{text.slice(idx, idx + q.length)}</mark>{text.slice(idx + q.length)}</>
+    );
+  };
+
   useEffect(() => {
     if (user?.gerencia === 'Manutenção') {
       navigate('/admin/manutencao');
@@ -134,8 +157,13 @@ export function SearchPage() {
   return (
     <div className="space-y-5">
       {/* Search box */}
-      <div className="bg-card rounded border border-border p-5 shadow-sm">
-        <label className="block mb-2 text-sm font-medium text-foreground">
+      <section className="bg-card border-2 border-border shadow-[var(--shadow-hard)]">
+        <header className="flex items-center gap-2 px-4 py-2.5 border-b-2 border-border bg-primary/5">
+          <Search size={14} className="text-primary" />
+          <span className="text-xs font-bold uppercase tracking-[0.14em] mono text-primary">CONSULTA // EQUIPAMENTO</span>
+        </header>
+        <div className="p-5">
+        <label className="block mb-2 text-sm font-semibold text-foreground">
           Buscar Equipamento
         </label>
         <div className="relative group">
@@ -148,34 +176,62 @@ export function SearchPage() {
             value={query}
             onChange={(e) => handleSearch(e.target.value)}
             placeholder="Últimos 4 dígitos do TAG ou nome do equipamento…"
-            className="w-full pl-10 pr-4 py-3 rounded-lg border-2 border-border/60 bg-muted/20 text-sm text-foreground outline-none transition-all focus:border-primary focus:bg-background focus:shadow-[0_0_15px_rgba(0,165,81,0.15)]"
+            className="w-full pl-10 pr-10 py-3 rounded-none border-2 border-border/60 bg-muted/20 text-sm text-foreground outline-none transition-all focus:border-primary focus:bg-background focus:shadow-[0_0_15px_rgba(0,165,81,0.15)]"
           />
+          {query && (
+            <button
+              onClick={() => { setQuery(''); setResults([]); setFiltroStatus('todos'); }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-destructive transition-colors"
+              title="Limpar busca"
+            >
+              <X size={16} />
+            </button>
+          )}
         </div>
-        <p className="mt-2 text-xs text-muted-foreground">
-          Ex: <span className="font-mono font-medium text-foreground/80">0001</span> para buscar por código &nbsp;·&nbsp; "válvula" para buscar por nome
+        <p className="mt-2 text-xs text-muted-foreground mono">
+          Ex: <span className="font-bold text-foreground/80">0001</span> código &nbsp;·&nbsp; "válvula" nome
         </p>
 
-        <div className="mt-4 flex flex-wrap gap-2 pt-4 border-t border-border">
+        <div className="mt-4 flex flex-wrap gap-2 pt-4 border-t-2 border-border">
           <button
             onClick={openQrModal}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-primary text-sm font-medium text-primary bg-transparent transition-colors hover:bg-primary hover:text-primary-foreground"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-none border-2 border-primary text-sm font-bold uppercase tracking-wider text-primary bg-transparent transition-colors hover:bg-primary hover:text-primary-foreground"
           >
             <QrCode size={15} />
             Escanear QR Code
           </button>
         </div>
-      </div>
+        </div>
+      </section>
 
       {/* Results */}
       {query && (
-        <div className="bg-card rounded border border-border p-5 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-foreground">Resultados da Busca</h2>
+        <section className="bg-card border-2 border-border shadow-[var(--shadow-hard)]">
+          <header className="flex items-center justify-between px-4 py-2.5 border-b-2 border-border bg-primary/5">
+            <span className="text-xs font-bold uppercase tracking-[0.14em] mono text-primary">RESULTADOS // BUSCA</span>
             {results.length > 0 && (
-              <span className="text-xs font-medium px-2 py-0.5 rounded bg-muted text-muted-foreground">
-                {results.length} encontrado{results.length > 1 ? 's' : ''}
+              <span className="text-[0.65rem] font-bold px-2 py-0.5 bg-primary text-primary-foreground mono">
+                {resultadosVisiveis.length}
               </span>
             )}
+          </header>
+          <div className="p-5">
+
+          {/* C1+C3: filtro status + ordenação */}
+          <div className="flex flex-wrap gap-2 mb-4 items-center">
+            {(['todos','operacional','manutenção','inativo'] as const).map(s => (
+              <button key={s} onClick={() => setFiltroStatus(s)}
+                className={`px-2.5 py-1 text-xs font-semibold uppercase rounded-none border transition-colors ${filtroStatus===s ? 'bg-primary text-primary-foreground border-primary' : 'border-border text-muted-foreground hover:bg-muted'}`}>
+                {s === 'todos' ? 'Todos' : s}
+              </button>
+            ))}
+            <span className="ml-auto text-xs text-muted-foreground">Ordenar:</span>
+            {(['tag','nome','nota'] as const).map(s => (
+              <button key={s} onClick={() => setSortBy(s)}
+                className={`px-2 py-1 text-xs rounded-none border transition-colors ${sortBy===s ? 'bg-accent text-accent-foreground border-accent' : 'border-border text-muted-foreground hover:bg-muted'}`}>
+                {s === 'tag' ? 'TAG' : s === 'nome' ? 'Nome' : 'Nota'}
+              </button>
+            ))}
           </div>
 
           {loading ? (
@@ -193,14 +249,14 @@ export function SearchPage() {
             </div>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {results.map((tag) => {
+              {resultadosVisiveis.map((tag) => {
                 const status = getStatusDot(tag.status);
                 const prioridade = tag.nota_manutencao ? getPrioridadeBadge(tag.nota_manutencao.prioridade) : null;
                 return (
                   <Link
                     key={tag.id}
                     to={`/tag/${tag.id}`}
-                    className={`block rounded-lg overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl bg-card ${
+                    className={`block rounded-none overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl bg-card ${
                       tag.nota_manutencao ? 'border-2 border-destructive shadow-sm shadow-destructive/20' : 'border border-border/50 shadow-sm'
                     }`}
                   >
@@ -234,7 +290,7 @@ export function SearchPage() {
                       <div className="flex items-start justify-between gap-2 mb-1.5">
                         <div>
                           <p className="text-xs uppercase tracking-wider mb-0.5 text-muted-foreground">TAG</p>
-                          <p className="text-sm font-bold font-mono text-primary">{tag.tag_completo}</p>
+                          <p className="text-sm font-bold font-mono text-primary">{highlight(tag.tag_completo)}</p>
                         </div>
                         <div className={`flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium flex-shrink-0 mt-0.5 ${status.container}`}>
                           <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${status.dot}`} />
@@ -242,7 +298,7 @@ export function SearchPage() {
                         </div>
                       </div>
 
-                      <p className="text-sm font-medium mb-1 text-foreground">{tag.nome_equipamento}</p>
+                      <p className="text-sm font-medium mb-1 text-foreground">{highlight(tag.nome_equipamento)}</p>
                       <p className="text-xs line-clamp-1 text-muted-foreground">{tag.localizacao_texto}</p>
                     </div>
                   </Link>
@@ -250,18 +306,20 @@ export function SearchPage() {
               })}
             </div>
           )}
-        </div>
+          </div>
+        </section>
       )}
 
       {/* Empty state: recent tags or how-to */}
       {!query && (
         <>
           {recentTags.length > 0 ? (
-            <div className="bg-card rounded border border-border p-5 shadow-sm">
-              <h2 className="font-semibold mb-3 flex items-center gap-2 text-foreground">
-                <Clock size={16} className="text-primary" />
-                Acessados recentemente
-              </h2>
+            <section className="bg-card border-2 border-border shadow-[var(--shadow-hard)]">
+              <header className="flex items-center gap-2 px-4 py-2.5 border-b-2 border-border bg-primary/5">
+                <Clock size={14} className="text-primary" />
+                <span className="text-xs font-bold uppercase tracking-[0.14em] mono text-primary">RECENTES // ACESSOS</span>
+              </header>
+              <div className="p-5">
               <div className="space-y-2">
                 {recentTags.map((r) => {
                   const status = getStatusDot(r.status);
@@ -269,7 +327,7 @@ export function SearchPage() {
                     <Link
                       key={r.id}
                       to={`/tag/${r.id}`}
-                      className="flex items-center justify-between gap-3 px-3 py-2.5 rounded border border-border hover:bg-muted/40 transition-colors"
+                      className="flex items-center justify-between gap-3 px-3 py-2.5 border-2 border-border hover:bg-muted/40 transition-colors"
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <span className="text-xs font-bold font-mono text-primary flex-shrink-0">
@@ -277,7 +335,7 @@ export function SearchPage() {
                         </span>
                         <span className="text-sm text-foreground truncate">{r.nome_equipamento}</span>
                       </div>
-                      <span className={`flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium flex-shrink-0 ${status.container}`}>
+                      <span className={`flex items-center gap-1 px-2 py-0.5 text-xs font-medium flex-shrink-0 ${status.container}`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
                         {r.status}
                       </span>
@@ -285,31 +343,37 @@ export function SearchPage() {
                   );
                 })}
               </div>
-            </div>
+              </div>
+            </section>
           ) : (
-            <div className="bg-card rounded border border-border p-6 shadow-sm">
-              <h2 className="font-semibold mb-4 text-foreground">Como usar</h2>
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div className="p-4 rounded border bg-primary/5 border-primary/20">
+            <section className="bg-card border-2 border-border shadow-[var(--shadow-hard)]">
+              <header className="flex items-center gap-2 px-4 py-2.5 border-b-2 border-border bg-primary/5">
+                <Tag size={14} className="text-primary" />
+                <span className="text-xs font-bold uppercase tracking-[0.14em] mono text-primary">PROTOCOLO // CONSULTA</span>
+              </header>
+              <div className="p-5">
+              <div className="grid sm:grid-cols-2 gap-3">
+                <div className="p-4 border-2 border-primary/30 bg-primary/5">
                   <div className="flex items-center gap-2 mb-2">
                     <Tag size={18} className="text-primary" />
-                    <span className="text-sm font-semibold text-primary">Buscar por Código</span>
+                    <span className="text-sm font-bold uppercase tracking-wider text-primary">Buscar Código</span>
                   </div>
                   <p className="text-xs text-primary/80">
-                    Digite os últimos 4 dígitos do TAG — ex: <span className="font-mono font-bold">0001</span>, <span className="font-mono font-bold">2002</span>
+                    Últimos 4 dígitos — ex: <span className="font-mono font-bold">0001</span>, <span className="font-mono font-bold">2002</span>
                   </p>
                 </div>
-                <div className="p-4 rounded border bg-accent/5 border-accent/20">
+                <div className="p-4 border-2 border-accent/30 bg-accent/5">
                   <div className="flex items-center gap-2 mb-2">
                     <QrCode size={18} className="text-accent" />
-                    <span className="text-sm font-semibold text-accent">Escanear QR Code</span>
+                    <span className="text-sm font-bold uppercase tracking-wider text-accent">Escanear QR</span>
                   </div>
                   <p className="text-xs text-accent/80">
-                    Use a câmera do dispositivo para escanear o QR Code fixado no equipamento
+                    Câmera do dispositivo no QR fixado no equipamento
                   </p>
                 </div>
               </div>
-            </div>
+              </div>
+            </section>
           )}
         </>
       )}
@@ -335,7 +399,7 @@ export function SearchPage() {
               {/* Camera view */}
               <div className="relative w-full aspect-square bg-gray-900 rounded overflow-hidden mb-4 flex items-center justify-center">
                 {qrStatus === 'found' ? (
-                  <div className="flex flex-col items-center gap-2 z-10 bg-gray-900/80 p-4 rounded-lg">
+                  <div className="flex flex-col items-center gap-2 z-10 bg-gray-900/80 p-4 rounded-none">
                     <div className="w-14 h-14 rounded-full bg-accent/20 flex items-center justify-center">
                       <Scan size={28} className="text-accent" />
                     </div>

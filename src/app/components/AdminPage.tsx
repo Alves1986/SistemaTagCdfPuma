@@ -54,6 +54,13 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
   const [exportFilter, setExportFilter] = useState<'all' | 'com_nota'>('all');
   const [exporting, setExporting] = useState(false);
 
+  // Import CSV state
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importPreview, setImportPreview] = useState<Array<{ tag_completo: string; nome_equipamento: string; localizacao_texto: string; status: string }>>([]);
+  const [importFileName, setImportFileName] = useState('');
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{ created: number; errors: Array<{ row: number; tag_completo: string; error: string }> } | null>(null);
+
   // Table pagination state
   const [tablePage, setTablePage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
@@ -231,6 +238,7 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
   };
 
   const handleExport = async () => {
+
     setExporting(true);
     await new Promise(r => setTimeout(r, 1200));
     const exportData = tags.filter(t => !t.nota_manutencao);
@@ -253,6 +261,65 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
     URL.revokeObjectURL(url);
     setExporting(false);
     setShowExportModal(false);
+  };
+
+  const parseImportCsv = (text: string): Array<{ tag_completo: string; nome_equipamento: string; localizacao_texto: string; status: string }> => {
+    const lines = text.split(String.fromCharCode(13)+String.fromCharCode(10)).join(String.fromCharCode(10)).split(String.fromCharCode(10)).map(l => l.trim()).filter(l => l.length > 0);
+
+    if (lines.length === 0) return [];
+    // Detecta separador (;) ou (,)
+    const sep = lines[0].includes(';') ? ';' : ',';
+    const parseLine = (line: string) => line.split(sep).map(c => c.trim().replace(/^"|"$/g, ''));
+    // Pula cabeçalho se a primeira coluna não parecer um TAG
+    const first = parseLine(lines[0]);
+    const startIdx = /\d{4}$/.test(first[0]) ? 0 : 1;
+    const out: Array<{ tag_completo: string; nome_equipamento: string; localizacao_texto: string; status: string }> = [];
+    for (let i = startIdx; i < lines.length; i++) {
+      const cols = parseLine(lines[i]);
+      if (cols.length < 3) continue;
+      const statusRaw = (cols[3] || 'operacional').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+      const status = statusRaw === 'manutencao' || statusRaw === 'manutenção' ? 'manutenção'
+        : statusRaw === 'inativo' ? 'inativo' : 'operacional';
+      out.push({ tag_completo: cols[0], nome_equipamento: cols[1], localizacao_texto: cols[2], status });
+    }
+    return out;
+  };
+
+  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImportFileName(file.name);
+    setImportResult(null);
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = String(reader.result || '');
+      setImportPreview(parseImportCsv(text));
+    };
+    reader.readAsText(file, 'utf-8');
+  };
+
+  const handleImportConfirm = async () => {
+    if (importPreview.length === 0) return;
+    setImporting(true);
+    setImportResult(null);
+    try {
+      const res = await api.importTags(
+        importPreview.map(r => ({
+          tag_completo: r.tag_completo,
+          nome_equipamento: r.nome_equipamento,
+          localizacao_texto: r.localizacao_texto,
+          status: r.status as 'operacional' | 'manutenção' | 'inativo',
+        })),
+        user?.nome
+      );
+      setImportResult(res);
+      if (res.created > 0) await loadTags();
+    } catch (error) {
+      console.error('Erro ao importar TAGs:', error);
+      alert('Erro ao importar TAGs. Tente novamente.');
+    } finally {
+      setImporting(false);
+    }
   };
 
   const toggleQrSelect = (id: number) => {
@@ -341,6 +408,15 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
               <Download size={15} />
               Exportar
             </button>
+            {!isManutencao && !isCoordenador && (
+              <button
+                onClick={() => { setImportResult(null); setImportPreview([]); setImportFileName(''); setShowImportModal(true); }}
+                className="flex items-center gap-1.5 px-3 py-2 rounded border border-primary text-primary text-sm font-medium transition-colors bg-transparent hover:bg-primary hover:text-primary-foreground"
+              >
+                <FileSpreadsheet size={15} />
+                Importar CSV
+              </button>
+            )}
             {isAdmin && (
               <>
                 <Link to="/admin/dashboard" className="flex items-center gap-1.5 px-3 py-2 rounded border border-border text-muted-foreground text-sm font-medium transition-colors bg-transparent hover:bg-muted">
@@ -866,6 +942,103 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
           </div>
         </div>
       )}
+
+      {/* ── Import CSV Modal ── */}
+      {showImportModal && (
+        <div className="fixed inset-0 flex items-center justify-center p-4 z-50 bg-black/50">
+          <div className="bg-card rounded shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto border border-border">
+            <div className="sticky top-0 bg-card px-5 py-4 flex items-center justify-between border-b border-border">
+              <h2 className="font-semibold text-foreground">Importar TAGs (CSV)</h2>
+              <button onClick={() => setShowImportModal(false)} className="p-1 rounded transition-colors text-muted-foreground hover:bg-muted">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              <p className="text-xs text-muted-foreground">
+                Formato: <code className="font-mono bg-muted px-1 rounded">TAG;NOME_EQUIPAMENTO;LOCALIZACAO;STATUS</code> (separador ; ou ,). STATUS opcional: operacional / manutenção / inativo.
+              </p>
+
+              <label className="flex flex-col items-center justify-center gap-2 w-full border-2 border-dashed border-border rounded p-6 cursor-pointer hover:bg-muted/40 transition-colors">
+                <FileSpreadsheet size={28} className="text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">
+                  {importFileName || 'Clique para selecionar o arquivo CSV'}
+                </span>
+                <input type="file" accept=".csv,text/csv" onChange={handleImportFile} className="hidden" />
+              </label>
+
+              {importPreview.length > 0 && (
+                <div className="border border-border rounded max-h-48 overflow-y-auto">
+                  <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground border-b border-border bg-muted/40">
+                    Preview: {importPreview.length} TAG(s) detectados
+                  </p>
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="bg-muted text-muted-foreground">
+                        <th className="px-2 py-1.5 text-left">TAG</th>
+                        <th className="px-2 py-1.5 text-left">Equipamento</th>
+                        <th className="px-2 py-1.5 text-left">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {importPreview.slice(0, 50).map((r, i) => (
+                        <tr key={i}>
+                          <td className="px-2 py-1 font-mono">{r.tag_completo}</td>
+                          <td className="px-2 py-1">{r.nome_equipamento}</td>
+                          <td className="px-2 py-1">{r.status}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {importPreview.length > 50 && (
+                    <p className="px-3 py-1.5 text-xs text-muted-foreground">…e mais {importPreview.length - 50} linha(s)</p>
+                  )}
+                </div>
+              )}
+
+              {importResult && (
+                <div className={`rounded border p-3 text-sm ${importResult.errors.length === 0 ? 'border-accent/40 bg-accent/10 text-accent' : 'border-amber-400 bg-amber-50 text-amber-800'}`}>
+                  <p className="font-semibold">{importResult.created} TAG(s) importado(s) com sucesso.</p>
+                  {importResult.errors.length > 0 && (
+                    <ul className="mt-1 list-disc list-inside text-xs">
+                      {importResult.errors.slice(0, 10).map((er, i) => (
+                        <li key={i}>Linha {er.row} ({er.tag_completo || '—'}): {er.error}</li>
+                      ))}
+                      {importResult.errors.length > 10 && <li>…e mais {importResult.errors.length - 10} erro(s)</li>}
+                    </ul>
+                  )}
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-2 border-t border-border">
+                <button
+                  onClick={() => setShowImportModal(false)}
+                  className="flex-1 py-2.5 rounded border border-border text-muted-foreground text-sm font-medium hover:bg-muted transition-colors"
+                >
+                  Fechar
+                </button>
+                <button
+                  onClick={handleImportConfirm}
+                  disabled={importing || importPreview.length === 0}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-60"
+                >
+                  {importing ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Importando…
+                    </>
+                  ) : (
+                    <>
+                      <FileSpreadsheet size={14} />
+                      Importar {importPreview.length > 0 ? importPreview.length : ''} TAG(s)
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       </div>
 
       {/* ── Hidden Print View ── */}
@@ -873,7 +1046,7 @@ function AdminPageContent({ selectedArea, initialFilter }: { selectedArea: strin
         {Array.from({ length: Math.ceil(tagsToPrint.length / 9) }, (_, i) => tagsToPrint.slice(i * 9, i * 9 + 9)).map((pageTags, pageIndex, arr) => (
           <div key={pageIndex} className="grid grid-cols-3 gap-6 p-6 print:p-6" style={{ pageBreakAfter: pageIndex < arr.length - 1 ? 'always' : 'auto' }}>
             {pageTags.map(tag => (
-              <div key={tag.id} className="flex flex-col items-center justify-center p-4 border-2 border-black rounded-lg break-inside-avoid shadow-none h-[290px]">
+              <div key={tag.id} className="flex flex-col items-center justify-center p-4 border-2 border-black rounded-none break-inside-avoid shadow-none h-[290px]">
                 <QRCodeSVG value={`${window.location.origin}/tag/${tag.id}`} size={140} level="H" />
                 <div className="mt-4 text-center">
                   <p className="font-bold text-[1.1rem] font-mono text-black">{tag.tag_completo}</p>

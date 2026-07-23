@@ -11,7 +11,42 @@ export function TeamPage() {
   const { selectedArea, selectedGerencia } = useArea();
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
+  // E1-E4: busca + filtros + estatísticas
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filtroGerencia, setFiltroGerencia] = useState<string>('todas');
+  const [filtroCargo, setFiltroCargo] = useState<string>('todos');
+
+  const normG = (g?: string) => normalizeGerencia(g || '');
+
+  const perfisVisiveis = profiles.filter(p => {
+    const userGerenciaNorm = normG(user?.gerencia);
+    const pGerenciaNorm = normG(p.gerencia);
+    const isManutencao = userGerenciaNorm === 'Manutenção';
+    const base = isManutencao
+      ? (pGerenciaNorm === selectedGerencia || pGerenciaNorm === 'Manutenção')
+      : (pGerenciaNorm === userGerenciaNorm);
+    if (!base) return false;
+    if (filtroGerencia !== 'todas' && pGerenciaNorm !== normG(filtroGerencia)) return false;
+    if (filtroCargo !== 'todos' && (p.cargo || '').toLowerCase() !== filtroCargo.toLowerCase()) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const match = (p.nome || '').toLowerCase().includes(q)
+        || (p.cargo || '').toLowerCase().includes(q)
+        || (p.prn || '').toLowerCase().includes(q)
+        || (p.gerencia || '').toLowerCase().includes(q);
+      if (!match) return false;
+    }
+    return true;
+  });
+
+  const statsEquipe = {
+    total: perfisVisiveis.length,
+    comWhats: perfisVisiveis.filter(p => p.whatsapp && p.whatsapp.replace(/\D/g, '').length >= 10).length,
+    comFoto: perfisVisiveis.filter(p => !!p.foto_url).length,
+    coordenacoes: new Set(perfisVisiveis.map(p => p.coordenacao || 'Sem coord.')).size,
+  };
+
   // Modal state
   const [editingProfile, setEditingProfile] = useState<UserProfile | null>(null);
   const [formData, setFormData] = useState({ 
@@ -120,7 +155,7 @@ export function TeamPage() {
     <div className="space-y-6">
       <div className="bg-card rounded border border-border p-5 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-primary/10 rounded-lg text-primary">
+          <div className="p-2 bg-primary/10 rounded-none text-primary">
             <Users size={24} />
           </div>
           <div>
@@ -130,24 +165,49 @@ export function TeamPage() {
         </div>
       </div>
 
+      {/* E3: estatísticas da equipe */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { label: 'Membros', value: statsEquipe.total, cls: 'bg-primary/5 border-primary/20 text-primary' },
+          { label: 'Com WhatsApp', value: statsEquipe.comWhats, cls: 'bg-accent/5 border-accent/20 text-accent' },
+          { label: 'Com Foto', value: statsEquipe.comFoto, cls: 'bg-muted border-border text-foreground' },
+          { label: 'Coordenações', value: statsEquipe.coordenacoes, cls: 'bg-muted border-border text-foreground' },
+        ].map(s => (
+          <div key={s.label} className={`border p-3 ${s.cls}`}>
+            <p className="text-xs font-medium">{s.label}</p>
+            <p className="text-xl font-bold">{s.value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* E1+E2: busca + filtros */}
+      <div className="flex flex-col sm:flex-row gap-2 flex-wrap items-center">
+        <input
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          placeholder="Buscar nome, cargo, PRN ou gerência…"
+          className="flex-1 min-w-[200px] px-3 py-2 rounded border border-border bg-background text-foreground text-sm outline-none focus:border-primary"
+        />
+        <select value={filtroGerencia} onChange={e => setFiltroGerencia(e.target.value)} className="px-3 py-2 rounded border border-border bg-background text-foreground text-sm">
+          <option value="todas">Todas gerências</option>
+          {GERENCIAS.map(g => (
+            <option key={g} value={g}>{g}</option>
+          ))}
+        </select>
+        <select value={filtroCargo} onChange={e => setFiltroCargo(e.target.value)} className="px-3 py-2 rounded border border-border bg-background text-foreground text-sm">
+          <option value="todos">Todos cargos</option>
+          {[...new Set(profiles.map(p => p.cargo).filter(Boolean))].map(c => (
+            <option key={c} value={c!}>{c}</option>
+          ))}
+        </select>
+      </div>
+
       {loading ? (
         <div className="text-center py-12 text-muted-foreground">Carregando equipe...</div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {profiles.filter(p => {
-            const userGerenciaNorm = normalizeGerencia(user?.gerencia || '');
-            const pGerenciaNorm = normalizeGerencia(p.gerencia || '');
-            const isManutencao = userGerenciaNorm === 'Manutenção';
-
-            if (isManutencao) {
-              // Gestores de Manutenção veem a gerência selecionada no header e sua própria equipe de manutenção
-              return pGerenciaNorm === selectedGerencia || pGerenciaNorm === 'Manutenção';
-            } else {
-              // Coordenadores/Operadores veem toda a sua gerência de uma vez só (não veem manutenção)
-              return pGerenciaNorm === userGerenciaNorm;
-            }
-          }).map(profile => (
-            <div key={profile.id} className="bg-card rounded-xl border border-border overflow-hidden shadow-md hover:shadow-lg transition-all hover:scale-[1.02] flex flex-col">
+          {perfisVisiveis.map(profile => (
+            <div key={profile.id} className="bg-card rounded-none border border-border overflow-hidden shadow-md hover:shadow-lg transition-all hover:scale-[1.02] flex flex-col">
               <div className="h-20 bg-gradient-to-r from-primary to-[#002040]"></div>
               <div className="px-5 pb-5 flex-1 flex flex-col items-center text-center -mt-10">
                 <div className="w-20 h-20 rounded-full border-4 border-card bg-muted flex items-center justify-center overflow-hidden mb-3">
