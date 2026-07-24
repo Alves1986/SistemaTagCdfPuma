@@ -155,14 +155,14 @@ export function SearchPage() {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 sm:space-y-5">
       {/* Search box */}
       <section className="bg-card border-2 border-border shadow-[var(--shadow-hard)]">
         <header className="flex items-center gap-2 px-4 py-2.5 border-b-2 border-border bg-primary/5">
           <Search size={14} className="text-primary" />
           <span className="text-xs font-bold uppercase tracking-[0.14em] mono text-primary">CONSULTA // EQUIPAMENTO</span>
         </header>
-        <div className="p-5">
+        <div className="p-4 sm:p-5">
         <label className="block mb-2 text-sm font-semibold text-foreground">
           Buscar Equipamento
         </label>
@@ -195,7 +195,7 @@ export function SearchPage() {
         <div className="mt-4 flex flex-wrap gap-2 pt-4 border-t-2 border-border">
           <button
             onClick={openQrModal}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-none border-2 border-primary text-sm font-bold uppercase tracking-wider text-primary bg-transparent transition-colors hover:bg-primary hover:text-primary-foreground"
+            className="flex items-center justify-center gap-1.5 w-full sm:w-auto px-4 py-3 rounded-none border-2 border-primary text-sm font-bold uppercase tracking-wider text-primary-foreground bg-primary transition-colors hover:bg-primary/90 active:scale-[0.98]"
           >
             <QrCode size={15} />
             Escanear QR Code

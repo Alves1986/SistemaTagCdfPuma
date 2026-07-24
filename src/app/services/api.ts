@@ -880,23 +880,69 @@ function desvincularManualLocal(vinculoId: string) {
 
 // ============ AGENTE BIBLIOTECÁRIO (IA) ============
 // Responde perguntas com base SOMENTE na Base KOS (contexto recuperado do Supabase).
-// Provedor configurável via .env: OPENAI_BASE_URL / OPENAI_API_KEY / VITE_LLM_MODEL
+// Provedor configurável via .env: VITE_OPENAI_BASE_URL / VITE_OPENAI_API_KEY / VITE_LLM_MODEL
 // (atualmente NVIDIA NIM). Fallback: busca full-text retorna trechos como resposta.
+//
+// IMPORTANTE (Vite): apenas variáveis com prefixo VITE_ são expostas em import.meta.env.
+// Lemos as duas grafias por retrocompatibilidade, mas o .env DEVE usar VITE_OPENAI_*.
+const LLM_BASE_URL = (import.meta.env.VITE_OPENAI_BASE_URL || import.meta.env.OPENAI_BASE_URL || '').replace(/\/+$/, '');
+const LLM_API_KEY = import.meta.env.VITE_OPENAI_API_KEY || import.meta.env.OPENAI_API_KEY || '';
+const LLM_MODEL = import.meta.env.VITE_LLM_MODEL || 'meta/llama-3.1-8b-instruct';
 
-export async function perguntarBibliotecario(tagCompleto: string, pergunta: string): Promise<any> {
-  // 1) Recuperar contexto da Base KOS
+// Converte uma pergunta em linguagem natural em uma tsquery segura (websearch),
+// evitando o erro do to_tsquery quando a string tem espaços/stopwords.
+function toKosQuery(raw: string): string {
+  const termos = raw
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remove acentos
+    .replace(/[^a-zA-Z0-9 -]/g, ' ')
+    .split(/\s+/)
+    .filter(w => w.length >= 3);
+  // OR entre os termos relevantes → recall alto na Base KOS
+  return termos.join(' | ');
+}
+
+async function recuperarContextoKos(termoBusca: string): Promise<{ contexto: string; fontes: string[] }> {
   let contexto = '';
   let fontes: string[] = [];
+  const q = toKosQuery(termoBusca);
+  if (!q) return { contexto, fontes };
   try {
+    // websearch_to_tsquery tolera frases naturais; 'or' entre termos amplia o recall
     const { data: docs, error } = await supabase
       .from('manual_documentos')
       .select('titulo, conteudo_md, sistema')
-      .textSearch('conteudo_md', tagCompleto.replace(/[^a-zA-Z0-9 -]/g, ' '))
+      .textSearch('conteudo_md', q, { config: 'portuguese' })
       .limit(8);
     if (!error && docs) {
       contexto = docs.map((d: any) => `### ${d.titulo}\n${d.conteudo_md}`).join('\n\n');
       fontes = docs.map((d: any) => d.titulo);
+    } else if (error) {
+      console.warn('textSearch KOS falhou, tentando ilike:', error.message);
     }
+    // Fallback adicional: se FTS não trouxe nada, tenta ilike no primeiro termo
+    if (!contexto) {
+      const primeiro = q.split(' | ')[0];
+      const { data: docs2 } = await supabase
+        .from('manual_documentos')
+        .select('titulo, conteudo_md, sistema')
+        .ilike('conteudo_md', `%${primeiro}%`)
+        .limit(8);
+      if (docs2 && docs2.length) {
+        contexto = docs2.map((d: any) => `### ${d.titulo}\n${d.conteudo_md}`).join('\n\n');
+        fontes = docs2.map((d: any) => d.titulo);
+      }
+    }
+  } catch (e) {
+    console.error('Erro ao recuperar contexto KOS:', e);
+  }
+  return { contexto, fontes };
+}
+
+export async function perguntarBibliotecario(tagCompleto: string, pergunta: string): Promise<any> {
+  // 1) Recuperar contexto da Base KOS — combina a pergunta E o tag para melhor recall
+  const termoBusca = `${pergunta} ${tagCompleto}`.trim();
+  let { contexto, fontes } = await recuperarContextoKos(termoBusca);
+  try {
     // também puxa menções diretas do tag
     const { data: ments } = await supabase
       .from('manual_tag_mentions')
@@ -908,12 +954,12 @@ export async function perguntarBibliotecario(tagCompleto: string, pergunta: stri
       contexto += `\n\n### Relacionamentos diretos do TAG ${tagCompleto}\n${trechos}`;
     }
   } catch (e) {
-    console.error('Erro ao recuperar contexto KOS:', e);
+    console.error('Erro ao recuperar menções do TAG:', e);
   }
 
-  const baseUrl = import.meta.env.OPENAI_BASE_URL || '';
-  const apiKey = import.meta.env.OPENAI_API_KEY || '';
-  const model = import.meta.env.VITE_LLM_MODEL || 'meta/llama-3.1-8b-instruct';
+  const baseUrl = LLM_BASE_URL;
+  const apiKey = LLM_API_KEY;
+  const model = LLM_MODEL;
 
   // 2) Fallback (sem chave): retorna trechos como resposta
   if (!apiKey || !baseUrl) {
@@ -977,28 +1023,11 @@ export async function perguntarBibliotecario(tagCompleto: string, pergunta: stri
 
 // Pergunta geral (sem TAG específico): recupera contexto por textSearch da pergunta.
 export async function perguntarBibliotecarioGeral(pergunta: string): Promise<any> {
-  let contexto = '';
-  let fontes: string[] = [];
-  try {
-    const q = pergunta.replace(/[^a-zA-Z0-9 -]/g, ' ').trim();
-    if (q.length >= 3) {
-      const { data: docs, error } = await supabase
-        .from('manual_documentos')
-        .select('titulo, conteudo_md, sistema')
-        .textSearch('conteudo_md', q)
-        .limit(8);
-      if (!error && docs) {
-        contexto = docs.map((d: any) => `### ${d.titulo}\n${d.conteudo_md}`).join('\n\n');
-        fontes = docs.map((d: any) => d.titulo);
-      }
-    }
-  } catch (e) {
-    console.error('Erro ao recuperar contexto KOS (geral):', e);
-  }
+  let { contexto, fontes } = await recuperarContextoKos(pergunta);
 
-  const baseUrl = import.meta.env.OPENAI_BASE_URL || '';
-  const apiKey = import.meta.env.OPENAI_API_KEY || '';
-  const model = import.meta.env.VITE_LLM_MODEL || 'meta/llama-3.1-8b-instruct';
+  const baseUrl = LLM_BASE_URL;
+  const apiKey = LLM_API_KEY;
+  const model = LLM_MODEL;
 
   if (!apiKey || !baseUrl) {
     if (!contexto) {

@@ -92,7 +92,7 @@ export function CommandRail() {
       </aside>
 
       {/* Mobile: bottom navigation bar (native pattern, full width) */}
-      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-50 flex items-stretch justify-around bg-[#001B36] border-t-2 border-accent tactical pb-[env(safe-area-inset-bottom)]">
+      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-50 grid grid-cols-6 items-stretch bg-[#001B36] border-t-2 border-accent tactical pb-[env(safe-area-inset-bottom)] shadow-[0_-2px_12px_rgba(0,0,0,0.4)]">
         {[...main, gestao[1], gestao[3]].map(item => (
           <RailBottom item={item} key={item.to} badge={item.to === '/admin/manutencao' ? badgeCount : undefined} />
         ))}
@@ -102,23 +102,32 @@ export function CommandRail() {
 }
 
 function RailBottom({ item, badge }: { item: RailItem; badge?: number | string }) {
+  // Rótulos curtos p/ caber 6 itens sem espremer no mobile
+  const shortLabel: Record<string, string> = {
+    'BIBLIOTECÁRIO': 'IA KOS',
+    'MANUTENÇÃO': 'MANUT.',
+    'TELEMETRIA': 'TELEM.',
+  };
+  const label = shortLabel[item.label] || item.label;
   return (
     <NavLink
       to={item.to}
       end={item.to === '/'}
       className={({ isActive }) =>
-        `relative flex-1 flex flex-col items-center justify-center gap-0.5 py-2 px-1 transition-colors ${
-          isActive ? 'text-accent' : 'text-sidebar-foreground/60 hover:text-sidebar-foreground'
+        `relative flex flex-col items-center justify-center gap-1 min-h-[56px] py-1.5 px-0.5 transition-colors ${
+          isActive ? 'text-accent bg-accent/10 border-t-2 border-accent -mt-0.5' : 'text-sidebar-foreground/60 hover:text-sidebar-foreground border-t-2 border-transparent'
         }`
       }
     >
-      {item.icon}
-      <span className="text-[0.55rem] font-bold uppercase tracking-wider leading-none">{item.label}</span>
-      {badge ? (
-        <span className="absolute top-1 right-1/2 translate-x-3 bg-destructive text-destructive-foreground text-[0.6rem] font-bold min-w-[16px] h-4 flex items-center justify-center px-0.5">
-          {badge}
-        </span>
-      ) : null}
+      <span className="relative">
+        {item.icon}
+        {badge ? (
+          <span className="absolute -top-1.5 -right-2 bg-destructive text-destructive-foreground text-[0.55rem] font-bold leading-none min-w-[14px] h-[14px] rounded-full flex items-center justify-center px-1 ring-1 ring-[#001B36]">
+            {badge}
+          </span>
+        ) : null}
+      </span>
+      <span className="text-[0.5rem] font-bold uppercase tracking-tight leading-none text-center truncate max-w-full">{label}</span>
     </NavLink>
   );
 }
